@@ -44,6 +44,7 @@ export class App {
 
   protected readonly abas = [
     { rota: '/', texto: 'Início', exato: true },
+    { rota: '/politicos', texto: 'Candidatos', exato: false },
     { rota: '/noticias', texto: 'Notícias', exato: false },
     { rota: '/comunidades', texto: 'Comunidades', exato: false },
     { rota: '/fatobot', texto: 'IA', exato: false },

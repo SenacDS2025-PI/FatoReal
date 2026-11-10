@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { PoliticosService, partidosCamara } from '../../core/politicos.service';
+import { POR_PAGINA, PoliticosService, partidosCamara } from '../../core/politicos.service';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
 
@@ -22,6 +22,9 @@ export class BuscaPage implements OnInit {
   protected uf = '';
   protected readonly resultados = signal<Politico[]>([]);
   protected readonly carregando = signal(false);
+  protected readonly carregandoMais = signal(false);
+  protected readonly temMais = signal(false);
+  private pagina = 1;
   protected readonly erro = signal('');
   private espera?: ReturnType<typeof setTimeout>;
   private pedido = 0;
@@ -57,8 +60,12 @@ export class BuscaPage implements OnInit {
       replaceUrl: true,
     });
     try {
-      const lista = await this.service.buscar({ termo: this.termo, partido: this.partido, uf: this.uf });
-      if (meu === this.pedido) this.resultados.set(lista);
+      this.pagina = 1;
+      const lista = await this.service.buscar(this.filtro());
+      if (meu === this.pedido) {
+        this.resultados.set(lista);
+        this.temMais.set(lista.length === POR_PAGINA);
+      }
     } catch (e) {
       if (meu === this.pedido) {
         this.resultados.set([]);
@@ -67,6 +74,27 @@ export class BuscaPage implements OnInit {
     } finally {
       if (meu === this.pedido) this.carregando.set(false);
     }
+  }
+
+  protected async carregarMais() {
+    const meu = this.pedido;
+    this.carregandoMais.set(true);
+    try {
+      const lista = await this.service.buscar({ ...this.filtro(), pagina: this.pagina + 1 });
+      if (meu !== this.pedido) return;
+      this.pagina++;
+      const vistos = new Set(this.resultados().map((p) => p.id));
+      this.resultados.update((r) => [...r, ...lista.filter((p) => !vistos.has(p.id))]);
+      this.temMais.set(lista.length === POR_PAGINA);
+    } catch {
+      this.erro.set('Não foi possível carregar mais resultados. Tente de novo.');
+    } finally {
+      this.carregandoMais.set(false);
+    }
+  }
+
+  private filtro() {
+    return { termo: this.termo, partido: this.partido, uf: this.uf };
   }
 
   protected limpar() {

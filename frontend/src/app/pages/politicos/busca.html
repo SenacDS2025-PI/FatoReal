@@ -37,7 +37,7 @@
   @if (carregando()) {
     Buscando...
   } @else if (!erro()) {
-    {{ resultados().length }} {{ resultados().length === 1 ? 'deputado encontrado' : 'deputados encontrados' }}
+    {{ resultados().length }}{{ temMais() ? '+' : '' }} {{ resultados().length === 1 ? 'deputado encontrado' : 'deputados encontrados' }}
   }
 </p>
 
@@ -77,5 +77,13 @@
     }
   }
 </ul>
+
+@if (temMais() && !carregando()) {
+  <div class="carregar-mais">
+    <button class="botao botao-fantasma" type="button" (click)="carregarMais()" [disabled]="carregandoMais()">
+      {{ carregandoMais() ? 'Carregando...' : 'Carregar mais deputados' }}
+    </button>
+  </div>
+}
 
 <p class="nota-fontes"><app-icone nome="verified" /> Dados da <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener noreferrer">API de Dados Abertos da Câmara dos Deputados</a></p>

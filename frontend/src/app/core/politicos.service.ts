@@ -8,7 +8,11 @@ export interface FiltroPoliticos {
   termo?: string;
   partido?: string;
   uf?: string;
+  /** Começa em 1. Cada página tem POR_PAGINA itens. */
+  pagina?: number;
 }
+
+export const POR_PAGINA = 30;
 
 /**
  * Busca e perfil de políticos.
@@ -22,9 +26,10 @@ export class PoliticosService {
     const termo = filtro.termo?.trim() ?? '';
     const partido = filtro.partido?.trim().toUpperCase() ?? '';
     const uf = filtro.uf ?? '';
+    const pagina = Math.max(1, filtro.pagina ?? 1);
 
     if (supabase) {
-      let q = supabase.from('politicos').select('*').order('nome').limit(50);
+      let q = supabase.from('politicos').select('*').order('nome').range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
       if (termo) q = q.ilike('nome', `%${termo}%`);
       if (partido) q = q.ilike('partido', partido);
       if (uf) q = q.eq('uf', uf);
@@ -33,7 +38,7 @@ export class PoliticosService {
       return data as Politico[];
     }
 
-    const params = new URLSearchParams({ itens: '30', ordem: 'ASC', ordenarPor: 'nome' });
+    const params = new URLSearchParams({ itens: String(POR_PAGINA), pagina: String(pagina), ordem: 'ASC', ordenarPor: 'nome' });
     if (termo.length >= 3) params.set('nome', termo);
     if (partido) params.set('siglaPartido', partido);
     if (uf) params.set('siglaUf', uf);
