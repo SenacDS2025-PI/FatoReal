@@ -6,7 +6,7 @@ import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Comunidade, Publicacao } from '../../core/modelos';
 import { linkSeguro } from '../../core/util';
-import { avatarComunidade, capaComunidade, CATEGORIAS, ICONE_TEMA } from '../../core/visual';
+import { avatarComunidade, capaComunidade, CATEGORIAS, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
@@ -33,6 +33,7 @@ export class InicioPage implements OnInit {
 
   protected readonly categorias = CATEGORIAS;
   protected readonly iconeTema = ICONE_TEMA;
+  protected readonly corTema = COR_TEMA;
   protected readonly avatarComunidade = avatarComunidade;
   protected readonly capaComunidade = capaComunidade;
 

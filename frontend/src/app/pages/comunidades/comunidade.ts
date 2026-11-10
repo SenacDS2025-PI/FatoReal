@@ -6,7 +6,7 @@ import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Autor, Comunidade, Publicacao } from '../../core/modelos';
 import { linkSeguro } from '../../core/util';
-import { avatarComunidade, capaComunidade, ICONE_TEMA } from '../../core/visual';
+import { avatarComunidade, capaComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
@@ -23,6 +23,7 @@ export class ComunidadePage implements OnInit {
   protected readonly avatarComunidade = avatarComunidade;
   protected readonly capaComunidade = capaComunidade;
   protected readonly iconeTema = ICONE_TEMA;
+  protected readonly corTema = COR_TEMA;
 
   /** Vem da URL /comunidades/:slug */
   readonly slug = input.required<string>();

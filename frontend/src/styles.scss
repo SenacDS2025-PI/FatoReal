@@ -813,3 +813,12 @@ legend { font-weight: 700; padding: 0 6px; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 .carregar-mais { display: flex; justify-content: center; margin: 0 0 18px; }
+
+/* Comunidades sem imagem própria: capa e ícone na cor do tema */
+.capa-icone { background: linear-gradient(135deg, var(--cor-tema, #1e6bff), color-mix(in srgb, var(--cor-tema, #7c4dff) 65%, #000)); }
+.card-comunidade-capa, .comunidade-capa {
+  position: relative; overflow: hidden;
+  background: linear-gradient(120deg, var(--cor-tema, #1e6bff), color-mix(in srgb, var(--cor-tema, #00c27a) 55%, #000));
+}
+.capa-marca { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.22); .material-symbols-rounded { font-size: 88px; } }
+.card-comunidade-avatar { position: relative; z-index: 1; }

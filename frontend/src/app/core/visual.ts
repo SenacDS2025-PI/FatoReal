@@ -26,5 +26,17 @@ export const ICONE_TEMA: Record<string, string> = {
   Tecnologia: 'memory',
 };
 
+/** Cor de cada tema: capa e ícone das comunidades que não têm imagem própria. */
+export const COR_TEMA: Record<string, string> = {
+  Política: '#1f4fbf',
+  Educação: '#6a3fc7',
+  Cidadania: '#0b7a55',
+  Economia: '#a8650a',
+  Saúde: '#c0353f',
+  'Meio ambiente': '#2f7d32',
+  Segurança: '#34495e',
+  Tecnologia: '#0e7490',
+};
+
 /** Faixa de categorias do topo da página inicial (filtra o feed pelo tema da comunidade). */
 export const CATEGORIAS = ['Política', 'Economia', 'Educação', 'Saúde', 'Tecnologia', 'Cidadania'];
