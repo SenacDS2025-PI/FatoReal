@@ -82,33 +82,15 @@
   <aside class="lateral" aria-label="Menu principal">
     <nav class="menu">
       @for (item of menu; track item.rota) {
-        <a [routerLink]="item.rota" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: !!item.exato }" [style.--cor-icone]="item.cor">
+        <a [routerLink]="item.rota" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: !!item.exato }">
           <app-icone [nome]="item.icone" /> <span class="menu-texto">{{ item.texto }}</span>
           @if (contador(item.contador); as n) { <span class="contador" [attr.aria-label]="n + ' novos'">{{ n }}</span> }
         </a>
       }
       @if (auth.moderador()) {
-        <a routerLink="/moderacao" routerLinkActive="ativo" style="--cor-icone: #d62839"><app-icone nome="shield" /> <span class="menu-texto">Moderação</span></a>
+        <a routerLink="/moderacao" routerLinkActive="ativo"><app-icone nome="shield" /> <span class="menu-texto">Moderação</span></a>
       }
     </nav>
-
-    <div class="lateral-juntos">
-      <strong>Juntos por um Brasil mais informado!</strong>
-      <img src="img/brasil-juntos.svg" alt="" />
-    </div>
-
-    <section class="lateral-progresso" aria-labelledby="titulo-progresso">
-      <h2 id="titulo-progresso"><app-icone nome="star" class="estrela" /> Seu progresso</h2>
-      <div class="barra" role="progressbar" aria-label="Primeiros passos" [attr.aria-valuenow]="progresso.feitos()" aria-valuemin="0" aria-valuemax="3">
-        <span [style.width.%]="(progresso.feitos() / 3) * 100"></span>
-      </div>
-      <small>{{ progresso.feitos() }} de 3 primeiros passos</small>
-      <ul>
-        @for (p of progresso.lista(); track p.texto) {
-          <li [class.feito]="p.feito"><app-icone [nome]="p.feito ? 'check_circle' : 'radio_button_unchecked'" /> {{ p.texto }}</li>
-        }
-      </ul>
-    </section>
 
     <nav class="lateral-rodape" aria-label="Institucional">
       <a routerLink="/sobre">Sobre e fontes</a>

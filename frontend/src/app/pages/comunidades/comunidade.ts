@@ -5,7 +5,6 @@ import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Autor, Comunidade, Publicacao } from '../../core/modelos';
-import { ProgressoService } from '../../core/progresso.service';
 import { linkSeguro } from '../../core/util';
 import { avatarComunidade, capaComunidade, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
@@ -19,7 +18,6 @@ import { PublicacaoCard } from '../../shared/publicacao-card';
 export class ComunidadePage implements OnInit {
   private service = inject(ComunidadesService);
   private avisos = inject(AvisosService);
-  private progresso = inject(ProgressoService);
   private router = inject(Router);
   protected auth = inject(AuthService);
   protected readonly avatarComunidade = avatarComunidade;
@@ -80,7 +78,6 @@ export class ComunidadePage implements OnInit {
         this.avisos.mostrar('Você saiu da comunidade.');
       } else {
         await this.service.entrar(c.id);
-        this.progresso.marcar('comunidade');
         this.avisos.mostrar(`Bem-vindo(a) à ${c.nome}!`);
       }
       await this.recarregar();

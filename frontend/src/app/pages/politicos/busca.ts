@@ -2,8 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { PoliticosService } from '../../core/politicos.service';
-import { ProgressoService } from '../../core/progresso.service';
+import { PoliticosService, partidosCamara } from '../../core/politicos.service';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
 
@@ -16,7 +15,6 @@ export class BuscaPage implements OnInit {
   private service = inject(PoliticosService);
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
-  private progresso = inject(ProgressoService);
 
   protected readonly ufs = UFS;
   protected termo = '';
@@ -27,6 +25,13 @@ export class BuscaPage implements OnInit {
   protected readonly erro = signal('');
   private espera?: ReturnType<typeof setTimeout>;
   private pedido = 0;
+  /** Siglas sugeridas no campo de partido (lista da Câmara; se falhar, o campo continua livre). */
+  protected readonly partidos = signal<string[]>([]);
+  protected readonly esqueletos = Array.from({ length: 6 });
+
+  protected get temFiltro(): boolean {
+    return !!(this.termo || this.partido || this.uf);
+  }
 
   ngOnInit() {
     const q = this.rota.snapshot.queryParamMap;
@@ -34,6 +39,7 @@ export class BuscaPage implements OnInit {
     this.partido = q.get('partido') ?? '';
     this.uf = q.get('uf') ?? '';
     this.pesquisar();
+    partidosCamara().then((l) => this.partidos.set(l)).catch(() => {});
   }
 
   /** Filtra enquanto a pessoa digita (espera 350 ms para não chamar a API a cada tecla). */
@@ -53,7 +59,6 @@ export class BuscaPage implements OnInit {
     try {
       const lista = await this.service.buscar({ termo: this.termo, partido: this.partido, uf: this.uf });
       if (meu === this.pedido) this.resultados.set(lista);
-      if (this.termo || this.partido || this.uf) this.progresso.marcar('politico');
     } catch (e) {
       if (meu === this.pedido) {
         this.resultados.set([]);

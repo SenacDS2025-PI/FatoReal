@@ -1,34 +1,43 @@
 <header class="cabecalho-pagina">
-  <h1>Pesquisar políticos</h1>
-  <p>Deputados federais com dados da Câmara dos Deputados. Busque por nome, partido ou estado.</p>
+  <p class="sobretitulo">Candidatos</p>
+  <h1>Deputados federais</h1>
+  <p>Consulte quem representa cada estado na Câmara dos Deputados: partido, comissões, proposições e gastos, sempre com a fonte oficial.</p>
 </header>
 
 <form class="card filtros" role="search" (submit)="$event.preventDefault(); pesquisar()">
   <div class="campo-form campo-largo">
     <label for="f-nome">Nome</label>
-    <input id="f-nome" name="termo" type="search" [(ngModel)]="termo" (ngModelChange)="aoDigitar()" placeholder="Digite um nome" autocomplete="off" />
+    <div class="campo-com-icone">
+      <app-icone nome="search" />
+      <input id="f-nome" name="termo" type="search" [(ngModel)]="termo" (ngModelChange)="aoDigitar()" placeholder="Digite pelo menos 3 letras" autocomplete="off" />
+    </div>
   </div>
   <div class="campo-form">
-    <label for="f-partido">Partido (sigla)</label>
-    <input id="f-partido" name="partido" type="text" [(ngModel)]="partido" (ngModelChange)="aoDigitar()" placeholder="Ex.: PT, PL, MDB" maxlength="15" />
+    <label for="f-partido">Partido</label>
+    <input id="f-partido" name="partido" type="text" list="lista-partidos" [(ngModel)]="partido" (ngModelChange)="aoDigitar()" placeholder="Todos" maxlength="20" autocomplete="off" />
+    <datalist id="lista-partidos">
+      @for (s of partidos(); track s) { <option [value]="s"></option> }
+    </datalist>
   </div>
   <div class="campo-form">
-    <label for="f-uf">UF</label>
+    <label for="f-uf">Estado</label>
     <select id="f-uf" name="uf" [(ngModel)]="uf" (ngModelChange)="pesquisar()">
-      <option value="">Todas</option>
+      <option value="">Todos</option>
       @for (u of ufs; track u) {
         <option [value]="u">{{ u }}</option>
       }
     </select>
   </div>
-  <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar</button>
+  @if (temFiltro) {
+    <button class="botao botao-fantasma" type="button" (click)="limpar()"><app-icone nome="close" /> Limpar filtros</button>
+  }
 </form>
 
 <p class="status-lista" aria-live="polite">
   @if (carregando()) {
     Buscando...
   } @else if (!erro()) {
-    {{ resultados().length }} resultado(s)
+    {{ resultados().length }} {{ resultados().length === 1 ? 'deputado encontrado' : 'deputados encontrados' }}
   }
 </p>
 
@@ -36,24 +45,37 @@
   <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
 }
 
-<ul class="grade-cards">
+<ul class="grade-politicos">
+  @if (carregando() && !resultados().length) {
+    @for (e of esqueletos; track $index) {
+      <li class="card card-politico" aria-hidden="true">
+        <span class="esqueleto esqueleto-foto-p"></span>
+        <span class="esqueleto-linhas"><span class="esqueleto" style="width: 70%"></span><span class="esqueleto" style="width: 40%"></span></span>
+      </li>
+    }
+  }
   @for (p of resultados(); track p.id) {
     <li>
       <a [routerLink]="['/politicos', p.id]" class="card card-politico">
-        <app-avatar [nome]="p.nome" [url]="p.foto_url" [tamanho]="64" />
-        <span>
+        <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="64" />
+        <span class="card-politico-texto">
           <strong>{{ p.nome }}</strong>
+          <span class="card-politico-partido">{{ p.partido || 'Partido n/d' }} · {{ p.uf || 'UF n/d' }}</span>
           <small>{{ p.cargo || 'Deputado(a) Federal' }}</small>
-          <span class="etiquetas">
-            <span class="etiqueta">{{ p.partido || 'partido n/d' }}</span>
-            <span class="etiqueta">{{ p.uf || 'UF n/d' }}</span>
-          </span>
         </span>
+        <app-icone nome="chevron_right" class="card-politico-seta" />
       </a>
     </li>
   } @empty {
     @if (!carregando() && !erro()) {
-      <li class="card vazio">Nenhum político encontrado com esses filtros.</li>
+      <li class="card vazio">
+        <app-icone nome="person_search" />
+        <strong>Nenhum deputado encontrado</strong>
+        <span>Confira a grafia do nome ou remova algum filtro.</span>
+        @if (temFiltro) { <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar filtros</button> }
+      </li>
     }
   }
 </ul>
+
+<p class="nota-fontes"><app-icone nome="verified" /> Dados da <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener noreferrer">API de Dados Abertos da Câmara dos Deputados</a></p>

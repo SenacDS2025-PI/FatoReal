@@ -5,7 +5,6 @@ import { AuthService } from './core/auth.service';
 import { AvisosService } from './core/avisos.service';
 import { MensagensService } from './core/mensagens.service';
 import { NotificacoesService } from './core/notificacoes.service';
-import { ProgressoService } from './core/progresso.service';
 import { TemaService } from './core/tema.service';
 import { tempoAtras } from './core/util';
 import { Avatar, AvisoDemo, Icone } from './shared/componentes';
@@ -22,7 +21,6 @@ export class App {
   protected auth = inject(AuthService);
   protected avisos = inject(AvisosService);
   protected tema = inject(TemaService);
-  protected progresso = inject(ProgressoService);
   protected notificacoes = inject(NotificacoesService);
   protected mensagens = inject(MensagensService);
   private router = inject(Router);
@@ -32,16 +30,16 @@ export class App {
   protected readonly tempo = tempoAtras;
   protected readonly iconesNotif = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail' };
 
-  protected readonly menu: { rota: string; cor: string; icone: string; texto: string; exato?: boolean; contador?: Contador }[] = [
-    { rota: '/', cor: '#00c27a', icone: 'home', texto: 'Início', exato: true },
-    { rota: '/noticias', cor: '#1e6bff', icone: 'newspaper', texto: 'Notícias' },
-    { rota: '/politicos', cor: '#7c4dff', icone: 'person', texto: 'Candidatos' },
-    { rota: '/base-da-politica', cor: '#ffb000', icone: 'school', texto: 'Base da Política' },
-    { rota: '/comunidades', cor: '#ff7a1a', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
-    { rota: '/fatobot', cor: '#00b8d9', icone: 'smart_toy', texto: 'IA FatoBot' },
-    { rota: '/verificar', cor: '#00c27a', icone: 'fact_check', texto: 'Verificar Informação' },
-    { rota: '/mensagens', cor: '#ff3d7f', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
-    { rota: '/perfil', cor: '#1e6bff', icone: 'account_circle', texto: 'Meu Perfil' },
+  protected readonly menu: { rota: string; icone: string; texto: string; exato?: boolean; contador?: Contador }[] = [
+    { rota: '/', icone: 'home', texto: 'Início', exato: true },
+    { rota: '/noticias', icone: 'newspaper', texto: 'Notícias' },
+    { rota: '/politicos', icone: 'person', texto: 'Candidatos' },
+    { rota: '/base-da-politica', icone: 'school', texto: 'Base da Política' },
+    { rota: '/comunidades', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
+    { rota: '/fatobot', icone: 'smart_toy', texto: 'IA FatoBot' },
+    { rota: '/verificar', icone: 'fact_check', texto: 'Verificar Informação' },
+    { rota: '/mensagens', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
+    { rota: '/perfil', icone: 'account_circle', texto: 'Meu Perfil' },
   ];
 
   protected readonly abas = [
