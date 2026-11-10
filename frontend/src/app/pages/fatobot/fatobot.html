@@ -1,0 +1,51 @@
+<header class="fatobot-topo">
+  <img src="img/fatobot-rosto.svg" alt="" />
+  <div>
+    <h1>FatoBot</h1>
+    <p>Pergunte sobre política, instituições e os políticos do nosso conjunto de dados. Respondo só com base em fontes e mostro as referências.</p>
+  </div>
+</header>
+
+<section class="card chat" aria-label="Conversa com o FatoBot">
+  <ol class="chat-mensagens" aria-live="polite">
+    @for (m of mensagens(); track $index) {
+      <li class="msg" [class.msg-voce]="m.autor === 'voce'">
+        <span class="msg-autor">{{ m.autor === 'voce' ? 'Você' : 'FatoBot' }}</span>
+        <p>{{ m.texto }}</p>
+        @if (m.resposta; as r) {
+          @if (r.sem_evidencia) {
+            <p class="sem-evidencia"><app-icone nome="help" /> Sem evidência suficiente nas fontes consultadas.</p>
+          }
+          @if (r.fontes.length) {
+            <div class="msg-fontes">
+              <strong>Fontes</strong>
+              @for (f of r.fontes; track f.url) {
+                <app-fonte [fonte]="f" rotulo="data" />
+              }
+            </div>
+          }
+          <small class="texto-suave">Consultado em {{ r.consultado_em | date: 'dd/MM/yyyy HH:mm' }}</small>
+          <app-aviso-ia />
+        }
+      </li>
+    } @empty {
+      <li class="chat-vazio">
+        <p>Experimente perguntar:</p>
+        <div class="sugestoes">
+          @for (s of sugestoes; track s) {
+            <button type="button" class="chip" (click)="enviar(s)">{{ s }}</button>
+          }
+        </div>
+      </li>
+    }
+    @if (pensando()) {
+      <li class="msg"><span class="msg-autor">FatoBot</span><p>Consultando as fontes...</p></li>
+    }
+  </ol>
+
+  <form class="chat-form" (submit)="$event.preventDefault(); enviar()">
+    <label for="pergunta" class="sr-only">Sua pergunta</label>
+    <input id="pergunta" name="pergunta" [(ngModel)]="pergunta" placeholder="Digite sua pergunta" maxlength="500" autocomplete="off" />
+    <button class="botao" type="submit" [disabled]="pensando()">Enviar</button>
+  </form>
+</section>

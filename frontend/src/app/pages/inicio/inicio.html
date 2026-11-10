@@ -1,0 +1,165 @@
+<div class="layout-inicio">
+  <div class="coluna-central">
+    <!-- Categorias -->
+    <div class="chips" role="tablist" aria-label="Filtrar publicações por tema">
+      <button type="button" role="tab" class="chip" [class.ativo]="categoria() === 'Em Alta'" [attr.aria-selected]="categoria() === 'Em Alta'" (click)="categoria.set('Em Alta')">
+        <app-icone nome="local_fire_department" class="fogo" /> Em Alta
+      </button>
+      @for (c of categorias; track c) {
+        <button type="button" role="tab" class="chip" [class.ativo]="categoria() === c" [attr.aria-selected]="categoria() === c" (click)="categoria.set(c)">{{ c }}</button>
+      }
+      <a routerLink="/comunidades" class="chip"><app-icone nome="add" /> Mais</a>
+    </div>
+
+    <!-- Destaque (carrossel) -->
+    <section class="destaque" aria-roledescription="carrossel" aria-label="Destaques">
+      @for (d of destaques; track d.tag; let i = $index) {
+        <article class="destaque-slide" [class.ativo]="slide() === i" [attr.aria-hidden]="slide() !== i">
+          <img [src]="d.imagem" alt="" />
+          <span class="tag-verde destaque-tag">{{ d.tag }}</span>
+          <div class="destaque-conteudo">
+            <h1>{{ d.titulo }}</h1>
+            <p>{{ d.texto }}</p>
+            <a class="botao-vidro" [routerLink]="d.rota" [attr.tabindex]="slide() === i ? 0 : -1">{{ d.acao }} <app-icone nome="arrow_forward" /></a>
+          </div>
+        </article>
+      }
+      <button type="button" class="seta seta-esq" aria-label="Destaque anterior" (click)="mudarSlide(-1)"><app-icone nome="chevron_left" /></button>
+      <button type="button" class="seta seta-dir" aria-label="Próximo destaque" (click)="mudarSlide(1)"><app-icone nome="chevron_right" /></button>
+    </section>
+    <div class="pontos" role="tablist" aria-label="Escolher destaque">
+      @for (d of destaques; track d.tag; let i = $index) {
+        <button type="button" role="tab" [class.ativo]="slide() === i" [attr.aria-selected]="slide() === i" [attr.aria-label]="d.tag" (click)="slide.set(i)"></button>
+      }
+    </div>
+
+    <!-- Suas comunidades (celular) -->
+    <section class="suas-comunidades so-celular" aria-labelledby="titulo-suas">
+      <div class="secao-titulo">
+        <h2 id="titulo-suas">{{ minhas().length ? 'Suas comunidades' : 'Comunidades' }}</h2>
+        <a routerLink="/comunidades">Ver todas <app-icone nome="arrow_forward" /></a>
+      </div>
+      <ul>
+        @for (c of (minhas().length ? minhas() : destaquesComunidade()); track c.id) {
+          <li>
+            <a [routerLink]="['/comunidades', c.slug]" class="mini-comunidade">
+              @if (capaComunidade(c.slug); as capa) { <img [src]="capa" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+              <strong>{{ c.nome }}</strong>
+              <small><app-icone nome="group" /> {{ c.total_membros }}</small>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Nova publicação -->
+    <section class="card composer" aria-label="Nova publicação">
+      @if (auth.usuario(); as u) {
+        <form (submit)="$event.preventDefault(); publicar()">
+          <div class="composer-linha">
+            <app-avatar [nome]="u.nome" [url]="u.foto_url" [tamanho]="48" />
+            <label for="novo-post" class="sr-only">No que você está pensando?</label>
+            <textarea id="novo-post" name="texto" [(ngModel)]="texto" rows="1" maxlength="2000" placeholder="No que você está pensando?"></textarea>
+          </div>
+          @if (mostrarLink) {
+            <div class="composer-extra">
+              <label for="novo-link" class="sr-only">Link da fonte</label>
+              <input id="novo-link" name="link" type="url" [(ngModel)]="link" placeholder="https:// link da fonte" />
+            </div>
+          }
+          <div class="composer-acoes">
+            @if (minhas().length) {
+              <label for="nova-comunidade" class="sr-only">Publicar em</label>
+              <select id="nova-comunidade" name="comunidade" [(ngModel)]="comunidadeId" class="select-discreto">
+                @for (c of minhas(); track c.id) { <option [ngValue]="c.id">Em {{ c.nome }}</option> }
+              </select>
+            } @else {
+              <a routerLink="/comunidades" class="acao-composer"><app-icone nome="group_add" /> Participe de uma comunidade para publicar</a>
+            }
+            <button type="button" class="acao-composer" (click)="mostrarLink = !mostrarLink" [attr.aria-pressed]="mostrarLink">
+              <app-icone nome="link" class="azul" /> Compartilhar link
+            </button>
+            <button type="submit" class="botao botao-escuro" [disabled]="!texto.trim() || !minhas().length || publicando()">Publicar</button>
+          </div>
+        </form>
+      } @else {
+        <div class="composer-linha">
+          <span class="avatar" style="--tam: 48px"><app-icone nome="person" /></span>
+          <a routerLink="/entrar" class="composer-falso">No que você está pensando? Entre para participar.</a>
+        </div>
+      }
+    </section>
+
+    <!-- Feed -->
+    <h2 class="sr-only">Publicações das comunidades</h2>
+    <div class="feed">
+      @for (p of feed(); track p.id) {
+        <app-publicacao [pub]="p" [mostrarComunidade]="true" (mudou)="recarregarFeed()" />
+      } @empty {
+        <div class="card vazio">
+          <app-icone nome="forum" />
+          <p>Ainda não há publicações em <strong>{{ categoria() }}</strong>.</p>
+          <a routerLink="/comunidades" class="botao">Explorar comunidades</a>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ===== Coluna da direita ===== -->
+  <aside class="coluna-direita" aria-label="Descobrir">
+    <section class="card bloco">
+      <h2><app-icone nome="workspace_premium" class="coroa" /> Comunidades em destaque</h2>
+      <ul class="lista-destaques">
+        @for (c of destaquesComunidade(); track c.id) {
+          <li>
+            <a [routerLink]="['/comunidades', c.slug]" class="destaque-com">
+              @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+              <span><strong>{{ c.nome }}</strong><small>{{ c.total_membros }} membro(s)</small></span>
+            </a>
+            @if (idsMinhas().has(c.id)) {
+              <span class="participando"><app-icone nome="check" /> Membro</span>
+            } @else {
+              <button type="button" class="botao-participar" (click)="participar(c)"><app-icone nome="add" /> Participar</button>
+            }
+          </li>
+        }
+      </ul>
+      <a routerLink="/comunidades" class="ver-todas">Ver todas as comunidades <app-icone nome="arrow_forward" /></a>
+    </section>
+
+    <section class="card-ia">
+      <h2><img src="logo.svg" alt="" width="22" height="22" /> Pergunte para a IA</h2>
+      <div class="card-ia-corpo">
+        <img src="img/fatobot.svg" alt="Ilustração do FatoBot, o robô assistente" class="robo" />
+        <p class="balao">Tire suas dúvidas sobre política, leis e candidatos!</p>
+      </div>
+      <a routerLink="/fatobot" class="botao botao-verde botao-bloco">Conversar agora <app-icone nome="arrow_forward" /></a>
+    </section>
+
+    <section class="card bloco">
+      <h2><app-icone nome="trending_up" class="tendencia" /> Assuntos em alta</h2>
+      <ol class="lista-assuntos">
+        @for (a of assuntos(); track a[0]; let i = $index) {
+          <li>
+            <span class="posicao" [class.primeiro]="i === 0">{{ i + 1 }}</span>
+            <button type="button" (click)="categoria.set(a[0])">
+              <strong>{{ a[0] }}</strong>
+              <small>{{ a[1] }} publicação(ões) recentes</small>
+            </button>
+            <app-icone nome="arrow_upward" class="sobe" />
+          </li>
+        } @empty {
+          <li class="texto-suave">Os temas aparecem aqui conforme as comunidades publicam.</li>
+        }
+      </ol>
+    </section>
+
+    <p class="nota-fontes">
+      <app-icone nome="verified" /> Dados oficiais com fonte e data. A IA pode errar.
+      <a routerLink="/sobre">Como funciona</a>
+    </p>
+  </aside>
+</div>
+
+<!-- Botão flutuante (celular) -->
+<button type="button" class="fab so-celular" aria-label="Nova publicação" (click)="focarComposer()"><app-icone nome="add" /></button>

@@ -1,0 +1,108 @@
+@if (carregando()) {
+  <p class="card">Carregando comunidade...</p>
+} @else if (comunidade(); as c) {
+  <header class="comunidade-cabecalho">
+    <div class="comunidade-capa">
+      @if (capaComunidade(c.slug); as capa) { <img [src]="capa" alt="" /> }
+    </div>
+    <div class="comunidade-info">
+      @if (avatarComunidade(c.slug); as img) {
+        <img [src]="img" alt="" class="comunidade-avatar" />
+      } @else {
+        <span class="comunidade-avatar capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span>
+      }
+      <div class="comunidade-textos">
+        <a routerLink="/comunidades" class="link-voltar"><app-icone nome="arrow_back" /> Comunidades</a>
+        <h1>{{ c.nome }}</h1>
+        <p>{{ c.descricao }}</p>
+        <small class="texto-suave"><span class="tag-verde tag-p">{{ c.tema }}</span> {{ c.total_membros }} membro(s) · comunidade aberta</small>
+      </div>
+      <button class="botao" [class.botao-verde]="!membro()" [class.botao-fantasma]="membro()" type="button" (click)="alternarMembro()">
+        <app-icone [nome]="membro() ? 'check' : 'add'" /> {{ membro() ? 'Participando' : 'Participar' }}
+      </button>
+    </div>
+    <div class="abas" role="tablist" aria-label="Seções da comunidade">
+      <button role="tab" type="button" [attr.aria-selected]="aba() === 'mural'" (click)="aba.set('mural')">Mural</button>
+      <button role="tab" type="button" [attr.aria-selected]="aba() === 'regras'" (click)="aba.set('regras')">Regras</button>
+      <button role="tab" type="button" [attr.aria-selected]="aba() === 'membros'" (click)="aba.set('membros')">Membros ({{ membros().length }})</button>
+    </div>
+  </header>
+
+  <div class="layout-comunidade">
+    <div class="coluna-central">
+      @switch (aba()) {
+        @case ('mural') {
+          @if (membro() && auth.usuario(); as u) {
+            <form class="card composer" (submit)="$event.preventDefault(); publicar()">
+              <div class="composer-linha">
+                <app-avatar [nome]="u.nome" [url]="u.foto_url" [tamanho]="48" />
+                <label for="pub-texto" class="sr-only">Escreva no mural</label>
+                <textarea id="pub-texto" name="texto" [(ngModel)]="novoTexto" rows="2" maxlength="2000" placeholder="Escreva no mural. Se for um fato, cite a fonte."></textarea>
+              </div>
+              @if (mostrarLink) {
+                <div class="composer-extra">
+                  <label for="pub-link" class="sr-only">Link da fonte</label>
+                  <input id="pub-link" name="link" [(ngModel)]="novoLink" type="url" placeholder="https:// link da fonte" />
+                </div>
+              }
+              <div class="composer-acoes">
+                <button type="button" class="acao-composer" (click)="mostrarLink = !mostrarLink"><app-icone nome="link" class="azul" /> Compartilhar link</button>
+                <button class="botao botao-escuro" type="submit" [disabled]="!novoTexto.trim()">Publicar</button>
+              </div>
+            </form>
+          } @else {
+            <div class="card aviso-participar">
+              <app-icone nome="group_add" />
+              <p>Participe da comunidade para publicar e comentar no mural.</p>
+              <button class="botao botao-verde" type="button" (click)="alternarMembro()">Participar</button>
+            </div>
+          }
+          <div class="feed">
+            @for (p of mural(); track p.id) {
+              <app-publicacao [pub]="p" (mudou)="recarregar()" />
+            } @empty {
+              <div class="card vazio"><app-icone nome="forum" /><p>O mural está vazio. Que tal a primeira publicação?</p></div>
+            }
+          </div>
+        }
+        @case ('regras') {
+          <section class="card">
+            <h2>Regras desta comunidade</h2>
+            <p class="pre-linha">{{ c.regras }}</p>
+            <p class="texto-suave">Também valem as <a routerLink="/regras">regras gerais do Fato Real</a>. Opinião não é desinformação.</p>
+          </section>
+        }
+        @case ('membros') {
+          <ul class="card lista-membros">
+            @for (m of membros(); track m.id) {
+              <li>
+                <app-avatar [nome]="m.nome" [url]="m.foto_url" [tamanho]="40" />
+                <span>{{ m.nome }}</span>
+                @if (m.papel === 'moderador') { <span class="etiqueta etiqueta-verde">moderador</span> }
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+
+    <aside class="coluna-direita">
+      <section class="card bloco">
+        <h2><app-icone nome="gavel" /> Regras</h2>
+        <p class="pre-linha texto-p">{{ c.regras }}</p>
+        <a routerLink="/regras" class="ver-todas">Regras gerais do Fato Real <app-icone nome="arrow_forward" /></a>
+      </section>
+      <section class="card bloco">
+        <h2><app-icone nome="group" /> Membros</h2>
+        <div class="avatares">
+          @for (m of membros().slice(0, 8); track m.id) {
+            <app-avatar [nome]="m.nome" [url]="m.foto_url" [tamanho]="36" />
+          }
+        </div>
+        <small class="texto-suave">{{ c.total_membros }} pessoa(s) participam</small>
+      </section>
+    </aside>
+  </div>
+} @else {
+  <div class="card vazio"><h1>Comunidade não encontrada</h1><a routerLink="/comunidades" class="botao">Ver comunidades</a></div>
+}

@@ -1,0 +1,59 @@
+<header class="cabecalho-pagina">
+  <h1>Pesquisar políticos</h1>
+  <p>Deputados federais com dados da Câmara dos Deputados. Busque por nome, partido ou estado.</p>
+</header>
+
+<form class="card filtros" role="search" (submit)="$event.preventDefault(); pesquisar()">
+  <div class="campo-form campo-largo">
+    <label for="f-nome">Nome</label>
+    <input id="f-nome" name="termo" type="search" [(ngModel)]="termo" (ngModelChange)="aoDigitar()" placeholder="Digite um nome" autocomplete="off" />
+  </div>
+  <div class="campo-form">
+    <label for="f-partido">Partido (sigla)</label>
+    <input id="f-partido" name="partido" type="text" [(ngModel)]="partido" (ngModelChange)="aoDigitar()" placeholder="Ex.: PT, PL, MDB" maxlength="15" />
+  </div>
+  <div class="campo-form">
+    <label for="f-uf">UF</label>
+    <select id="f-uf" name="uf" [(ngModel)]="uf" (ngModelChange)="pesquisar()">
+      <option value="">Todas</option>
+      @for (u of ufs; track u) {
+        <option [value]="u">{{ u }}</option>
+      }
+    </select>
+  </div>
+  <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar</button>
+</form>
+
+<p class="status-lista" aria-live="polite">
+  @if (carregando()) {
+    Buscando...
+  } @else if (!erro()) {
+    {{ resultados().length }} resultado(s)
+  }
+</p>
+
+@if (erro()) {
+  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
+}
+
+<ul class="grade-cards">
+  @for (p of resultados(); track p.id) {
+    <li>
+      <a [routerLink]="['/politicos', p.id]" class="card card-politico">
+        <app-avatar [nome]="p.nome" [url]="p.foto_url" [tamanho]="64" />
+        <span>
+          <strong>{{ p.nome }}</strong>
+          <small>{{ p.cargo || 'Deputado(a) Federal' }}</small>
+          <span class="etiquetas">
+            <span class="etiqueta">{{ p.partido || 'partido n/d' }}</span>
+            <span class="etiqueta">{{ p.uf || 'UF n/d' }}</span>
+          </span>
+        </span>
+      </a>
+    </li>
+  } @empty {
+    @if (!carregando() && !erro()) {
+      <li class="card vazio">Nenhum político encontrado com esses filtros.</li>
+    }
+  }
+</ul>

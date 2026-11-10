@@ -1,0 +1,56 @@
+<a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para a busca</a>
+
+@if (carregando()) {
+  <p class="card">Carregando perfil...</p>
+} @else if (erro()) {
+  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
+} @else if (politico(); as p) {
+  <article class="perfil">
+    <header class="card perfil-topo">
+      <app-avatar [nome]="p.nome" [url]="p.foto_url" [tamanho]="120" />
+      <div>
+        <h1>{{ p.nome }}</h1>
+        <p class="texto-suave">{{ p.cargo || 'Deputado(a) Federal' }}</p>
+        <div class="etiquetas">
+          <span class="etiqueta">{{ p.partido || 'partido não disponível' }}</span>
+          <span class="etiqueta">{{ p.uf || 'UF não disponível' }}</span>
+          @if (p.situacao) { <span class="etiqueta etiqueta-verde">{{ p.situacao }}</span> }
+        </div>
+        @if (fonte(); as f) { <app-fonte [fonte]="f" /> }
+      </div>
+    </header>
+
+    <div class="grade-2">
+      <section class="card">
+        <h2>Dados públicos</h2>
+        <dl class="lista-campos">
+          <app-campo rotulo="Nome civil" [valor]="p.nome_civil" />
+          <app-campo rotulo="Partido" [valor]="p.partido" />
+          <app-campo rotulo="Estado (UF)" [valor]="p.uf" />
+          <app-campo rotulo="Escolaridade" [valor]="p.escolaridade" />
+          <app-campo rotulo="Data de nascimento" [valor]="p.data_nascimento ? (p.data_nascimento | date: 'dd/MM/yyyy') : null" />
+          <app-campo rotulo="Naturalidade" [valor]="p.municipio_nascimento" />
+          <app-campo rotulo="E-mail do gabinete" [valor]="p.email" />
+        </dl>
+        @if (fonte(); as f) { <app-fonte [fonte]="f" /> }
+      </section>
+
+      <section class="card">
+        <h2>Atuação e votações</h2>
+        <p>Projetos, votações e discursos ficam no site oficial da Câmara.</p>
+        <ul class="lista-links">
+          <li><a [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Página oficial na Câmara</a></li>
+          <li><a [href]="'https://dadosabertos.camara.leg.br/api/v2/deputados/' + p.id" target="_blank" rel="noopener noreferrer"><app-icone nome="data_object" /> Dados brutos (API de Dados Abertos)</a></li>
+        </ul>
+        <a class="botao botao-destaque" [routerLink]="['/fatobot']" [queryParams]="{ p: perguntaIa() }">
+          <app-icone nome="smart_toy" /> Perguntar ao FatoBot
+        </a>
+      </section>
+    </div>
+  </article>
+} @else {
+  <div class="card vazio">
+    <h1>Perfil não encontrado</h1>
+    <p>Esse político não está no nosso conjunto de dados.</p>
+  </div>
+}
