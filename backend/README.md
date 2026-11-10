@@ -94,16 +94,16 @@ Responde **somente com base em fontes oficiais** (RN02 e RN04), em duas etapas:
 
 1. **Busca de evidências:** identifica deputados citados pelo nome parlamentar completo e
    transforma o perfil em fatos numerados, cada um com fonte e data.
-2. **Síntese com o Claude (IA):** o Claude recebe **só** essas evidências e escreve uma resposta
+2. **Síntese com o Gemini (IA):** o Gemini recebe **só** essas evidências e escreve uma resposta
    curta e neutra, citando cada fato como `[1]`, `[2]`... O número aponta para `evidencias[n-1]`.
 
-**Travas anti-alucinação** — o backend descarta a resposta do Claude e mostra só a lista
+**Travas anti-alucinação** — o backend descarta a resposta do Gemini e mostra só a lista
 de fatos (`modo: "somente_fontes"`) quando:
 - a resposta não tem citação ou cita uma evidência que não existe;
-- o Claude diz que as evidências não bastam;
-- a API do Claude recusa, falha ou a chave não está configurada.
+- o Gemini diz que as evidências não bastam;
+- a API do Gemini bloqueia, falha ou a chave não está configurada.
 
-Se a pergunta não cita nenhum deputado, o Claude **nem é chamado**: a resposta é
+Se a pergunta não cita nenhum deputado, o Gemini **nem é chamado**: a resposta é
 "não encontrei evidência".
 
 ```json
@@ -119,17 +119,15 @@ Se a pergunta não cita nenhum deputado, o Claude **nem é chamado**: a resposta
 ```
 
 - `tipo`: `fontes_encontradas` ou `sem_evidencia`.
-- `modo`: `ia_com_fontes` (resposta do Claude) ou `somente_fontes` (lista de fatos, sem IA).
+- `modo`: `ia_com_fontes` (resposta do Gemini) ou `somente_fontes` (lista de fatos, sem IA).
 - O front deve **sempre** mostrar o `aviso` e os links de `fontes`, e pode transformar `[n]`
   em link para `evidencias[n-1].url`.
 
-#### Configurar o Claude
+#### Configurar o Gemini
 
-1. Crie uma chave em https://console.anthropic.com (menu *API Keys*). A API é paga por uso:
-   coloque um limite de gastos no console.
-2. Coloque a chave em `ANTHROPIC_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
+1. Entre em https://aistudio.google.com/apikey com uma conta Google e clique em **Create API key**.
+2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
    **Nunca** no código nem no Angular.
-3. O modelo padrão é `claude-opus-5-5`. Para trocar, defina `CLAUDE_MODEL`
-   (ex.: `claude-haiku-5-5`, bem mais barato).
+3. O modelo padrão é `gemini-3.8-flash`. Para trocar, defina `GEMINI_MODEL`.
 
-Código: `src/services/claude.js` (chamada ao Claude) e `src/services/fatobot.js` (pipeline).
+Código: `src/services/gemini.js` (chamada ao Gemini) e `src/services/fatobot.js` (pipeline).

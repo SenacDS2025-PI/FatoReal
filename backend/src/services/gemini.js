@@ -1,10 +1,10 @@
-// Etapa 4 do FatoBot: síntese com o Claude (Anthropic), restrita às evidências.
+// Etapa 4 do FatoBot: síntese com o Gemini (Google), restrita às evidências.
 //
-// A chave fica SÓ no servidor, na variável de ambiente ANTHROPIC_API_KEY.
+// A chave fica SÓ no servidor, na variável de ambiente GEMINI_API_KEY.
 // Sem chave, esta função devolve null e o FatoBot continua no modo "somente_fontes".
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI, ApiError } from '@google/genai';
 
-export const MODELO_PADRAO = 'claude-opus-5-5';
+export const MODELO_PADRAO = 'gemini-3.8-flash';
 const SEM_EVIDENCIA = 'SEM_EVIDENCIA';
 
 const SYSTEM = `Você é o FatoBot, assistente da plataforma cívica FATO REAL.
@@ -19,7 +19,7 @@ Regras obrigatórias:
 
 let client;
 function getClient() {
-  client ??= new Anthropic(); // lê ANTHROPIC_API_KEY do ambiente
+  client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   return client;
 }
 
@@ -29,7 +29,7 @@ export function _setClient(fake) {
 }
 
 export function iaConfigurada() {
-  return Boolean(process.env.ANTHROPIC_API_KEY) || Boolean(client);
+  return Boolean(process.env.GEMINI_API_KEY) || Boolean(client);
 }
 
 function montarMensagem(pergunta, evidencias) {
@@ -48,37 +48,28 @@ export function citacoesValidas(texto, total) {
 /**
  * Retorna { texto, citadas, modelo } ou null quando:
  * - não há chave configurada;
- * - o Claude disse que as evidências não bastam;
+ * - o Gemini disse que as evidências não bastam;
  * - a resposta veio sem citações válidas (trava anti-alucinação);
- * - houve recusa ou erro na API (o FatoBot cai para o modo "somente_fontes").
+ * - houve bloqueio de segurança ou erro na API (o FatoBot cai para "somente_fontes").
  */
-export async function sintetizarComClaude(pergunta, evidencias) {
+export async function sintetizarComIA(pergunta, evidencias) {
   if (!iaConfigurada() || evidencias.length === 0) return null;
 
+  const modelo = process.env.GEMINI_MODEL || MODELO_PADRAO;
+
   try {
-    const response = await getClient().beta.messages.create({
-      model: process.env.CLAUDE_MODEL || MODELO_PADRAO,
-      max_tokens: 16000,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: montarMensagem(pergunta, evidencias) }],
-      output_config: { effort: 'medium' },
-      // Se o modelo recusar por política de segurança, a API tenta de novo em
-      // um modelo substituto definido pela Anthropic, na mesma chamada.
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
+    const response = await getClient().models.generateContent({
+      model: modelo,
+      contents: montarMensagem(pergunta, evidencias),
+      config: { systemInstruction: SYSTEM },
     });
 
-    if (response.stop_reason === 'refusal') {
-      console.warn('FatoBot: o Claude recusou a pergunta', response.stop_details?.category);
+    if (response.promptFeedback?.blockReason) {
+      console.warn('FatoBot: o Gemini bloqueou a pergunta', response.promptFeedback.blockReason);
       return null;
     }
 
-    const texto = response.content
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('')
-      .trim();
-
+    const texto = (response.text ?? '').trim();
     if (!texto || texto.includes(SEM_EVIDENCIA)) return null;
     if (!citacoesValidas(texto, evidencias.length)) {
       console.warn('FatoBot: resposta descartada por citações inválidas');
@@ -86,16 +77,18 @@ export async function sintetizarComClaude(pergunta, evidencias) {
     }
 
     const citadas = [...new Set([...texto.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1])))];
-    return { texto, citadas, modelo: response.model };
+    return { texto, citadas, modelo };
   } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) {
-      console.error('FatoBot: ANTHROPIC_API_KEY inválida');
-    } else if (err instanceof Anthropic.RateLimitError) {
-      console.error('FatoBot: limite de uso da API do Claude atingido');
-    } else if (err instanceof Anthropic.APIError) {
-      console.error(`FatoBot: erro ${err.status} na API do Claude`);
+    if (err instanceof ApiError) {
+      if (err.status === 400 || err.status === 403) {
+        console.error(`FatoBot: GEMINI_API_KEY ou modelo inválido (erro ${err.status})`);
+      } else if (err.status === 429) {
+        console.error('FatoBot: limite de uso da API do Gemini atingido');
+      } else {
+        console.error(`FatoBot: erro ${err.status} na API do Gemini`);
+      }
     } else {
-      console.error('FatoBot: falha ao chamar o Claude', err.message);
+      console.error('FatoBot: falha ao chamar o Gemini', err.message);
     }
     return null;
   }

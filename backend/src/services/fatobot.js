@@ -4,12 +4,12 @@
 //   1. Pergunta  →  2. Busca documental  →  3. Filtro de evidência
 //   →  4. Síntese  →  5. Exibição com fontes e aviso
 //
-// A etapa 4 usa o Claude (src/services/claude.js), que recebe APENAS as evidências
-// encontradas e precisa citá-las. Se a chave não estiver configurada, se o Claude
+// A etapa 4 usa o Gemini (src/services/gemini.js), que recebe APENAS as evidências
+// encontradas e precisa citá-las. Se a chave não estiver configurada, se o Gemini
 // disser que as evidências não bastam ou se a resposta vier sem citações válidas,
 // o FatoBot responde no modo "somente_fontes": só a lista de fatos, sem IA.
 import { listarDeputados, obterDeputado } from './camara.js';
-import { sintetizarComClaude } from './claude.js';
+import { sintetizarComIA } from './gemini.js';
 import { normalizar } from '../utils/texto.js';
 
 export const AVISO =
@@ -92,7 +92,7 @@ export async function responder(pergunta) {
     consultadoEm: e.consultadoEm,
   }));
 
-  const sintese = await sintetizarComClaude(pergunta, evidencias);
+  const sintese = await sintetizarComIA(pergunta, evidencias);
 
   return {
     pergunta,
