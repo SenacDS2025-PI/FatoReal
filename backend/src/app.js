@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import healthRouter from './routes/health.js';
 import deputadosRouter from './routes/deputados.js';
+import fatobotRouter from './routes/fatobot.js';
 import { CamaraError } from './services/camara.js';
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.json({ limit: '100kb' }));
 
 app.use('/api/health', healthRouter);
 app.use('/api/deputados', deputadosRouter);
+app.use('/api/fatobot', fatobotRouter);
 
 // Rota não encontrada
 app.use('/api', (req, res) => {

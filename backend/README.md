@@ -82,9 +82,34 @@ Erros: `400` ID inválido · `404` deputado não encontrado · `502` a Câmara n
 
 Ela é instável (às vezes demora mais de 15s ou responde 504). Por isso o backend tem:
 limite de 10s por chamada, uma nova tentativa automática e cache em memória
-(lista: 6h, perfil: 1h). O próximo passo é salvar esses dados no Supabase para não depender
+(lista: 6h, perfil: 1h). Se a Câmara cair, a API devolve a última resposta boa que tinha
+(com a data original da consulta). O próximo passo é salvar esses dados no Supabase para não depender
 da Câmara a cada acesso.
 
-## Próximas rotas (MVP)
+### `POST /api/fatobot`
 
-- `POST /api/fatobot` — pergunta ao FatoBot; responde com referências ou "não encontrei evidência"
+Corpo: `{ "pergunta": "Quem é Tabata Amaral?" }` (3 a 500 caracteres).
+
+Responde **somente com base em fontes oficiais** (RN02 e RN04). Hoje identifica deputados
+citados pelo nome parlamentar completo e devolve os fatos do perfil, cada um com fonte e data.
+Se não achar nada, responde que **não encontrou evidência**, sem inventar.
+
+```json
+{
+  "pergunta": "Quem é Tabata Amaral?",
+  "tipo": "fontes_encontradas",
+  "modo": "somente_fontes",
+  "resposta": "Encontrei estas informações nas fontes oficiais:\n• Tabata Amaral é deputado(a) federal pelo PSB-SP.\n• ...",
+  "evidencias": [{ "texto": "...", "fonte": "Dados Abertos da Câmara dos Deputados", "url": "https://...", "consultadoEm": "..." }],
+  "fontes": [{ "nome": "...", "url": "https://...", "consultadoEm": "..." }],
+  "aviso": "O FatoBot pode errar. Confira sempre as fontes oficiais. Não encontrar evidência não significa que a informação é falsa."
+}
+```
+
+- `tipo`: `fontes_encontradas` ou `sem_evidencia`.
+- `modo`: `somente_fontes` (sem IA, hoje) ou `ia_com_fontes` (quando a IA for ligada).
+- O front deve **sempre** mostrar o `aviso` e os links de `fontes`.
+
+**Pendente (decisão do grupo):** qual IA usar para a etapa de síntese. Ela vai entrar em
+`sintetizarComIA` (`src/services/fatobot.js`) recebendo **apenas** as evidências encontradas,
+e a chave fica só no `.env` do servidor.
