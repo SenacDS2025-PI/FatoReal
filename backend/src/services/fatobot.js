@@ -4,11 +4,12 @@
 //   1. Pergunta  →  2. Busca documental  →  3. Filtro de evidência
 //   →  4. Síntese  →  5. Exibição com fontes e aviso
 //
-// Hoje roda no modo "somente_fontes": a etapa 4 (síntese com IA) ainda não existe,
-// porque o grupo não escolheu o provedor de IA. A resposta é montada só com os fatos
-// encontrados, então não há como inventar informação. Quando a IA for escolhida,
-// ela entra em `sintetizarComIA`, recebendo apenas as evidências desta etapa.
+// A etapa 4 usa o Claude (src/services/claude.js), que recebe APENAS as evidências
+// encontradas e precisa citá-las. Se a chave não estiver configurada, se o Claude
+// disser que as evidências não bastam ou se a resposta vier sem citações válidas,
+// o FatoBot responde no modo "somente_fontes": só a lista de fatos, sem IA.
 import { listarDeputados, obterDeputado } from './camara.js';
+import { sintetizarComClaude } from './claude.js';
 import { normalizar } from '../utils/texto.js';
 
 export const AVISO =
@@ -63,12 +64,6 @@ export function evidenciasDoPerfil({ dados: p, fonte }) {
   return evidencias;
 }
 
-// Etapa 4 (futura): síntese com IA, restrita às evidências recebidas.
-// Retorna null enquanto nenhum provedor estiver configurado.
-async function sintetizarComIA(/* pergunta, evidencias */) {
-  return null;
-}
-
 export async function responder(pergunta) {
   const deputados = await identificarDeputados(pergunta);
 
@@ -97,14 +92,14 @@ export async function responder(pergunta) {
     consultadoEm: e.consultadoEm,
   }));
 
-  const sintese = await sintetizarComIA(pergunta, evidencias);
+  const sintese = await sintetizarComClaude(pergunta, evidencias);
 
   return {
     pergunta,
     tipo: 'fontes_encontradas',
     modo: sintese ? 'ia_com_fontes' : 'somente_fontes',
     resposta:
-      sintese ??
+      sintese?.texto ??
       'Encontrei estas informações nas fontes oficiais:\n' +
         evidencias.map((e) => `• ${e.texto}`).join('\n'),
     evidencias,

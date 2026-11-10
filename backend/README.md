@@ -90,16 +90,28 @@ da Câmara a cada acesso.
 
 Corpo: `{ "pergunta": "Quem é Tabata Amaral?" }` (3 a 500 caracteres).
 
-Responde **somente com base em fontes oficiais** (RN02 e RN04). Hoje identifica deputados
-citados pelo nome parlamentar completo e devolve os fatos do perfil, cada um com fonte e data.
-Se não achar nada, responde que **não encontrou evidência**, sem inventar.
+Responde **somente com base em fontes oficiais** (RN02 e RN04), em duas etapas:
+
+1. **Busca de evidências:** identifica deputados citados pelo nome parlamentar completo e
+   transforma o perfil em fatos numerados, cada um com fonte e data.
+2. **Síntese com o Claude (IA):** o Claude recebe **só** essas evidências e escreve uma resposta
+   curta e neutra, citando cada fato como `[1]`, `[2]`... O número aponta para `evidencias[n-1]`.
+
+**Travas anti-alucinação** — o backend descarta a resposta do Claude e mostra só a lista
+de fatos (`modo: "somente_fontes"`) quando:
+- a resposta não tem citação ou cita uma evidência que não existe;
+- o Claude diz que as evidências não bastam;
+- a API do Claude recusa, falha ou a chave não está configurada.
+
+Se a pergunta não cita nenhum deputado, o Claude **nem é chamado**: a resposta é
+"não encontrei evidência".
 
 ```json
 {
-  "pergunta": "Quem é Tabata Amaral?",
+  "pergunta": "Qual o partido de Tabata Amaral?",
   "tipo": "fontes_encontradas",
-  "modo": "somente_fontes",
-  "resposta": "Encontrei estas informações nas fontes oficiais:\n• Tabata Amaral é deputado(a) federal pelo PSB-SP.\n• ...",
+  "modo": "ia_com_fontes",
+  "resposta": "Tabata Amaral é deputada federal pelo PSB de São Paulo [1].",
   "evidencias": [{ "texto": "...", "fonte": "Dados Abertos da Câmara dos Deputados", "url": "https://...", "consultadoEm": "..." }],
   "fontes": [{ "nome": "...", "url": "https://...", "consultadoEm": "..." }],
   "aviso": "O FatoBot pode errar. Confira sempre as fontes oficiais. Não encontrar evidência não significa que a informação é falsa."
@@ -107,9 +119,17 @@ Se não achar nada, responde que **não encontrou evidência**, sem inventar.
 ```
 
 - `tipo`: `fontes_encontradas` ou `sem_evidencia`.
-- `modo`: `somente_fontes` (sem IA, hoje) ou `ia_com_fontes` (quando a IA for ligada).
-- O front deve **sempre** mostrar o `aviso` e os links de `fontes`.
+- `modo`: `ia_com_fontes` (resposta do Claude) ou `somente_fontes` (lista de fatos, sem IA).
+- O front deve **sempre** mostrar o `aviso` e os links de `fontes`, e pode transformar `[n]`
+  em link para `evidencias[n-1].url`.
 
-**Pendente (decisão do grupo):** qual IA usar para a etapa de síntese. Ela vai entrar em
-`sintetizarComIA` (`src/services/fatobot.js`) recebendo **apenas** as evidências encontradas,
-e a chave fica só no `.env` do servidor.
+#### Configurar o Claude
+
+1. Crie uma chave em https://console.anthropic.com (menu *API Keys*). A API é paga por uso:
+   coloque um limite de gastos no console.
+2. Coloque a chave em `ANTHROPIC_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
+   **Nunca** no código nem no Angular.
+3. O modelo padrão é `claude-opus-5-5`. Para trocar, defina `CLAUDE_MODEL`
+   (ex.: `claude-haiku-5-5`, bem mais barato).
+
+Código: `src/services/claude.js` (chamada ao Claude) e `src/services/fatobot.js` (pipeline).
