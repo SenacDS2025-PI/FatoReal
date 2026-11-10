@@ -1,0 +1,21 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (NUNCA subir chaves para o GitHub)
+.env
+.env.*
+!.env.example
+
+# Builds e caches
+dist/
+.angular/
+.vercel/
+coverage/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
