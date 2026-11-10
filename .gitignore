@@ -1,24 +1,29 @@
-# Sistema
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (NUNCA subir chaves para o GitHub)
+.env
+.env.*
+!.env.example
+!.env.exemplo
+*.key
+
+# Builds e caches
+dist/
+.angular/
+.vercel/
+coverage/
+
+# Sistema / editores
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Editores
 .vscode/*
 !.vscode/extensions.json
 .idea/
-
-# Dependências / builds
-node_modules/
-dist/
-
-# Segredos — NUNCA subir
-.env
-.env.*
-*.key
+*.log
 
 # Vídeos e arquivos pesados (coloque no Google Drive)
 *.mp4
 *.mov
 *.zip
-!.env.exemplo
