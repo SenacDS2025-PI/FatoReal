@@ -5,6 +5,8 @@ node_modules/
 .env
 .env.*
 !.env.example
+!.env.exemplo
+*.key
 
 # Builds e caches
 dist/
@@ -15,7 +17,13 @@ coverage/
 # Sistema / editores
 .DS_Store
 Thumbs.db
+desktop.ini
 .vscode/*
 !.vscode/extensions.json
 .idea/
 *.log
+
+# Vídeos e arquivos pesados (coloque no Google Drive)
+*.mp4
+*.mov
+*.zip

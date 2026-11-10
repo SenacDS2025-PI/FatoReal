@@ -42,3 +42,22 @@ Projeto Integrador — Senac. Entrega final: **1º de dezembro de 2026**.
 
 Verde Real `#0B3D2E` · Dourado `#D4AF37` · Grafite `#1A1A1A`
 Fontes: Montserrat (títulos) e Open Sans (textos).
+
+## Pastas adicionadas
+
+| Pasta           | O que tem                                                    |
+|-----------------|--------------------------------------------------------------|
+| `supabase/`     | `schema.sql` (tabelas, RLS e políticas) e instruções do Supabase |
+| `apresentacao/` | Roteiros da apresentação (Canva) e do vídeo                  |
+| `docs/`         | Problematização, requisitos, casos de uso, modelagem, manual, relatório e cronograma |
+
+O guia de Git do time está em `CONTRIBUTING.md`, e os modelos de Issue e PR estão em `.github/`.
+
+## Front-end (Angular)
+
+O front em Angular está na branch [`luiz/frontend`](https://github.com/SenacDS2025-PI/FatoReal/tree/luiz/frontend). Para rodar:
+
+```bash
+git checkout luiz/frontend
+cd frontend && npm install && npm start
+```
