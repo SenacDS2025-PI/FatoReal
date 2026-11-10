@@ -7,6 +7,7 @@ const MIN = 3;
 const MAX = 500;
 
 // POST /api/fatobot   body: { "pergunta": "Quem é Tabata Amaral?" }
+// 200 → { resposta, fontes: [{ titulo, url, data }], consultado_em, sem_evidencia, ... }
 router.post('/', async (req, res, next) => {
   try {
     const pergunta = typeof req.body?.pergunta === 'string' ? req.body.pergunta.trim() : '';

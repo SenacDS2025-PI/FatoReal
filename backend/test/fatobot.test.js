@@ -79,6 +79,33 @@ test('responde com evidências, fontes e aviso quando encontra o deputado', asyn
   assert.ok(!JSON.stringify(body).includes('00000000000'), 'não pode vazar CPF');
 });
 
+test('segue o contrato do front: { resposta, fontes: [{ titulo, url, data }], consultado_em, sem_evidencia }', async () => {
+  const body = await (await perguntar('Quem é Tabata Amaral?')).json();
+  assert.equal(typeof body.resposta, 'string');
+  assert.equal(body.sem_evidencia, false);
+  assert.ok(!Number.isNaN(Date.parse(body.consultado_em)));
+  const [fonte] = body.fontes;
+  assert.match(fonte.titulo, /Câmara dos Deputados: Tabata Amaral/);
+  assert.match(fonte.url, /\/deputados\/1$/);
+  assert.ok(fonte.data);
+});
+
+test('sem IA, responde perguntas gerais com a base da Constituição', async () => {
+  const body = await (await perguntar('Quantos senadores tem cada estado?')).json();
+  assert.equal(body.sem_evidencia, false);
+  assert.match(body.resposta, /três senadores/);
+  assert.equal(body.fontes.length, 1);
+  assert.match(body.fontes[0].titulo, /Constituição Federal de 1988, art\. 46/);
+  assert.match(body.fontes[0].url, /planalto\.gov\.br/);
+  assert.equal(body.fontes[0].data, null);
+});
+
+test('sem IA, "quantos deputados" usa o total em exercício da Câmara', async () => {
+  const body = await (await perguntar('Quantos deputados tem a Câmara?')).json();
+  assert.match(body.resposta, /em exercício hoje, segundo a Câmara: 3\./);
+  assert.ok(body.fontes.some((f) => /lista de deputados em exercício/.test(f.titulo)));
+});
+
 test('nome de uma palavra só não gera falso positivo', async () => {
   const body = await (await perguntar('O que o Amaral votou?')).json();
   assert.equal(body.tipo, 'sem_evidencia');
@@ -87,7 +114,9 @@ test('nome de uma palavra só não gera falso positivo', async () => {
 test('sem deputado na pergunta → declara que não encontrou evidência', async () => {
   const body = await (await perguntar('Qual a capital da França?')).json();
   assert.equal(body.tipo, 'sem_evidencia');
+  assert.equal(body.sem_evidencia, true);
   assert.deepEqual(body.evidencias, []);
+  assert.deepEqual(body.fontes, []);
   assert.match(body.resposta, /Não encontrei evidência/);
   assert.match(body.aviso, /não significa que a informação é falsa/);
 });

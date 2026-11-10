@@ -34,10 +34,18 @@ backend/
 │   ├── server.js       → sobe o servidor localmente
 │   ├── routes/
 │   │   ├── health.js     → GET /api/health
-│   │   └── deputados.js  → busca e perfil de deputados
+│   │   ├── deputados.js  → busca e perfil de deputados
+│   │   ├── fatobot.js    → POST /api/fatobot
+│   │   └── verificar.js  → POST /api/verificar
 │   ├── services/
-│   │   └── camara.js     → acesso à API de Dados Abertos da Câmara
-│   └── utils/            → cache em memória e normalização de texto
+│   │   ├── camara.js     → acesso à API de Dados Abertos da Câmara
+│   │   ├── evidencias.js → busca documental e filtro de evidência (usado pelo FatoBot e pela verificação)
+│   │   ├── fatobot.js    → FatoBot: instruções da IA e montagem da resposta
+│   │   ├── verificar.js  → verificação assistida de afirmações
+│   │   └── ia.js         → conexão com o Claude (Anthropic)
+│   ├── data/
+│   │   └── base-conhecimento.js → fatos da Constituição que o FatoBot pode citar
+│   └── utils/            → cache em memória, normalização de texto e limite de pedidos por IP
 ├── test/               → testes (node --test)
 ├── .env.example        → modelo das variáveis de ambiente
 └── vercel.json
@@ -90,26 +98,74 @@ da Câmara a cada acesso.
 
 Corpo: `{ "pergunta": "Quem é Tabata Amaral?" }` (3 a 500 caracteres).
 
-Responde **somente com base em fontes oficiais** (RN02 e RN04). Hoje identifica deputados
-citados pelo nome parlamentar completo e devolve os fatos do perfil, cada um com fonte e data.
-Se não achar nada, responde que **não encontrou evidência**, sem inventar.
+Responde **somente com base em fontes oficiais** (RN02 e RN04). As evidências vêm de dois lugares:
+
+- **Câmara (ao vivo):** deputados citados pelo nome parlamentar completo e o total de deputados em exercício.
+- **Base de conhecimento** (`src/data/base-conhecimento.js`): fatos da Constituição de 1988 sobre
+  como a política funciona (Poderes, Congresso, PEC, veto, eleições...), cada um com o artigo.
+
+Com a IA ligada, o **Claude** escreve a resposta em linguagem simples usando só essas evidências e diz
+quais usou (pelo código, ex.: `B08`, `D1`). O backend monta os links a partir desses códigos, então a
+IA não tem como inventar fontes. Se nada responder à pergunta, a resposta diz que **não encontrou evidência**.
+
+Sem a chave (ou se a IA falhar), o FatoBot continua funcionando no **modo somente fontes**: lista os
+fatos encontrados por palavras-chave.
 
 ```json
 {
-  "pergunta": "Quem é Tabata Amaral?",
+  "resposta": "Cada estado e o Distrito Federal elegem três senadores, com mandato de oito anos.",
+  "fontes": [{ "titulo": "Constituição Federal de 1988, art. 46", "url": "https://www.planalto.gov.br/...", "data": null }],
+  "consultado_em": "2026-11-10T12:43:09.986Z",
+  "sem_evidencia": false,
+  "pergunta": "Quantos senadores tem cada estado?",
   "tipo": "fontes_encontradas",
-  "modo": "somente_fontes",
-  "resposta": "Encontrei estas informações nas fontes oficiais:\n• Tabata Amaral é deputado(a) federal pelo PSB-SP.\n• ...",
-  "evidencias": [{ "texto": "...", "fonte": "Dados Abertos da Câmara dos Deputados", "url": "https://...", "consultadoEm": "..." }],
-  "fontes": [{ "nome": "...", "url": "https://...", "consultadoEm": "..." }],
+  "modo": "ia_com_fontes",
+  "evidencias": [{ "id": "B09", "texto": "...", "fonte": "Constituição Federal de 1988", "url": "https://...", "consultadoEm": null, "titulo": "..." }],
   "aviso": "O FatoBot pode errar. Confira sempre as fontes oficiais. Não encontrar evidência não significa que a informação é falsa."
 }
 ```
 
-- `tipo`: `fontes_encontradas` ou `sem_evidencia`.
-- `modo`: `somente_fontes` (sem IA, hoje) ou `ia_com_fontes` (quando a IA for ligada).
-- O front deve **sempre** mostrar o `aviso` e os links de `fontes`.
+- `resposta`, `fontes`, `consultado_em` e `sem_evidencia` são o que o front usa (`RespostaFatoBot` em `frontend/src/app/core/modelos.ts`).
+- `fontes[].data`: data da consulta (Câmara) ou `null` (Constituição, que não muda).
+- `modo`: `ia_com_fontes` (Claude) ou `somente_fontes` (sem IA).
+- O front deve **sempre** mostrar o aviso e os links de `fontes`.
 
-**Pendente (decisão do grupo):** qual IA usar para a etapa de síntese. Ela vai entrar em
-`sintetizarComIA` (`src/services/fatobot.js`) recebendo **apenas** as evidências encontradas,
-e a chave fica só no `.env` do servidor.
+### `POST /api/verificar`
+
+Corpo: `{ "afirmacao": "Cada estado elege três senadores." }` (10 a 1000 caracteres).
+
+Avaliação **preliminar** de uma afirmação, comparando só com as mesmas evidências do FatoBot:
+
+```json
+{ "estado": "Evidências sustentam", "explicacao": "...", "fontes": [{ "titulo": "...", "url": "...", "data": null }], "consultado_em": "..." }
+```
+
+`estado`: `Evidências sustentam`, `Evidências contradizem`, `Fora de contexto`, `Evidência insuficiente`
+ou `Em análise` (quando a IA está desligada e há fontes para o usuário comparar sozinho).
+Se a IA disser que sustenta ou contradiz sem citar nenhuma fonte válida, o backend troca para `Evidência insuficiente`.
+
+### Limite de uso
+
+`/api/fatobot` e `/api/verificar` aceitam até 30 pedidos a cada 10 minutos por IP (ajuste com
+`LIMITE_IA_POR_IP`). Acima disso respondem `429`. Isso evita que alguém gaste os créditos da IA à toa.
+
+## Ligar a IA (Claude)
+
+1. Crie uma conta em [platform.claude.com](https://platform.claude.com), coloque créditos e gere uma **API key**.
+2. Coloque a chave em `ANTHROPIC_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
+   **Nunca** coloque a chave no código, no Angular ou no GitHub.
+3. Reinicie o servidor. A resposta do FatoBot passa a vir com `"modo": "ia_com_fontes"`.
+
+Opcionais no `.env`:
+
+| Variável           | Padrão            | Para quê |
+|--------------------|-------------------|----------|
+| `AI_MODEL`         | `claude-opus-5-5` | Modelo do Claude. `claude-haiku-5-5` é bem mais barato, mas escreve respostas mais simples. |
+| `AI_EFFORT`        | `low`             | Quanto o modelo "pensa" antes de responder (`low`, `medium`, `high`). Mais alto = mais lento e mais caro. |
+| `LIMITE_IA_POR_IP` | `30`              | Pedidos por IP a cada 10 minutos. |
+
+Se o Claude recusar uma pergunta por política de segurança, a Anthropic tenta de novo automaticamente
+com outro modelo (parâmetro `fallbacks`). Se mesmo assim falhar, o FatoBot cai no modo somente fontes.
+
+Para ensinar algo novo ao FatoBot, acrescente um item em `src/data/base-conhecimento.js`
+(com o artigo da fonte) e rode `npm test`.
