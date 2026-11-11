@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, computed, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icone } from '../../shared/componentes';
 
@@ -23,6 +23,33 @@ interface Trilha {
       <p>Aprender política sem precisar já entender de política. Explicações curtas sobre como o Brasil funciona, com link para a fonte oficial.</p>
     </header>
 
+    <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario">
+      <div class="glossario-topo">
+        <h2 id="titulo-glossario"><app-icone nome="menu_book" /> Glossário</h2>
+        <div class="glossario-controles">
+          <span class="glossario-contador" aria-live="polite">{{ visiveis() > 1 ? atual() + 1 + '–' + (atual() + visiveis()) : atual() + 1 }} de {{ glossario.length }}</span>
+          <button type="button" class="botao-seta" (click)="ir(atual() - 1)" [disabled]="atual() === 0" aria-label="Termo anterior"><app-icone nome="chevron_left" /></button>
+          <button type="button" class="botao-seta" (click)="ir(atual() + 1)" [disabled]="atual() >= ultimaPosicao()" aria-label="Próximo termo"><app-icone nome="chevron_right" /></button>
+        </div>
+      </div>
+      <ul #trilho class="glossario-trilho" (scroll)="aoRolar()" tabindex="0" aria-label="Termos do glossário" (keydown.arrowRight)="$event.preventDefault(); ir(atual() + 1)" (keydown.arrowLeft)="$event.preventDefault(); ir(atual() - 1)">
+        @for (g of glossario; track g[0]; let i = $index) {
+          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + glossario.length">
+            <span class="glossario-letra" aria-hidden="true">{{ g[0].charAt(0) }}</span>
+            <dl><dt>{{ g[0] }}</dt><dd>{{ g[1] }}</dd></dl>
+          </li>
+        }
+      </ul>
+      <div class="glossario-pontos" role="tablist" aria-label="Escolher termo">
+        @for (i of posicoes(); track i) {
+          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + glossario[i][0]" (click)="ir(i)"></button>
+        }
+      </div>
+      <p class="fonte">
+        <app-icone nome="verified" /> <span>Fonte: Constituição Federal de 1988 (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer">planalto.gov.br</a>)</span>
+      </p>
+    </section>
+
     <div class="trilhas">
       @for (t of trilhas; track t.titulo) {
         <section class="card trilha" [style.--cor-trilha]="t.cor">
@@ -37,18 +64,6 @@ interface Trilha {
       }
     </div>
 
-    <section class="card">
-      <h2><app-icone nome="menu_book" /> Glossário</h2>
-      <dl class="glossario">
-        @for (g of glossario; track g[0]) {
-          <div><dt>{{ g[0] }}</dt><dd>{{ g[1] }}</dd></div>
-        }
-      </dl>
-      <p class="fonte">
-        <app-icone nome="verified" /> Fonte: Constituição Federal de 1988 (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer">planalto.gov.br</a>)
-      </p>
-    </section>
-
     <div class="card aviso-participar">
       <app-icone nome="smart_toy" />
       <p>Ficou com dúvida? Pergunte ao FatoBot: ele explica em linguagem simples e mostra de onde veio a informação.</p>
@@ -56,7 +71,49 @@ interface Trilha {
     </div>
   `,
 })
-export class BasePoliticaPage {
+export class BasePoliticaPage implements AfterViewInit {
+  private readonly trilho = viewChild.required<ElementRef<HTMLUListElement>>('trilho');
+  /** Índice do primeiro termo visível. */
+  protected readonly atual = signal(0);
+  /** Quantos termos cabem na tela ao mesmo tempo (3 no computador, 1 no celular). */
+  protected readonly visiveis = signal(1);
+  protected readonly ultimaPosicao = computed(() => Math.max(0, this.glossario.length - this.visiveis()));
+  protected readonly posicoes = computed(() => Array.from({ length: this.ultimaPosicao() + 1 }, (_, i) => i));
+
+  ngAfterViewInit() {
+    this.medir();
+  }
+
+  @HostListener('window:resize')
+  protected medir() {
+    const lista = this.trilho().nativeElement;
+    const passo = this.passo(lista);
+    this.visiveis.set(Math.max(1, Math.round((lista.clientWidth + this.gap(lista)) / passo)));
+    this.aoRolar();
+  }
+
+  /** Rola o carrossel até a posição i (com limite nas pontas). */
+  protected ir(i: number) {
+    const lista = this.trilho().nativeElement;
+    const destino = Math.max(0, Math.min(i, this.ultimaPosicao()));
+    lista.scrollTo({ left: destino * this.passo(lista), behavior: 'smooth' });
+  }
+
+  /** Atualiza o contador conforme a pessoa arrasta ou rola o carrossel. */
+  protected aoRolar() {
+    const lista = this.trilho().nativeElement;
+    const i = Math.round(lista.scrollLeft / this.passo(lista));
+    this.atual.set(Math.max(0, Math.min(i, this.ultimaPosicao())));
+  }
+
+  private gap(lista: HTMLElement): number {
+    return parseFloat(getComputedStyle(lista).columnGap) || 0;
+  }
+
+  private passo(lista: HTMLElement): number {
+    return ((lista.children[0] as HTMLElement | undefined)?.offsetWidth ?? 1) + this.gap(lista);
+  }
+
   protected readonly trilhas: Trilha[] = [
     {
       titulo: 'Começar pelo básico', icone: 'lightbulb', cor: '#14a370',
@@ -93,5 +150,12 @@ export class BasePoliticaPage {
     ['Sanção e veto', 'Sanção é a aprovação de um projeto pelo chefe do Executivo; veto é a recusa, total ou parcial.'],
     ['Plenário', 'Reunião de todos os parlamentares de uma Casa para votar.'],
     ['Comissão', 'Grupo menor de parlamentares que analisa projetos sobre um tema antes do plenário.'],
+    ['CPI', 'Comissão Parlamentar de Inquérito. Investiga um fato determinado, por prazo certo, e é criada com a assinatura de um terço dos membros da Casa.'],
+    ['Lei complementar', 'Lei que regulamenta assuntos que a Constituição manda tratar dessa forma. Precisa de maioria absoluta para ser aprovada.'],
+    ['Quórum', 'Número mínimo de parlamentares presentes, ou de votos, exigido para abrir uma votação ou aprovar uma proposta.'],
+    ['Legislatura', 'Período de quatro anos de trabalho do Congresso, que coincide com o mandato dos deputados federais.'],
+    ['Emenda parlamentar', 'Indicação feita por deputados e senadores de onde aplicar uma parte do Orçamento federal, como obras e serviços nos estados e municípios.'],
+    ['Cota parlamentar', 'Verba para despesas do mandato, como passagens, combustível e divulgação. Os gastos de cada deputado são públicos.'],
+    ['Federação partidária', 'União de partidos que atuam juntos, como se fossem um só, por pelo menos quatro anos.'],
   ];
 }

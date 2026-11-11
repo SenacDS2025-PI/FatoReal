@@ -7,7 +7,7 @@ import { Comunidade } from '../../core/modelos';
 import { Icone } from '../../shared/componentes';
 import { VistosService } from '../../core/vistos.service';
 import { NotificacoesService } from '../../core/notificacoes.service';
-import { capaComunidade, avatarComunidade, ICONE_TEMA } from '../../core/visual';
+import { capaComunidade, avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 
 @Component({
   selector: 'app-comunidades',
@@ -19,6 +19,7 @@ export class ComunidadesPage implements OnInit {
   protected auth = inject(AuthService);
   protected termo = '';
   protected readonly capa = capaComunidade;
+  protected readonly corTema = COR_TEMA;
   protected readonly avatar = avatarComunidade;
   protected readonly iconeTema = ICONE_TEMA;
   protected readonly lista = signal<Comunidade[]>([]);

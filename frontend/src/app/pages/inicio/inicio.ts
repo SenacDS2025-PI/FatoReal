@@ -5,9 +5,8 @@ import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Comunidade, Publicacao } from '../../core/modelos';
-import { ProgressoService } from '../../core/progresso.service';
 import { linkSeguro } from '../../core/util';
-import { avatarComunidade, capaComunidade, CATEGORIAS, ICONE_TEMA } from '../../core/visual';
+import { avatarComunidade, capaComunidade, CATEGORIAS, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
@@ -29,12 +28,12 @@ interface Destaque {
 export class InicioPage implements OnInit {
   private comunidades = inject(ComunidadesService);
   private avisos = inject(AvisosService);
-  private progresso = inject(ProgressoService);
   private router = inject(Router);
   protected auth = inject(AuthService);
 
   protected readonly categorias = CATEGORIAS;
   protected readonly iconeTema = ICONE_TEMA;
+  protected readonly corTema = COR_TEMA;
   protected readonly avatarComunidade = avatarComunidade;
   protected readonly capaComunidade = capaComunidade;
 
@@ -121,7 +120,6 @@ export class InicioPage implements OnInit {
     }
     try {
       await this.comunidades.entrar(c.id);
-      this.progresso.marcar('comunidade');
       this.avisos.mostrar(`Você entrou na comunidade ${c.nome}!`);
       await this.carregar();
     } catch (e) {

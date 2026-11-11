@@ -1,9 +1,9 @@
 @if (carregando()) {
   <p class="card">Carregando comunidade...</p>
 } @else if (comunidade(); as c) {
-  <header class="comunidade-cabecalho">
+  <header class="comunidade-cabecalho" [style.--cor-tema]="corTema[c.tema]">
     <div class="comunidade-capa">
-      @if (capaComunidade(c.slug); as capa) { <img [src]="capa" alt="" /> }
+      @if (capaComunidade(c.slug); as capa) { <img [src]="capa" alt="" /> } @else { <app-icone [nome]="iconeTema[c.tema] || 'groups'" class="capa-marca" /> }
     </div>
     <div class="comunidade-info">
       @if (avatarComunidade(c.slug); as img) {

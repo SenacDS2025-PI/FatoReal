@@ -115,6 +115,38 @@ export class ComunidadesService {
     return (data as Linha[]).map((m) => mapComunidade(m['comunidade']));
   }
 
+  /** Publicações escritas por uma pessoa (aba "Publicações" do perfil). */
+  async publicacoesDe(usuarioId: string): Promise<Publicacao[]> {
+    const eu = this.auth.usuario()?.id;
+    if (!supabase) return this.demo.feed(eu).filter((p) => p.autor.id === usuarioId);
+    const { data, error } = await supabase
+      .from('publicacoes')
+      .select(SELECT_PUBLICACAO)
+      .eq('autor_id', usuarioId)
+      .eq('removida', false)
+      .order('criado_em', { ascending: false })
+      .limit(50);
+    if (error) throw new Error('Não foi possível carregar as publicações.');
+    return (data as Linha[]).map((p) => mapPublicacao(p, eu));
+  }
+
+  /** Publicações que a pessoa curtiu (aba "Curtidas" do perfil). */
+  async curtidasDe(usuarioId: string): Promise<Publicacao[]> {
+    const eu = this.auth.usuario()?.id;
+    if (!supabase) return this.demo.feed(eu).filter((p) => this.demo.curtiu(p.id, usuarioId));
+    const { data, error } = await supabase
+      .from('curtidas')
+      .select(`publicacao:publicacoes(${SELECT_PUBLICACAO})`)
+      .eq('usuario_id', usuarioId)
+      .limit(50);
+    if (error) throw new Error('Não foi possível carregar as curtidas.');
+    return (data as Linha[])
+      .map((c) => c['publicacao'])
+      .filter((p) => p && !p['removida'])
+      .map((p) => mapPublicacao(p, eu))
+      .sort((a, b) => b.criado_em.localeCompare(a.criado_em));
+  }
+
   // ---------- Mural ----------
   async publicacoes(comunidadeId: number): Promise<Publicacao[]> {
     const eu = this.auth.usuario()?.id;
@@ -293,6 +325,8 @@ export interface BancoDemo {
   comentarios: Comentario[];
   curtidas: { publicacao_id: number; usuario_id: string }[];
   denuncias: Omit<Denuncia, 'conteudo' | 'comunidade_slug'>[];
+  /** Slugs das comunidades extras já aplicadas neste navegador. */
+  sementes?: string[];
 }
 
 const EQUIPE: Autor = { id: 'equipe', nome: 'Fato Real', foto_url: 'logo.svg' };
@@ -348,14 +382,97 @@ function bancoInicial(): BancoDemo {
   };
 }
 
+/**
+ * Comunidades temáticas acrescentadas depois da primeira versão. São mescladas no banco
+ * já salvo no navegador (pelo slug), para quem já usava o site também vê-las.
+ */
+const SEMENTES_EXTRAS: { nome: string; tema: string; descricao: string; post?: { texto: string; link_url: string | null; verificada: boolean } }[] = [
+  {
+    nome: 'Eleições e Voto', tema: 'Política',
+    descricao: 'Calendário eleitoral, regras do TSE, urna eletrônica e como conferir candidaturas.',
+    post: { verificada: true, texto: 'No DivulgaCandContas, do TSE, dá para consultar candidaturas, bens declarados e prestação de contas de campanha.', link_url: 'https://divulgacandcontas.tse.jus.br/' },
+  },
+  {
+    nome: 'Câmara e Senado em Pauta', tema: 'Política',
+    descricao: 'Acompanhe projetos, votações e comissões do Congresso Nacional, com link para a tramitação oficial.',
+    post: { verificada: true, texto: 'Toda proposição na Câmara tem uma ficha de tramitação pública: autor, relator, pareceres e votações.', link_url: 'https://www.camara.leg.br/busca-portal/proposicoes/pesquisa-simplificada' },
+  },
+  {
+    nome: 'Política na Minha Cidade', tema: 'Política',
+    descricao: 'Câmaras municipais, prefeituras e orçamento local. O que é decidido perto de você.',
+    post: { verificada: true, texto: 'Pela Lei de Acesso à Informação (Lei 12.527/2011), qualquer pessoa pode pedir dados públicos à prefeitura ou à câmara municipal, sem precisar justificar.', link_url: 'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm' },
+  },
+  {
+    nome: 'Checagem de Fatos', tema: 'Cidadania',
+    descricao: 'Recebeu um boato? Traga aqui para a comunidade conferir junto, sempre com fonte.',
+    post: { verificada: false, texto: 'Vi um vídeo dizendo que dá para votar pela internet nas próximas eleições. Alguém achou alguma fonte oficial sobre isso?', link_url: null },
+  },
+  {
+    nome: 'Contas Públicas', tema: 'Economia',
+    descricao: 'Orçamento, impostos, gastos do governo e cota parlamentar, com dados abertos.',
+    post: { verificada: true, texto: 'O Portal da Transparência mostra despesas, transferências e servidores do governo federal, com dados para baixar.', link_url: 'https://portaldatransparencia.gov.br/' },
+  },
+  {
+    nome: 'Saúde Pública e SUS', tema: 'Saúde',
+    descricao: 'Políticas de saúde, vacinação e funcionamento do SUS, com informação oficial.',
+    post: { verificada: true, texto: 'O calendário nacional de vacinação, por idade, fica no site do Ministério da Saúde.', link_url: 'https://www.gov.br/saude/pt-br/vacinacao' },
+  },
+  {
+    nome: 'Meio Ambiente e Clima', tema: 'Meio ambiente',
+    descricao: 'Desmatamento, clima, energia e as leis ambientais em debate no país.',
+    post: { verificada: true, texto: 'Os dados oficiais de desmatamento da Amazônia (Prodes e Deter) são publicados pelo Inpe na plataforma TerraBrasilis.', link_url: 'https://terrabrasilis.dpi.inpe.br/' },
+  },
+  {
+    nome: 'Segurança Pública', tema: 'Segurança',
+    descricao: 'Políticas de segurança, dados de violência e o papel de cada esfera de governo.',
+    post: { verificada: true, texto: 'O Anuário Brasileiro de Segurança Pública reúne, todo ano, os dados oficiais de violência de todos os estados.', link_url: 'https://forumseguranca.org.br/' },
+  },
+  {
+    nome: 'Tecnologia e Democracia', tema: 'Tecnologia',
+    descricao: 'Desinformação, inteligência artificial, privacidade (LGPD) e regras para as plataformas.',
+    post: { verificada: true, texto: 'A LGPD (Lei 13.709/2018) define seus direitos sobre dados pessoais: saber quem usa, corrigir e pedir a exclusão.', link_url: 'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm' },
+  },
+  {
+    nome: 'Juventude e Participação', tema: 'Cidadania',
+    descricao: 'Para quem vota pela primeira vez: título de eleitor, conselhos, grêmios e como participar.',
+    post: { verificada: true, texto: 'O voto é facultativo a partir dos 16 anos. O título de eleitor pode ser tirado pela internet, no autoatendimento da Justiça Eleitoral.', link_url: 'https://www.tse.jus.br/servicos-eleitorais/autoatendimento-eleitoral' },
+  },
+];
+
+function completarSementes(db: BancoDemo): BancoDemo {
+  const aplicadas = new Set(db.sementes ?? []);
+  let mudou = false;
+  SEMENTES_EXTRAS.forEach((sem, i) => {
+    const slug = gerarSlug(sem.nome);
+    if (aplicadas.has(slug)) return;
+    aplicadas.add(slug);
+    mudou = true;
+    if (db.comunidades.some((c) => c.slug === slug)) return;
+    const id = proximoId(db.comunidades);
+    db.comunidades.push({ id, slug, nome: sem.nome, tema: sem.tema, descricao: sem.descricao, regras: REGRAS_PADRAO, criado_em: new Date().toISOString() });
+    db.membros.push({ comunidade_id: id, usuario: EQUIPE, papel: 'moderador' });
+    if (i % 3 === 0) db.membros.push({ comunidade_id: id, usuario: EXEMPLO, papel: 'membro' });
+    if (sem.post) {
+      db.publicacoes.push({
+        id: proximoId(db.publicacoes), comunidade_id: id, autor: sem.post.verificada ? EQUIPE : EXEMPLO,
+        verificada: sem.post.verificada, removida: false, texto: sem.post.texto, link_url: sem.post.link_url,
+        criado_em: new Date(Date.now() - (8 + i * 5) * 3600_000).toISOString(),
+      });
+    }
+  });
+  db.sementes = [...aplicadas];
+  if (mudou) salvarDemo('social-v2', db);
+  return db;
+}
+
 /** Leitura do banco do modo demonstração (usado também pelas notificações). */
 export function lerBancoSocial(): BancoDemo {
-  return lerDemo<BancoDemo>('social-v2', bancoInicial());
+  return completarSementes(lerDemo<BancoDemo>('social-v2', bancoInicial()));
 }
 
 class DemoSocial {
   private get db(): BancoDemo {
-    return lerDemo<BancoDemo>('social-v2', bancoInicial());
+    return lerBancoSocial();
   }
   private salvar(db: BancoDemo) {
     salvarDemo('social-v2', db);
@@ -403,6 +520,9 @@ class DemoSocial {
   }
   membros(comunidadeId: number) {
     return this.db.membros.filter((m) => m.comunidade_id === comunidadeId).map((m) => ({ ...m.usuario, papel: m.papel }));
+  }
+  curtiu(publicacaoId: number, usuarioId: string): boolean {
+    return this.db.curtidas.some((c) => c.publicacao_id === publicacaoId && c.usuario_id === usuarioId);
   }
   minhas(usuarioId: string): Comunidade[] {
     const db = this.db;

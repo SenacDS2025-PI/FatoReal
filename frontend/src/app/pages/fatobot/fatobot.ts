@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { FatoBotService } from '../../core/fatobot.service';
 import { RespostaFatoBot } from '../../core/modelos';
-import { ProgressoService } from '../../core/progresso.service';
 import { AvisoIa, FonteDado, Icone } from '../../shared/componentes';
 
 interface Mensagem {
@@ -21,7 +20,6 @@ interface Mensagem {
 export class FatoBotPage implements OnInit {
   private bot = inject(FatoBotService);
   private rota = inject(ActivatedRoute);
-  private progresso = inject(ProgressoService);
 
   protected pergunta = '';
   protected readonly mensagens = signal<Mensagem[]>([]);
@@ -43,7 +41,6 @@ export class FatoBotPage implements OnInit {
     this.pergunta = '';
     this.mensagens.update((m) => [...m, { autor: 'voce', texto: pergunta }]);
     this.pensando.set(true);
-    this.progresso.marcar('fatobot');
     try {
       const resposta = await this.bot.perguntar(pergunta);
       this.mensagens.update((m) => [...m, { autor: 'bot', texto: resposta.resposta, resposta }]);

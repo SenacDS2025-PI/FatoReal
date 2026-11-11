@@ -1,0 +1,180 @@
+@if (auth.usuario(); as u) {
+  <!-- Cabeçalho: capa, foto, nome e números -->
+  <header class="card perfil-rede">
+    <div class="perfil-rede-capa" aria-hidden="true"></div>
+    <div class="perfil-rede-corpo">
+      <div class="perfil-rede-linha">
+        <app-avatar class="perfil-rede-foto" [nome]="u.nome" [url]="u.foto_url" [tamanho]="132" />
+        <div class="perfil-rede-acoes">
+          <button type="button" class="botao botao-fantasma" (click)="abrirEdicao()"><app-icone nome="edit" /> Editar perfil</button>
+        </div>
+      </div>
+      <h1>{{ u.nome }}
+        @if (u.moderador) { <span class="selo-moderador" title="Moderador(a) da plataforma"><app-icone nome="shield_person" /> Moderador(a)</span> }
+      </h1>
+      @if (u.bio) {
+        <p class="perfil-rede-bio">{{ u.bio }}</p>
+      } @else {
+        <button type="button" class="link-sutil" (click)="abrirEdicao()"><app-icone nome="add" /> Adicionar uma bio</button>
+      }
+      <ul class="perfil-rede-meta">
+        @if (u.criado_em) { <li><app-icone nome="calendar_month" /> Membro desde {{ u.criado_em | date: 'MMMM \'de\' yyyy' : '' : 'pt-BR' }}</li> }
+        <li><app-icone nome="groups" /> {{ minhas().length }} {{ minhas().length === 1 ? 'comunidade' : 'comunidades' }}</li>
+      </ul>
+      <ul class="perfil-rede-numeros" aria-label="Resumo da atividade">
+        <li><strong>{{ publicacoes().length }}</strong> {{ publicacoes().length === 1 ? 'publicação' : 'publicações' }}</li>
+        <li><strong>{{ curtidasRecebidas() }}</strong> curtidas recebidas</li>
+        <li><strong>{{ curtidas().length }}</strong> {{ curtidas().length === 1 ? 'curtida dada' : 'curtidas dadas' }}</li>
+      </ul>
+    </div>
+    <nav class="perfil-rede-abas" role="tablist" aria-label="Seções do perfil">
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'publicacoes'" (click)="aba.set('publicacoes')">Publicações</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'curtidas'" (click)="aba.set('curtidas')">Curtidas</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'comunidades'" (click)="aba.set('comunidades')">Comunidades</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'conta'" (click)="aba.set('conta')">Conta e privacidade</button>
+    </nav>
+  </header>
+
+  <div class="perfil-rede-grade">
+    <!-- Coluna principal: conteúdo da aba -->
+    <section class="perfil-rede-conteudo" role="tabpanel">
+      @if (carregando() && aba() !== 'conta') {
+        <div class="card"><div class="esqueleto-linhas"><span class="esqueleto" style="width: 40%"></span><span class="esqueleto"></span><span class="esqueleto" style="width: 80%"></span></div></div>
+      } @else {
+        @switch (aba()) {
+          @case ('publicacoes') {
+            @for (p of publicacoes(); track p.id) {
+              <app-publicacao [pub]="p" [mostrarComunidade]="true" (mudou)="recarregar()" />
+            } @empty {
+              <div class="card vazio">
+                <app-icone nome="edit_note" />
+                <strong>Você ainda não publicou nada</strong>
+                <span>Entre em uma comunidade e compartilhe uma informação, sempre com a fonte.</span>
+                <a routerLink="/comunidades" class="botao">Explorar comunidades</a>
+              </div>
+            }
+          }
+          @case ('curtidas') {
+            @for (p of curtidas(); track p.id) {
+              <app-publicacao [pub]="p" [mostrarComunidade]="true" (mudou)="recarregar()" />
+            } @empty {
+              <div class="card vazio">
+                <app-icone nome="favorite" />
+                <strong>Nenhuma curtida ainda</strong>
+                <span>As publicações que você curtir aparecem aqui.</span>
+                <a routerLink="/" class="botao botao-fantasma">Ver o feed</a>
+              </div>
+            }
+          }
+          @case ('comunidades') {
+            <ul class="perfil-rede-comunidades">
+              @for (c of minhas(); track c.id) {
+                <li>
+                  <a [routerLink]="['/comunidades', c.slug]" class="card perfil-rede-comunidade" [style.--cor-tema]="corTema[c.tema]">
+                    @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" class="capa-icone" /> }
+                    @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+                    <span><strong>{{ c.nome }}</strong><small>{{ c.tema }} · {{ c.total_membros }} {{ c.total_membros === 1 ? 'membro' : 'membros' }}</small></span>
+                  </a>
+                </li>
+              } @empty {
+                <li class="card vazio">
+                  <app-icone nome="groups" />
+                  <strong>Você ainda não participa de nenhuma comunidade</strong>
+                  <a routerLink="/comunidades" class="botao">Encontrar comunidades</a>
+                </li>
+              }
+            </ul>
+          }
+          @case ('conta') {
+            <section class="card">
+              <h2 class="titulo-secao">Seus dados</h2>
+              <dl class="lista-campos">
+                <dt>E-mail</dt><dd>{{ u.email }} <small class="texto-suave">(só você vê)</small></dd>
+                <dt>Tipo de conta</dt><dd>{{ u.moderador ? 'Moderador(a)' : 'Participante' }}</dd>
+              </dl>
+            </section>
+            <section class="card">
+              <h2 class="titulo-secao">Privacidade (LGPD)</h2>
+              <p class="texto-suave">Guardamos só seu nome, e-mail, foto e bio (se você colocar) e o que você publica. Você pode sair ou excluir sua conta quando quiser.</p>
+              <div class="acoes-linha">
+                <button class="botao botao-fantasma" type="button" (click)="sair()"><app-icone nome="logout" /> Sair</button>
+                <button class="botao botao-perigo" type="button" (click)="confirmando.set(true)"><app-icone nome="delete" /> Excluir minha conta</button>
+              </div>
+              @if (confirmando()) {
+                <div class="confirmacao" role="alertdialog" aria-labelledby="conf-titulo">
+                  <p id="conf-titulo"><strong>Excluir sua conta?</strong> Suas publicações e comentários também serão apagados. Isso não tem volta.</p>
+                  <div class="acoes-linha">
+                    <button class="botao botao-fantasma" type="button" (click)="confirmando.set(false)">Cancelar</button>
+                    <button class="botao botao-perigo" type="button" (click)="excluir()">Sim, excluir</button>
+                  </div>
+                </div>
+              }
+            </section>
+          }
+        }
+      }
+    </section>
+
+    <!-- Coluna lateral: comunidades em destaque -->
+    <aside class="perfil-rede-lateral">
+      <section class="card">
+        <div class="secao-titulo"><h2 class="titulo-secao">Comunidades</h2>
+          @if (minhas().length > 6) { <button type="button" class="link-sutil" (click)="aba.set('comunidades')">Ver todas</button> }
+        </div>
+        @if (minhas().length) {
+          <ul class="perfil-rede-mosaico">
+            @for (c of minhas().slice(0, 6); track c.id) {
+              <li>
+                <a [routerLink]="['/comunidades', c.slug]" [style.--cor-tema]="corTema[c.tema]" [title]="c.nome">
+                  @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" class="capa-icone" /> }
+                  @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+                  <span>{{ c.nome }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="texto-suave">Nenhuma ainda. <a routerLink="/comunidades">Explorar</a></p>
+        }
+      </section>
+      <section class="card dica-perfil">
+        <app-icone nome="verified" />
+        <p>Publicações com fonte oficial ganham mais confiança. Use o <a routerLink="/verificar">Verificar Informação</a> antes de compartilhar.</p>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Janela: editar perfil -->
+  @if (editando()) {
+    <div class="modal-fundo" (click)="fecharEdicao()">
+      <form class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-editar" #f="ngForm" (ngSubmit)="f.valid && salvar()" (click)="$event.stopPropagation()">
+        <div class="modal-topo">
+          <h2 id="titulo-editar">Editar perfil</h2>
+          <button type="button" class="botao-seta" (click)="fecharEdicao()" aria-label="Fechar"><app-icone nome="close" /></button>
+        </div>
+        <div class="editar-previa">
+          <app-avatar [nome]="nome || u.nome" [url]="previa()" [tamanho]="72" />
+          <span class="texto-suave">Prévia da sua foto</span>
+        </div>
+        <div class="campo-form">
+          <label for="p-nome">Nome</label>
+          <input id="p-nome" name="nome" [(ngModel)]="nome" required minlength="2" maxlength="60" />
+        </div>
+        @if (auth.aceitaBio()) {
+          <div class="campo-form">
+            <label for="p-bio">Bio <small class="texto-suave">({{ bio.length }}/160)</small></label>
+            <textarea id="p-bio" name="bio" rows="3" maxlength="160" [(ngModel)]="bio" placeholder="Conte em uma frase quem você é e o que te interessa em política."></textarea>
+          </div>
+        }
+        <div class="campo-form">
+          <label for="p-foto">Foto (link da imagem, opcional)</label>
+          <input id="p-foto" name="foto" type="url" [(ngModel)]="foto" (ngModelChange)="atualizarPrevia()" placeholder="https://..." />
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="botao botao-fantasma" (click)="fecharEdicao()">Cancelar</button>
+          <button type="submit" class="botao" [disabled]="f.invalid || salvando()">{{ salvando() ? 'Salvando...' : 'Salvar' }}</button>
+        </div>
+      </form>
+    </div>
+  }
+}

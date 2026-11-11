@@ -42,7 +42,7 @@
       <ul>
         @for (c of (minhas().length ? minhas() : destaquesComunidade()); track c.id) {
           <li>
-            <a [routerLink]="['/comunidades', c.slug]" class="mini-comunidade">
+            <a [routerLink]="['/comunidades', c.slug]" class="mini-comunidade" [style.--cor-tema]="corTema[c.tema]">
               @if (capaComunidade(c.slug); as capa) { <img [src]="capa" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
               <strong>{{ c.nome }}</strong>
               <small><app-icone nome="group" /> {{ c.total_membros }}</small>
@@ -112,7 +112,7 @@
       <ul class="lista-destaques">
         @for (c of destaquesComunidade(); track c.id) {
           <li>
-            <a [routerLink]="['/comunidades', c.slug]" class="destaque-com">
+            <a [routerLink]="['/comunidades', c.slug]" class="destaque-com" [style.--cor-tema]="corTema[c.tema]">
               @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
               <span><strong>{{ c.nome }}</strong><small>{{ c.total_membros }} membro(s)</small></span>
             </a>
