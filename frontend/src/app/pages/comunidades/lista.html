@@ -30,7 +30,7 @@
           <strong>{{ c.nome }}</strong>
           <span class="tag-verde tag-p">{{ c.tema }}</span>
           <p>{{ c.descricao }}</p>
-          <small class="texto-suave"><app-icone nome="group" /> {{ c.total_membros }} membro(s)</small>
+          <small class="texto-suave"><app-icone nome="group" /> {{ c.total_membros | plural: 'membro' : 'membros' }}</small>
         </div>
       </a>
     </li>

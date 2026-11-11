@@ -15,7 +15,7 @@
         <a routerLink="/comunidades" class="link-voltar"><app-icone nome="arrow_back" /> Comunidades</a>
         <h1>{{ c.nome }}</h1>
         <p>{{ c.descricao }}</p>
-        <small class="texto-suave"><span class="tag-verde tag-p">{{ c.tema }}</span> {{ c.total_membros }} membro(s) · comunidade aberta</small>
+        <small class="texto-suave"><span class="tag-verde tag-p">{{ c.tema }}</span> {{ c.total_membros | plural: 'membro' : 'membros' }} · comunidade aberta</small>
       </div>
       <button class="botao" [class.botao-verde]="!membro()" [class.botao-fantasma]="membro()" type="button" (click)="alternarMembro()">
         <app-icone [nome]="membro() ? 'check' : 'add'" /> {{ membro() ? 'Participando' : 'Participar' }}
@@ -99,7 +99,7 @@
             <app-avatar [nome]="m.nome" [url]="m.foto_url" [tamanho]="36" />
           }
         </div>
-        <small class="texto-suave">{{ c.total_membros }} pessoa(s) participam</small>
+        <small class="texto-suave">{{ c.total_membros === 1 ? '1 pessoa participa' : c.total_membros + ' pessoas participam' }}</small>
       </section>
     </aside>
   </div>

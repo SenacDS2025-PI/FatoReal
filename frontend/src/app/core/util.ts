@@ -37,6 +37,11 @@ export function tempoAtras(iso: string): string {
   if (s < 60) return 'agora';
   if (s < 3600) return `${Math.floor(s / 60)} min atrás`;
   if (s < 86400) return `${Math.floor(s / 3600)}h atrás`;
-  if (s < 7 * 86400) return `${Math.floor(s / 86400)} dia(s) atrás`;
+  if (s < 7 * 86400) return plural(Math.floor(s / 86400), 'dia', 'dias') + ' atrás';
   return new Date(iso).toLocaleDateString('pt-BR');
+}
+
+/** 1 → "1 membro"; 0 ou 2 → "0 membros", "2 membros". */
+export function plural(n: number, singular: string, pluralForma: string): string {
+  return `${n} ${n === 1 ? singular : pluralForma}`;
 }

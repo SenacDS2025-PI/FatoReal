@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, Pipe, PipeTransform, computed, input } from '@angular/core';
 import { Fonte } from '../core/modelos';
 import { modoDemo } from '../core/supabase';
-import { imagemSegura, linkSeguro } from '../core/util';
+import { imagemSegura, linkSeguro, plural } from '../core/util';
 
 /** Ícone do Google Material Symbols. Uso: <app-icone nome="search" /> */
 @Component({
@@ -124,3 +124,11 @@ export class AvisoDemo {
   host: { class: 'aviso-ia' },
 })
 export class AvisoIa {}
+
+/** Plural correto: {{ total | plural: 'membro' : 'membros' }} → "1 membro" ou "2 membros". */
+@Pipe({ name: 'plural' })
+export class PluralPipe implements PipeTransform {
+  transform(n: number | null | undefined, singular: string, pluralForma: string): string {
+    return plural(n ?? 0, singular, pluralForma);
+  }
+}

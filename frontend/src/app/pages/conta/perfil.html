@@ -10,7 +10,7 @@
         </div>
       </div>
       <h1>{{ u.nome }}
-        @if (u.moderador) { <span class="selo-moderador" title="Moderador(a) da plataforma"><app-icone nome="shield_person" /> Moderador(a)</span> }
+        @if (u.moderador) { <span class="selo-moderador" title="Moderação da plataforma"><app-icone nome="shield_person" /> Moderação</span> }
       </h1>
       @if (u.bio) {
         <p class="perfil-rede-bio">{{ u.bio }}</p>
@@ -23,7 +23,7 @@
       </ul>
       <ul class="perfil-rede-numeros" aria-label="Resumo da atividade">
         <li><strong>{{ publicacoes().length }}</strong> {{ publicacoes().length === 1 ? 'publicação' : 'publicações' }}</li>
-        <li><strong>{{ curtidasRecebidas() }}</strong> curtidas recebidas</li>
+        <li><strong>{{ curtidasRecebidas() }}</strong> {{ curtidasRecebidas() === 1 ? 'curtida recebida' : 'curtidas recebidas' }}</li>
         <li><strong>{{ curtidas().length }}</strong> {{ curtidas().length === 1 ? 'curtida dada' : 'curtidas dadas' }}</li>
       </ul>
     </div>
@@ -90,7 +90,7 @@
               <h2 class="titulo-secao">Seus dados</h2>
               <dl class="lista-campos">
                 <dt>E-mail</dt><dd>{{ u.email }} <small class="texto-suave">(só você vê)</small></dd>
-                <dt>Tipo de conta</dt><dd>{{ u.moderador ? 'Moderador(a)' : 'Participante' }}</dd>
+                <dt>Tipo de conta</dt><dd>{{ u.moderador ? 'Moderação' : 'Participante' }}</dd>
               </dl>
             </section>
             <section class="card">

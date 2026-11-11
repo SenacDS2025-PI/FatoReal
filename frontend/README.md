@@ -29,14 +29,20 @@ Abra http://localhost:4200.
 1. Copie `.env.exemplo` para `.env` (o `.env` não vai para o Git).
 2. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` (Supabase → Project Settings → API).
 3. Rode o [`supabase/schema.sql`](../supabase/schema.sql) no SQL Editor do Supabase.
+   **Se o projeto já existia, rode de novo:** o arquivo pode ser executado várias vezes sem erro e
+   acrescenta o que faltar (coluna `bio` do perfil e as comunidades temáticas).
 4. Rode `npm start` de novo. A faixa amarela de "modo demonstração" some.
+5. Para ter acesso ao painel de moderação, rode no SQL Editor (com o seu e-mail de cadastro):
+   `update public.perfis set is_moderador = true where id = (select id from auth.users where email = 'seu@email.com');`
+
+A busca e o perfil de políticos usam sempre a API de Dados Abertos da Câmara, ao vivo (com ou sem Supabase).
 
 As variáveis viram o arquivo `src/environments/environment.ts` pelo script `scripts/gerar-env.mjs`, que roda sozinho antes do `start` e do `build`. Nunca coloque a chave `service_role` nem a chave da IA no front.
 
 ## Deploy na Vercel
 
 1. Importe o repositório na Vercel e, em **Root Directory**, escolha `frontend`.
-2. Em **Settings → Environment Variables**, cadastre `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `API_URL` (`/api` se a API em Node ficar no mesmo projeto).
+2. Em **Settings → Environment Variables**, cadastre `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `API_URL` (a URL do projeto do backend na Vercel + `/api`, ex.: `https://fato-real-api.vercel.app/api`). No backend, `CORS_ORIGIN` deve ser a URL deste site.
 3. O `vercel.json` já define o build e manda todas as rotas para o Angular (menos `/api`).
 4. No Supabase, em **Authentication → URL Configuration**, coloque o link da Vercel em *Site URL* e em *Redirect URLs* (precisa disso para a confirmação de e-mail e a recuperação de senha).
 

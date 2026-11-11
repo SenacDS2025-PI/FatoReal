@@ -7,12 +7,12 @@ import { ComunidadesService } from '../../core/comunidades.service';
 import { Autor, Comunidade, Publicacao } from '../../core/modelos';
 import { linkSeguro } from '../../core/util';
 import { avatarComunidade, capaComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
-import { Avatar, Icone } from '../../shared/componentes';
+import { Avatar, Icone, PluralPipe } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
 @Component({
   selector: 'app-comunidade',
-  imports: [FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
+  imports: [FormsModule, RouterLink, Avatar, Icone, PublicacaoCard, PluralPipe],
   templateUrl: './comunidade.html',
 })
 export class ComunidadePage implements OnInit {

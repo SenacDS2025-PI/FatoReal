@@ -7,12 +7,12 @@ import { AvisosService } from '../core/avisos.service';
 import { ComunidadesService } from '../core/comunidades.service';
 import { Comentario, Publicacao } from '../core/modelos';
 import { linkSeguro, tempoAtras } from '../core/util';
-import { Avatar, Icone } from './componentes';
+import { Avatar, Icone, PluralPipe } from './componentes';
 
 /** Card de publicação no estilo da apresentação: autor, comunidade, texto, link, curtir/comentar/compartilhar/denunciar. */
 @Component({
   selector: 'app-publicacao',
-  imports: [FormsModule, RouterLink, Avatar, Icone],
+  imports: [FormsModule, RouterLink, Avatar, Icone, PluralPipe],
   template: `
     @let p = pub();
     <article class="post" [class.post-verificado]="p.verificada">
@@ -48,7 +48,7 @@ import { Avatar, Icone } from './componentes';
 
       <div class="post-contagem">
         <span>@if (p.total_curtidas) { <span class="bolinha-curtida"><app-icone nome="thumb_up" /></span> {{ p.total_curtidas }} }</span>
-        <button type="button" class="link-discreto" (click)="alternarComentarios()">{{ p.total_comentarios }} comentário(s)</button>
+        <button type="button" class="link-discreto" (click)="alternarComentarios()">{{ p.total_comentarios | plural: 'comentário' : 'comentários' }}</button>
       </div>
 
       <footer class="post-acoes">

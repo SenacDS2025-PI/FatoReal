@@ -18,3 +18,11 @@ export const exigirModerador: CanActivateFn = async () => {
   await auth.pronto;
   return auth.moderador() || router.createUrlTree(['/']);
 };
+
+/** Telas de entrar/cadastrar: quem já está logado volta para o início. */
+export const apenasVisitante: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  await auth.pronto;
+  return !auth.logado() || router.createUrlTree(['/']);
+};

@@ -5,7 +5,7 @@
 
 ## O projeto
 - **Fato Real**: rede social de informação cívica (PI do Senac). O que vale é o **Trello** "PI Senac - FATO REAL", que é o que o professor pediu.
-- **Tecnologias:** Angular (pasta `frontend/`), Supabase (banco e login), API em Node (FatoBot, ainda não existe), hospedagem na Vercel.
+- **Tecnologias:** Angular (pasta `frontend/`), Supabase (banco e login), API em Node (FatoBot com Gemini, verificação e Câmara, pasta `backend/`), hospedagem na Vercel.
 - **Entrega final:** 1º/12/2026. Código congelado em 28/11.
 - **Quem pede as mudanças:** Luiz Gustavo (GitHub `Liipez`), responsável pelo **front**. Coordenador: Guilherme. Vice: Pablo.
 
@@ -42,9 +42,10 @@ Não usar o Live Server ("Go Live"): ele não monta o Angular.
 ## Link de teste
 https://claude.ai/artifact/J1BvQb1JBHBEA62uR5vm2x (privado, versão com `#` nas rotas, gerada com `HASH_ROUTING=true`).
 
-## Pendências
-- Ligar o Supabase de verdade (URL e chave `anon` em `frontend/.env` e na Vercel) e testar.
-- Deploy na Vercel (Root Directory: `frontend`).
-- API em Node do FatoBot (`POST /api/fatobot`) e da verificação (`POST /api/verificar`). Os contratos estão em `frontend/README.md`.
+## Pendências (atualizado em 11/11/2026)
+- Branch de trabalho do Matheus: `matheus` (repositório `SenacDS2025-PI/FatoReal`), com front do Luiz e backend do João juntos.
+- Rodar de novo o `supabase/schema.sql` no projeto Supabase (acrescenta a coluna `bio` e as comunidades temáticas).
+- Colocar as chaves: `SUPABASE_URL` e `SUPABASE_ANON_KEY` no front; `GEMINI_API_KEY` e `CORS_ORIGIN` no backend (`.env` local e Vercel).
+- Deploy na Vercel: dois projetos (Root Directory `frontend` e `backend`); no front, `API_URL` = URL do backend + `/api`.
 - Trocar o e-mail de contato provisório em `frontend/src/app/pages/institucional/institucional.ts`.
-- Notícias, Base da Política, Verificar, Mensagens e Notificações estavam "fora do piloto" no Trello: avisar o coordenador que entraram.
+- Abrir o Pull Request da `matheus` para a `main`.

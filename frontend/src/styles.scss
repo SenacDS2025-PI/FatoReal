@@ -897,7 +897,7 @@ legend { font-weight: 700; padding: 0 6px; }
   }
 }
 .perfil-rede-grade { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
-.perfil-rede-conteudo { min-width: 0; > .card, > app-publicacao { display: block; margin-bottom: 14px; } }
+.perfil-rede-conteudo { min-width: 0; > .card, > app-publicacao { display: block; margin-bottom: 14px; } > .card.vazio { display: grid; } }
 .perfil-rede-lateral { display: grid; gap: 14px; position: sticky; top: 92px; .card { margin: 0; } }
 .perfil-rede-lateral .secao-titulo { display: flex; justify-content: space-between; align-items: baseline; .titulo-secao { margin-bottom: 10px; } .link-sutil { margin: 0; font-size: 0.85rem; } }
 .perfil-rede-mosaico {

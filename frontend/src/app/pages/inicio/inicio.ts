@@ -7,7 +7,7 @@ import { ComunidadesService } from '../../core/comunidades.service';
 import { Comunidade, Publicacao } from '../../core/modelos';
 import { linkSeguro } from '../../core/util';
 import { avatarComunidade, capaComunidade, CATEGORIAS, COR_TEMA, ICONE_TEMA } from '../../core/visual';
-import { Avatar, Icone } from '../../shared/componentes';
+import { Avatar, Icone, PluralPipe } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
 interface Destaque {
@@ -22,7 +22,7 @@ interface Destaque {
 
 @Component({
   selector: 'app-inicio',
-  imports: [FormsModule, RouterLink, Icone, Avatar, PublicacaoCard],
+  imports: [FormsModule, RouterLink, Icone, Avatar, PublicacaoCard, PluralPipe],
   templateUrl: './inicio.html',
 })
 export class InicioPage implements OnInit {

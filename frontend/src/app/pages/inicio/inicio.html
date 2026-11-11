@@ -114,7 +114,7 @@
           <li>
             <a [routerLink]="['/comunidades', c.slug]" class="destaque-com" [style.--cor-tema]="corTema[c.tema]">
               @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
-              <span><strong>{{ c.nome }}</strong><small>{{ c.total_membros }} membro(s)</small></span>
+              <span><strong>{{ c.nome }}</strong><small>{{ c.total_membros | plural: 'membro' : 'membros' }}</small></span>
             </a>
             @if (idsMinhas().has(c.id)) {
               <span class="participando"><app-icone nome="check" /> Membro</span>
@@ -144,7 +144,7 @@
             <span class="posicao" [class.primeiro]="i === 0">{{ i + 1 }}</span>
             <button type="button" (click)="categoria.set(a[0])">
               <strong>{{ a[0] }}</strong>
-              <small>{{ a[1] }} publicação(ões) recentes</small>
+              <small>{{ a[1] | plural: 'publicação recente' : 'publicações recentes' }}</small>
             </button>
             <app-icone nome="arrow_upward" class="sobe" />
           </li>

@@ -4,14 +4,14 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Comunidade } from '../../core/modelos';
-import { Icone } from '../../shared/componentes';
+import { Icone, PluralPipe } from '../../shared/componentes';
 import { VistosService } from '../../core/vistos.service';
 import { NotificacoesService } from '../../core/notificacoes.service';
 import { capaComunidade, avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 
 @Component({
   selector: 'app-comunidades',
-  imports: [FormsModule, RouterLink, Icone],
+  imports: [FormsModule, RouterLink, Icone, PluralPipe],
   templateUrl: './lista.html',
 })
 export class ComunidadesPage implements OnInit {

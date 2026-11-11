@@ -13,6 +13,8 @@ create table if not exists public.perfis (
   is_moderador boolean not null default false,
   criado_em    timestamptz not null default now()
 );
+-- Frase curta de apresentação do perfil (opcional). "add column if not exists" deixa rodar de novo sem erro.
+alter table public.perfis add column if not exists bio text check (bio is null or char_length(bio) <= 160);
 
 create or replace function public.criar_perfil()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -258,6 +260,23 @@ insert into public.comunidades (slug, nome, tema, descricao, regras) values
   ('politica-brasileira', 'Política Brasileira', 'Política', 'Debate sobre o Congresso, o governo e as eleições, sempre com fontes.', 'Respeite as pessoas. Cite fontes ao afirmar fatos. Opinião não é desinformação.'),
   ('educacao-para-todos', 'Educação para Todos', 'Educação', 'Educação pública, escolas, universidades e políticas educacionais.', 'Respeite as pessoas. Cite fontes ao afirmar fatos. Opinião não é desinformação.'),
   ('direitos-e-cidadania', 'Direitos e Cidadania', 'Cidadania', 'Direitos do cidadão, serviços públicos e participação social.', 'Respeite as pessoas. Cite fontes ao afirmar fatos. Opinião não é desinformação.')
+on conflict (slug) do nothing;
+
+-- Comunidades temáticas (as mesmas do modo demonstração do front)
+insert into public.comunidades (slug, nome, tema, descricao, regras)
+select v.slug, v.nome, v.tema, v.descricao, E'1. Respeite as pessoas: critique ideias, não ataque quem pensa diferente.\n2. Ao afirmar um fato, cite a fonte (de preferência oficial).\n3. Opinião é bem-vinda e não é desinformação.\n4. Não publique conteúdo sabidamente falso nem dados pessoais de outras pessoas.\n5. Denuncie o que violar estas regras: a moderação humana analisa.'
+from (values
+  ('eleicoes-e-voto', 'Eleições e Voto', 'Política', 'Calendário eleitoral, regras do TSE, urna eletrônica e como conferir candidaturas.'),
+  ('camara-e-senado-em-pauta', 'Câmara e Senado em Pauta', 'Política', 'Acompanhe projetos, votações e comissões do Congresso Nacional, com link para a tramitação oficial.'),
+  ('politica-na-minha-cidade', 'Política na Minha Cidade', 'Política', 'Câmaras municipais, prefeituras e orçamento local. O que é decidido perto de você.'),
+  ('checagem-de-fatos', 'Checagem de Fatos', 'Cidadania', 'Recebeu um boato? Traga aqui para a comunidade conferir junto, sempre com fonte.'),
+  ('contas-publicas', 'Contas Públicas', 'Economia', 'Orçamento, impostos, gastos do governo e cota parlamentar, com dados abertos.'),
+  ('saude-publica-e-sus', 'Saúde Pública e SUS', 'Saúde', 'Políticas de saúde, vacinação e funcionamento do SUS, com informação oficial.'),
+  ('meio-ambiente-e-clima', 'Meio Ambiente e Clima', 'Meio ambiente', 'Desmatamento, clima, energia e as leis ambientais em debate no país.'),
+  ('seguranca-publica', 'Segurança Pública', 'Segurança', 'Políticas de segurança, dados de violência e o papel de cada esfera de governo.'),
+  ('tecnologia-e-democracia', 'Tecnologia e Democracia', 'Tecnologia', 'Desinformação, inteligência artificial, privacidade (LGPD) e regras para as plataformas.'),
+  ('juventude-e-participacao', 'Juventude e Participação', 'Cidadania', 'Para quem vota pela primeira vez: título de eleitor, conselhos, grêmios e como participar.')
+) as v(slug, nome, tema, descricao)
 on conflict (slug) do nothing;
 
 -- =====================================================================

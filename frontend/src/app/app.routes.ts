@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { exigirLogin, exigirModerador } from './core/guards';
+import { apenasVisitante, exigirLogin, exigirModerador } from './core/guards';
 
 // Cada tela é carregada só quando a pessoa abre (lazy loading).
 export const routes: Routes = [
@@ -18,9 +18,9 @@ export const routes: Routes = [
   { path: 'comunidades/:slug', title: 'Comunidade · Fato Real', loadComponent: () => import('./pages/comunidades/comunidade').then((m) => m.ComunidadePage) },
 
   // Conta
-  { path: 'entrar', title: 'Entrar · Fato Real', loadComponent: () => import('./pages/conta/entrar').then((m) => m.EntrarPage) },
-  { path: 'cadastrar', title: 'Criar conta · Fato Real', loadComponent: () => import('./pages/conta/cadastrar').then((m) => m.CadastrarPage) },
-  { path: 'recuperar-senha', title: 'Recuperar senha · Fato Real', loadComponent: () => import('./pages/conta/recuperar-senha').then((m) => m.RecuperarSenhaPage) },
+  { path: 'entrar', title: 'Entrar · Fato Real', canActivate: [apenasVisitante], loadComponent: () => import('./pages/conta/entrar').then((m) => m.EntrarPage) },
+  { path: 'cadastrar', title: 'Criar conta · Fato Real', canActivate: [apenasVisitante], loadComponent: () => import('./pages/conta/cadastrar').then((m) => m.CadastrarPage) },
+  { path: 'recuperar-senha', title: 'Recuperar senha · Fato Real', canActivate: [apenasVisitante], loadComponent: () => import('./pages/conta/recuperar-senha').then((m) => m.RecuperarSenhaPage) },
   { path: 'nova-senha', title: 'Nova senha · Fato Real', loadComponent: () => import('./pages/conta/nova-senha').then((m) => m.NovaSenhaPage) },
   { path: 'perfil', title: 'Meu perfil · Fato Real', canActivate: [exigirLogin], loadComponent: () => import('./pages/conta/perfil').then((m) => m.PerfilPage) },
 
