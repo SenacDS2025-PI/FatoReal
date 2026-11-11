@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a1d0c"/><stop offset=".45" stop-color="#d9531e"/><stop offset=".8" stop-color="#f6a23b"/><stop offset="1" stop-color="#ffd27a"/></linearGradient>
+    <radialGradient id="sol" cx=".72" cy=".42" r=".42"><stop offset="0" stop-color="#fff2b8"/><stop offset=".35" stop-color="#ffd25a" stop-opacity=".9"/><stop offset="1" stop-color="#ffd25a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e5a7a"/><stop offset="1" stop-color="#062c40"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#ceu)"/>
+  <rect width="1200" height="630" fill="url(#sol)"/>
+  <circle cx="864" cy="265" r="95" fill="#fff4c4"/>
+  <!-- termômetro -->
+  <g transform="translate(170 110)">
+    <rect x="0" y="0" width="60" height="280" rx="30" fill="#fff" opacity=".92"/>
+    <circle cx="30" cy="300" r="52" fill="#fff" opacity=".92"/>
+    <rect x="16" y="70" width="28" height="220" rx="14" fill="#e3342f"/><circle cx="30" cy="300" r="36" fill="#e3342f"/>
+    <g stroke="#fff" stroke-width="5" opacity=".9"><path d="M60 60h22M60 110h22M60 160h22M60 210h22"/></g>
+  </g>
+  <!-- mar com ondas -->
+  <path d="M0 450q75-30 150 0t150 0 150 0 150 0 150 0 150 0 150 0 150 0V630H0z" fill="url(#mar)"/>
+  <path d="M0 500q75-26 150 0t150 0 150 0 150 0 150 0 150 0 150 0 150 0" fill="none" stroke="#7fd3f0" stroke-width="6" stroke-opacity=".5"/>
+  <path d="M0 555q75-22 150 0t150 0 150 0 150 0 150 0 150 0 150 0 150 0" fill="none" stroke="#7fd3f0" stroke-width="5" stroke-opacity=".35"/>
+  <!-- marcadores de cidades -->
+  <g fill="#fff">
+    <path d="M470 330c0-22 36-22 36 0 0 18-18 40-18 40s-18-22-18-40z"/><circle cx="488" cy="330" r="7" fill="#d9531e"/>
+    <path d="M580 280c0-22 36-22 36 0 0 18-18 40-18 40s-18-22-18-40z" opacity=".75"/><circle cx="598" cy="280" r="7" fill="#d9531e"/>
+    <path d="M400 230c0-22 36-22 36 0 0 18-18 40-18 40s-18-22-18-40z" opacity=".6"/><circle cx="418" cy="230" r="7" fill="#d9531e"/>
+  </g>
+</svg>
