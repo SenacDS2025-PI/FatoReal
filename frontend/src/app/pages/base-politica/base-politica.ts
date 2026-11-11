@@ -6,6 +6,14 @@ interface Topico {
   pergunta: string;
   resposta: string;
 }
+interface Termo {
+  termo: string;
+  categoria: string;
+  icone: string;
+  definicao: string;
+  /** Exemplo concreto, para a ideia ficar clara. */
+  exemplo: string;
+}
 interface Trilha {
   titulo: string;
   icone: string;
@@ -26,24 +34,42 @@ interface Trilha {
     <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario"
       (mouseenter)="pausado.set(true)" (mouseleave)="pausado.set(false)" (focusin)="aoFocar($event)" (focusout)="pausado.set(false)">
       <div class="glossario-topo">
-        <h2 id="titulo-glossario"><app-icone nome="menu_book" /> Glossário</h2>
+        <div>
+          <h2 id="titulo-glossario"><app-icone nome="menu_book" /> Glossário</h2>
+          <p class="glossario-sub">{{ glossario.length }} termos que aparecem no noticiário político, explicados em uma frase.</p>
+        </div>
         <div class="glossario-controles">
-          <span class="glossario-contador" aria-live="polite">{{ visiveis() > 1 ? atual() + 1 + '–' + (atual() + visiveis()) : atual() + 1 }} de {{ glossario.length }}</span>
+          <span class="glossario-contador" aria-live="polite">{{ visiveis() > 1 && termos().length > 1 ? atual() + 1 + '–' + min(atual() + visiveis(), termos().length) : atual() + 1 }} de {{ termos().length }}</span>
           <button type="button" class="botao-seta" (click)="ir(atual() - 1)" [disabled]="atual() === 0" aria-label="Termo anterior"><app-icone nome="chevron_left" /></button>
           <button type="button" class="botao-seta" (click)="ir(atual() + 1)" [disabled]="atual() >= ultimaPosicao()" aria-label="Próximo termo"><app-icone nome="chevron_right" /></button>
         </div>
       </div>
+
+      <div class="glossario-filtros" role="tablist" aria-label="Filtrar por categoria">
+        @for (c of categorias; track c) {
+          <button type="button" role="tab" [attr.aria-selected]="categoria() === c" (click)="filtrar(c)">{{ c }}</button>
+        }
+      </div>
+
       <ul #trilho class="glossario-trilho" (scroll)="aoRolar()" tabindex="0" aria-label="Termos do glossário" (keydown.arrowRight)="$event.preventDefault(); ir(atual() + 1)" (keydown.arrowLeft)="$event.preventDefault(); ir(atual() - 1)">
-        @for (g of glossario; track g[0]; let i = $index) {
-          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + glossario.length" [attr.data-cor]="i % 3">
-            <span class="glossario-letra" aria-hidden="true">{{ g[0].charAt(0) }}</span>
-            <dl><dt>{{ g[0] }}</dt><dd>{{ g[1] }}</dd></dl>
+        @for (g of termos(); track g.termo; let i = $index) {
+          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + termos().length" [attr.data-cor]="i % 3">
+            <div class="glossario-cabeca">
+              <span class="glossario-icone" aria-hidden="true"><app-icone [nome]="g.icone" /></span>
+              <span class="glossario-categoria">{{ g.categoria }}</span>
+            </div>
+            <h3>{{ g.termo }}</h3>
+            <p class="glossario-def">{{ g.definicao }}</p>
+            <div class="glossario-pratica"><strong><app-icone nome="lightbulb" /> Na prática</strong><span>{{ g.exemplo }}</span></div>
+            <a class="glossario-bot" routerLink="/fatobot" [queryParams]="{ p: 'O que é ' + g.termo + ' e como funciona no Brasil?' }" [attr.tabindex]="i >= atual() && i < atual() + visiveis() ? 0 : -1">
+              <app-icone nome="smart_toy" /> Perguntar ao FatoBot
+            </a>
           </li>
         }
       </ul>
       <div class="glossario-pontos" role="tablist" aria-label="Escolher termo">
         @for (i of posicoes(); track i) {
-          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + glossario[i][0]" (click)="ir(i)">
+          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + termos()[i].termo" (click)="ir(i)">
             <span [style.animation-play-state]="pausado() ? 'paused' : 'running'"></span>
           </button>
         }
@@ -80,7 +106,12 @@ export class BasePoliticaPage implements AfterViewInit, OnDestroy {
   protected readonly atual = signal(0);
   /** Quantos termos cabem na tela ao mesmo tempo (3 no computador, 1 no celular). */
   protected readonly visiveis = signal(1);
-  protected readonly ultimaPosicao = computed(() => Math.max(0, this.glossario.length - this.visiveis()));
+  protected readonly categoria = signal('Todos');
+  protected readonly termos = computed(() =>
+    this.categoria() === 'Todos' ? this.glossario : this.glossario.filter((g) => g.categoria === this.categoria()),
+  );
+  protected readonly ultimaPosicao = computed(() => Math.max(0, this.termos().length - this.visiveis()));
+  protected readonly min = Math.min;
   protected readonly posicoes = computed(() => Array.from({ length: this.ultimaPosicao() + 1 }, (_, i) => i));
 
   /** Carrossel "vivo": avança sozinho a cada 3 s; pausa com o mouse em cima ou com o foco do teclado. */
@@ -103,6 +134,16 @@ export class BasePoliticaPage implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     clearInterval(this.timer);
+  }
+
+  protected filtrar(c: string) {
+    this.categoria.set(c);
+    this.atual.set(0);
+    this.decorrido = 0;
+    setTimeout(() => {
+      this.trilho().nativeElement.scrollTo({ left: 0 });
+      this.medir();
+    });
   }
 
   /** Pausa quando a pessoa navega pelo teclado (Tab); um clique com o mouse não trava o carrossel. */
@@ -171,19 +212,46 @@ export class BasePoliticaPage implements AfterViewInit, OnDestroy {
     },
   ];
 
-  protected readonly glossario: [string, string][] = [
-    ['Projeto de lei (PL)', 'Proposta de nova lei ou de mudança em uma lei existente.'],
-    ['PEC', 'Proposta de Emenda à Constituição. Precisa ser aprovada em dois turnos em cada Casa do Congresso, por pelo menos três quintos dos votos.'],
-    ['Medida provisória', 'Ato do presidente com força de lei imediata, em casos de relevância e urgência. Perde a validade se o Congresso não a aprovar em até 60 dias, prorrogáveis por mais 60.'],
-    ['Sanção e veto', 'Sanção é a aprovação de um projeto pelo chefe do Executivo; veto é a recusa, total ou parcial.'],
-    ['Plenário', 'Reunião de todos os parlamentares de uma Casa para votar.'],
-    ['Comissão', 'Grupo menor de parlamentares que analisa projetos sobre um tema antes do plenário.'],
-    ['CPI', 'Comissão Parlamentar de Inquérito. Investiga um fato determinado, por prazo certo, e é criada com a assinatura de um terço dos membros da Casa.'],
-    ['Lei complementar', 'Lei que regulamenta assuntos que a Constituição manda tratar dessa forma. Precisa de maioria absoluta para ser aprovada.'],
-    ['Quórum', 'Número mínimo de parlamentares presentes, ou de votos, exigido para abrir uma votação ou aprovar uma proposta.'],
-    ['Legislatura', 'Período de quatro anos de trabalho do Congresso, que coincide com o mandato dos deputados federais.'],
-    ['Emenda parlamentar', 'Indicação feita por deputados e senadores de onde aplicar uma parte do Orçamento federal, como obras e serviços nos estados e municípios.'],
-    ['Cota parlamentar', 'Verba para despesas do mandato, como passagens, combustível e divulgação. Os gastos de cada deputado são públicos.'],
-    ['Federação partidária', 'União de partidos que atuam juntos, como se fossem um só, por pelo menos quatro anos.'],
+  protected readonly glossario: Termo[] = [
+    { termo: 'Projeto de lei (PL)', categoria: 'Leis', icone: 'description',
+      definicao: 'Proposta de nova lei ou de mudança em uma lei existente.',
+      exemplo: 'O texto passa por comissões e pelo plenário da Câmara e do Senado antes de ir para sanção.' },
+    { termo: 'PEC', categoria: 'Leis', icone: 'menu_book',
+      definicao: 'Proposta de Emenda à Constituição. Precisa ser aprovada em dois turnos em cada Casa, por três quintos dos votos.',
+      exemplo: 'Mudar algo escrito na Constituição, como regras de aposentadoria, exige uma PEC.' },
+    { termo: 'Lei complementar', categoria: 'Leis', icone: 'library_books',
+      definicao: 'Lei que regulamenta assuntos que a Constituição manda tratar dessa forma. Precisa de maioria absoluta.',
+      exemplo: 'A Lei de Responsabilidade Fiscal (LC 101/2000) é uma lei complementar.' },
+    { termo: 'Medida provisória', categoria: 'Executivo', icone: 'bolt',
+      definicao: 'Ato do presidente com força de lei imediata, em casos de relevância e urgência.',
+      exemplo: 'Vale assim que é publicada, mas perde a validade se o Congresso não aprovar em até 60 dias, prorrogáveis por mais 60.' },
+    { termo: 'Sanção e veto', categoria: 'Executivo', icone: 'approval',
+      definicao: 'Sanção é a aprovação de um projeto pelo chefe do Executivo; veto é a recusa, total ou parcial.',
+      exemplo: 'Depois que o Congresso aprova um projeto, o presidente tem 15 dias úteis para sancionar ou vetar.' },
+    { termo: 'Plenário', categoria: 'Congresso', icone: 'groups',
+      definicao: 'Reunião de todos os parlamentares de uma Casa para votar.',
+      exemplo: 'É no plenário que acontece a votação final de um projeto na Câmara ou no Senado.' },
+    { termo: 'Comissão', categoria: 'Congresso', icone: 'diversity_3',
+      definicao: 'Grupo menor de parlamentares que analisa projetos sobre um tema antes do plenário.',
+      exemplo: 'Um projeto sobre escolas costuma passar pela Comissão de Educação.' },
+    { termo: 'CPI', categoria: 'Congresso', icone: 'manage_search',
+      definicao: 'Comissão Parlamentar de Inquérito. Investiga um fato determinado, por prazo certo; é criada com a assinatura de um terço da Casa.',
+      exemplo: 'Pode convocar pessoas para depor e pedir quebra de sigilos, mas não julga nem condena ninguém.' },
+    { termo: 'Quórum', categoria: 'Congresso', icone: 'how_to_reg',
+      definicao: 'Número mínimo de parlamentares presentes, ou de votos, para abrir uma votação ou aprovar uma proposta.',
+      exemplo: 'Uma PEC precisa de três quintos dos votos: 308 dos 513 deputados.' },
+    { termo: 'Legislatura', categoria: 'Congresso', icone: 'calendar_month',
+      definicao: 'Período de quatro anos de trabalho do Congresso, igual ao mandato dos deputados federais.',
+      exemplo: 'A legislatura atual começou em fevereiro de 2023 e vai até janeiro de 2027.' },
+    { termo: 'Emenda parlamentar', categoria: 'Orçamento', icone: 'payments',
+      definicao: 'Indicação feita por deputados e senadores de onde aplicar uma parte do Orçamento federal.',
+      exemplo: 'Um deputado pode indicar verba para uma obra ou um serviço de saúde na sua região.' },
+    { termo: 'Cota parlamentar', categoria: 'Orçamento', icone: 'receipt_long',
+      definicao: 'Verba para despesas do mandato, como passagens, combustível e divulgação. Os gastos são públicos.',
+      exemplo: 'No perfil de cada deputado, aqui no Fato Real, dá para ver esses gastos por categoria.' },
+    { termo: 'Federação partidária', categoria: 'Partidos', icone: 'handshake',
+      definicao: 'União de partidos que atuam juntos, como se fossem um só, por pelo menos quatro anos.',
+      exemplo: 'Partidos federados disputam as eleições juntos e atuam como um bloco no Congresso.' },
   ];
+  protected readonly categorias = ['Todos', 'Leis', 'Congresso', 'Executivo', 'Orçamento', 'Partidos'];
 }
