@@ -7,11 +7,19 @@ import { lerDemo, salvarDemo } from './demo-store';
  * Cadastro, login e perfil do usuário (Supabase Auth).
  * LGPD: coletamos só nome, e-mail e (opcional) foto. Nada de opinião política.
  */
+
+const CAMPOS_EXTRAS = ['bio', 'cidade', 'uf', 'capa'];
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly usuario = signal<Usuario | null>(null);
-  /** No modo demonstração a bio sempre funciona; no Supabase, só se a tabela perfis tiver a coluna bio. */
-  readonly aceitaBio = signal(true);
+  /**
+   * Campos opcionais do perfil (bio, cidade, uf, capa). No modo demonstração todos funcionam;
+   * no Supabase, só os que existirem como coluna na tabela perfis.
+   */
+  readonly camposExtras = signal<string[]>([...CAMPOS_EXTRAS]);
+  aceita(campo: string): boolean {
+    return this.camposExtras().includes(campo);
+  }
   readonly logado = computed(() => this.usuario() !== null);
   readonly moderador = computed(() => this.usuario()?.moderador ?? false);
 
@@ -45,8 +53,8 @@ export class AuthService {
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    // A coluna "bio" é opcional no banco: só oferecemos o campo se ela existir.
-    this.aceitaBio.set(!!data && 'bio' in data);
+    // As colunas extras são opcionais no banco: só oferecemos os campos que existirem.
+    this.camposExtras.set(CAMPOS_EXTRAS.filter((c) => !!data && c in data));
     this.usuario.set({
       id,
       email: email ?? '',
@@ -54,6 +62,9 @@ export class AuthService {
       foto_url: data?.foto_url ?? null,
       moderador: data?.is_moderador ?? false,
       bio: data?.bio ?? null,
+      cidade: data?.cidade ?? null,
+      uf: data?.uf ?? null,
+      capa: data?.capa ?? null,
       criado_em: data?.criado_em ?? null,
     });
   }
@@ -107,14 +118,21 @@ export class AuthService {
     if (error) throw new Error(traduzirErro(error.message));
   }
 
-  async atualizarPerfil(dados: { nome: string; foto_url: string | null; bio?: string | null }): Promise<void> {
+  async atualizarPerfil(dados: {
+    nome: string;
+    foto_url: string | null;
+    bio?: string | null;
+    cidade?: string | null;
+    uf?: string | null;
+    capa?: string | null;
+  }): Promise<void> {
     const atual = this.usuario();
     if (!atual) return;
     if (!supabase) {
       this.salvarDemo({ ...atual, ...dados });
       return;
     }
-    if (!this.aceitaBio()) delete dados.bio;
+    for (const c of CAMPOS_EXTRAS) if (!this.aceita(c)) delete (dados as Record<string, unknown>)[c];
     const { error } = await supabase.from('perfis').update(dados).eq('id', atual.id);
     if (error) throw new Error(traduzirErro(error.message));
     this.usuario.set({ ...atual, ...dados });

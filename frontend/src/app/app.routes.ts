@@ -23,6 +23,8 @@ export const routes: Routes = [
   { path: 'recuperar-senha', title: 'Recuperar senha · Fato Real', loadComponent: () => import('./pages/conta/recuperar-senha').then((m) => m.RecuperarSenhaPage) },
   { path: 'nova-senha', title: 'Nova senha · Fato Real', loadComponent: () => import('./pages/conta/nova-senha').then((m) => m.NovaSenhaPage) },
   { path: 'perfil', title: 'Meu perfil · Fato Real', canActivate: [exigirLogin], loadComponent: () => import('./pages/conta/perfil').then((m) => m.PerfilPage) },
+  { path: 'perfil/editar', title: 'Editar perfil · Fato Real', canActivate: [exigirLogin], loadComponent: () => import('./pages/conta/perfil-editar').then((m) => m.PerfilEditarPage) },
+  { path: 'pessoas/:id', title: 'Perfil · Fato Real', loadComponent: () => import('./pages/conta/perfil').then((m) => m.PerfilPage) },
 
   // Novas áreas do menu
   { path: 'noticias', title: 'Notícias · Fato Real', loadComponent: () => import('./pages/noticias/noticias').then((m) => m.NoticiasPage) },

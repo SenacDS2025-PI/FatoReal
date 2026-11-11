@@ -33,6 +33,23 @@ export interface Usuario {
   /** Frase curta de apresentação (até 160 caracteres). */
   bio?: string | null;
   criado_em?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  /** Cor da capa do perfil (chave de CAPAS em perfis.service.ts). */
+  capa?: string | null;
+}
+
+/** Dados de perfil que qualquer pessoa pode ver (sem e-mail). */
+export interface PerfilPublico {
+  id: string;
+  nome: string;
+  foto_url?: string | null;
+  bio?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  capa?: string | null;
+  moderador: boolean;
+  criado_em?: string | null;
 }
 
 export interface Autor {
