@@ -17,10 +17,10 @@ import { Avatar, Icone } from './componentes';
     @let p = pub();
     <article class="post" [class.post-verificado]="p.verificada">
       <header class="post-topo">
-        <app-avatar [nome]="p.autor.nome" [url]="p.autor.foto_url" [tamanho]="44" />
+        <a [routerLink]="['/pessoas', p.autor.id]" class="post-autor-foto" [attr.aria-label]="'Perfil de ' + p.autor.nome"><app-avatar [nome]="p.autor.nome" [url]="p.autor.foto_url" [tamanho]="44" /></a>
         <div class="post-autor">
           <strong>
-            {{ p.autor.nome }}
+            <a [routerLink]="['/pessoas', p.autor.id]" class="post-autor-nome">{{ p.autor.nome }}</a>
             @if (p.verificada) { <app-icone nome="verified" class="selo-azul" /> }
           </strong>
           <small>

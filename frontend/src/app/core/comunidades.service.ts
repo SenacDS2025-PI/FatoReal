@@ -5,6 +5,7 @@ import { Autor, Comentario, Comunidade, Denuncia, Publicacao, StatusDenuncia } f
 import { supabase } from './supabase';
 import { lerDemo, proximoId, salvarDemo } from './demo-store';
 import { gerarSlug } from './util';
+import { PESSOAS_EXEMPLO, PUBLICACOES_EXEMPLO } from './pessoas-demo';
 
 type Linha = Record<string, any>;
 
@@ -105,12 +106,16 @@ export class ComunidadesService {
   /** Comunidades de que o usuário logado participa (para a página de perfil). */
   async minhas(): Promise<Comunidade[]> {
     const u = this.auth.usuario();
-    if (!u) return [];
-    if (!supabase) return this.demo.minhas(u.id);
+    return u ? this.comunidadesDe(u.id) : [];
+  }
+
+  /** Comunidades de que uma pessoa participa (perfil público). */
+  async comunidadesDe(usuarioId: string): Promise<Comunidade[]> {
+    if (!supabase) return this.demo.minhas(usuarioId);
     const { data, error } = await supabase
       .from('comunidade_membros')
       .select('comunidade:comunidades(*, comunidade_membros(count))')
-      .eq('usuario_id', u.id);
+      .eq('usuario_id', usuarioId);
     if (error) return [];
     return (data as Linha[]).map((m) => mapComunidade(m['comunidade']));
   }
@@ -460,6 +465,24 @@ function completarSementes(db: BancoDemo): BancoDemo {
       });
     }
   });
+  // Pessoas de exemplo: entram nas comunidades e publicam (uma vez por navegador)
+  if (!aplicadas.has('pessoas-1')) {
+    aplicadas.add('pessoas-1');
+    mudou = true;
+    for (const pub of PUBLICACOES_EXEMPLO) {
+      const c = db.comunidades.find((x) => x.slug === pub.comunidade);
+      const pessoa = PESSOAS_EXEMPLO.find((x) => x.id === pub.autor);
+      if (!c || !pessoa) continue;
+      const autor = { id: pessoa.id, nome: pessoa.nome, foto_url: pessoa.foto_url };
+      if (!db.membros.some((m) => m.comunidade_id === c.id && m.usuario.id === autor.id)) {
+        db.membros.push({ comunidade_id: c.id, usuario: autor, papel: 'membro' });
+      }
+      db.publicacoes.push({
+        id: proximoId(db.publicacoes), comunidade_id: c.id, autor, verificada: false, removida: false,
+        texto: pub.texto, link_url: pub.link_url, criado_em: new Date(Date.now() - pub.horas * 3600_000).toISOString(),
+      });
+    }
+  }
   db.sementes = [...aplicadas];
   if (mudou) salvarDemo('social-v2', db);
   return db;
