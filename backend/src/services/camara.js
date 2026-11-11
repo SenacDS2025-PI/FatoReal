@@ -1,13 +1,18 @@
 // Acesso à API de Dados Abertos da Câmara dos Deputados.
 // Documentação: https://dadosabertos.camara.leg.br/swagger/api.html
+// Ordem de leitura:
+// - Lista de deputados: Supabase primeiro (rápido e estável); se vazio ou fora, Câmara.
+// - Perfil: Câmara primeiro (mais detalhes); se a Câmara cair, cópia do Supabase.
 import { cached } from '../utils/cache.js';
+import { CAMARA_API, FONTE_NOME } from './camara-fonte.js';
+import { supabaseConfigurado, listarDoSupabase, obterDoSupabase } from './supabase.js';
 
-export const CAMARA_API = 'https://dadosabertos.camara.leg.br/api/v2';
-export const FONTE_NOME = 'Dados Abertos da Câmara dos Deputados';
+export { CAMARA_API, FONTE_NOME };
 
 const TIMEOUT_MS = 10_000;
 const TENTATIVAS = 2;
-const ESPERA_ENTRE_TENTATIVAS_MS = process.env.NODE_ENV === 'test' ? 0 : 1000;
+// Nos testes (node --test define NODE_TEST_CONTEXT) não espera entre tentativas.
+const ESPERA_ENTRE_TENTATIVAS_MS = process.env.NODE_TEST_CONTEXT ? 0 : 1000;
 const CACHE_LISTA_MS = 6 * 60 * 60 * 1000; // 6 horas
 const CACHE_PERFIL_MS = 60 * 60 * 1000; // 1 hora
 
@@ -47,7 +52,7 @@ function fonte(url) {
 }
 
 // Lista todos os deputados em exercício (a API pagina de 100 em 100).
-export function listarDeputados() {
+function listarDaCamara() {
   return cached('deputados:lista', CACHE_LISTA_MS, async () => {
     const deputados = [];
     let pagina = 1;
@@ -78,7 +83,7 @@ export function listarDeputados() {
 }
 
 // Perfil de um deputado. Remove dados pessoais desnecessários (ex.: CPF) — LGPD.
-export function obterDeputado(id) {
+function obterDaCamara(id) {
   return cached(`deputados:${id}`, CACHE_PERFIL_MS, async () => {
     const { url, json } = await buscarJson(`/deputados/${id}`);
     const d = json.dados;
@@ -113,4 +118,34 @@ export function obterDeputado(id) {
       fonte: fonte(url),
     };
   });
+}
+
+async function tentarSupabase(fn, ...args) {
+  if (!supabaseConfigurado()) return null;
+  try {
+    return await fn(...args);
+  } catch (err) {
+    console.error(err.message);
+    return null;
+  }
+}
+
+export async function listarDeputados() {
+  const doBanco = await cached('deputados:lista:supabase', CACHE_PERFIL_MS, async () => {
+    const r = await tentarSupabase(listarDoSupabase);
+    if (!r) throw new Error('sem dados no Supabase');
+    return r;
+  }).catch(() => null);
+  return doBanco ?? listarDaCamara();
+}
+
+export async function obterDeputado(id) {
+  try {
+    return await obterDaCamara(id);
+  } catch (err) {
+    if (err instanceof CamaraError && err.status === 404) throw err;
+    const copia = await tentarSupabase(obterDoSupabase, id);
+    if (copia) return copia;
+    throw err;
+  }
 }

@@ -83,8 +83,37 @@ Erros: `400` ID inválido · `404` deputado não encontrado · `502` a Câmara n
 Ela é instável (às vezes demora mais de 15s ou responde 504). Por isso o backend tem:
 limite de 10s por chamada, uma nova tentativa automática e cache em memória
 (lista: 6h, perfil: 1h). Se a Câmara cair, a API devolve a última resposta boa que tinha
-(com a data original da consulta). O próximo passo é salvar esses dados no Supabase para não depender
-da Câmara a cada acesso.
+(com a data original da consulta).
+
+### Cópia no Supabase (tabela `politicos`)
+
+Para não depender da Câmara na hora H, os deputados ficam salvos no Supabase:
+
+- **Busca (`/api/deputados`)**: lê do Supabase primeiro; se estiver vazio ou fora, usa a Câmara.
+- **Perfil (`/api/deputados/:id`)**: tenta a Câmara primeiro (tem mais detalhes); se ela cair,
+  usa a cópia do Supabase.
+- Quando a resposta vem da cópia, a `fonte` diz *"(cópia salva no Fato Real)"* e `consultadoEm`
+  é a data da coleta, para o usuário saber de quando é a informação.
+
+A API usa só `SUPABASE_URL` e `SUPABASE_ANON_KEY` (leitura pública, protegida pelo RLS).
+Sem essas variáveis, tudo continua funcionando direto pela Câmara.
+
+#### Importar os deputados
+
+1. A tabela precisa existir: rode o `supabase/schema.sql` no SQL Editor do Supabase.
+2. No `backend/.env`, preencha `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`
+   (*Project Settings > API*).
+3. Rode:
+
+```bash
+npm run importar -- 20   # teste rápido com 20 deputados
+npm run importar         # todos os deputados em exercício (~513, alguns minutos)
+```
+
+Pode rodar de novo quando quiser: atualiza os dados e a data da coleta. O CPF não é salvo (LGPD).
+
+> ⚠️ A `service_role` ignora as regras de segurança do banco. Use **só** no seu computador,
+> para importar. **Nunca** na Vercel, no Angular ou no GitHub.
 
 ### `POST /api/fatobot`
 
