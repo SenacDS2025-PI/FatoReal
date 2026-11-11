@@ -56,10 +56,12 @@ export class App {
       this.menuAberto.set(false);
       this.notifAberto.set(false);
       this.notificacoes.atualizar();
+      this.mensagens.atualizarContagem();
     });
     effect(() => {
       this.auth.usuario();
       this.notificacoes.atualizar();
+      this.mensagens.atualizarContagem();
     });
   }
 

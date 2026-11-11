@@ -120,7 +120,9 @@ export class PerfisService {
     return id;
   }
 
+  /** As pessoas de exemplo vêm sempre do código (assim novas entram para todos); só quem segue quem fica salvo. */
   private demo(): BancoPessoas {
-    return lerDemo<BancoPessoas>('pessoas-v1', { perfis: PESSOAS_EXEMPLO, seguir: SEGUIR_EXEMPLO });
+    const salvo = lerDemo<Partial<BancoPessoas>>('pessoas-v1', {});
+    return { perfis: PESSOAS_EXEMPLO, seguir: salvo.seguir ?? [...SEGUIR_EXEMPLO] };
   }
 }

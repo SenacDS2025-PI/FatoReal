@@ -5,7 +5,7 @@ import { Autor, Comentario, Comunidade, Denuncia, Publicacao, StatusDenuncia } f
 import { supabase } from './supabase';
 import { lerDemo, proximoId, salvarDemo } from './demo-store';
 import { gerarSlug } from './util';
-import { PESSOAS_EXEMPLO, PUBLICACOES_EXEMPLO } from './pessoas-demo';
+import { GRUPOS_EXEMPLO, PESSOAS_EXEMPLO, PUBLICACOES_EXEMPLO } from './pessoas-demo';
 
 type Linha = Record<string, any>;
 
@@ -481,6 +481,17 @@ function completarSementes(db: BancoDemo): BancoDemo {
         id: proximoId(db.publicacoes), comunidade_id: c.id, autor, verificada: false, removida: false,
         texto: pub.texto, link_url: pub.link_url, criado_em: new Date(Date.now() - pub.horas * 3600_000).toISOString(),
       });
+    }
+  }
+  // Quem escreve nos grupos de exemplo passa a ser membro da comunidade
+  if (!aplicadas.has('pessoas-2')) {
+    aplicadas.add('pessoas-2');
+    mudou = true;
+    for (const g of GRUPOS_EXEMPLO) {
+      const c = db.comunidades.find((x) => x.slug === g.comunidade);
+      const pessoa = PESSOAS_EXEMPLO.find((x) => x.id === g.autor);
+      if (!c || !pessoa || db.membros.some((m) => m.comunidade_id === c.id && m.usuario.id === pessoa.id)) continue;
+      db.membros.push({ comunidade_id: c.id, usuario: { id: pessoa.id, nome: pessoa.nome, foto_url: pessoa.foto_url }, papel: 'membro' });
     }
   }
   db.sementes = [...aplicadas];
