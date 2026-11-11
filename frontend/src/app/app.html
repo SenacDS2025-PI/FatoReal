@@ -18,6 +18,11 @@
 
   <div class="topo-acoes">
     <a routerLink="/politicos" class="sino so-celular" aria-label="Pesquisar" title="Pesquisar"><app-icone nome="search" /></a>
+    <button type="button" class="sino" (click)="tema.alternar()"
+      [attr.aria-label]="tema.tema() === 'claro' ? 'Ativar modo escuro' : 'Ativar modo claro'"
+      [title]="tema.tema() === 'claro' ? 'Modo escuro' : 'Modo claro'">
+      <app-icone [nome]="tema.tema() === 'claro' ? 'dark_mode' : 'light_mode'" />
+    </button>
     <div class="menu-conta">
       <button type="button" class="sino" (click)="alternarNotificacoes()" [attr.aria-expanded]="notifAberto()" aria-haspopup="dialog"
         [attr.aria-label]="'Notificações' + (notificacoes.naoLidas() ? ', ' + notificacoes.naoLidas() + ' novas' : '')" title="Notificações">
@@ -57,9 +62,6 @@
             <div class="menu-conta-quem"><strong>{{ u.nome }}</strong><small>{{ u.email }}</small></div>
             <a role="menuitem" routerLink="/perfil"><app-icone nome="account_circle" /> Meu perfil</a>
             @if (auth.moderador()) { <a role="menuitem" routerLink="/moderacao"><app-icone nome="shield" /> Moderação</a> }
-            <button role="menuitem" type="button" (click)="tema.alternar()">
-              <app-icone [nome]="tema.tema() === 'claro' ? 'dark_mode' : 'light_mode'" /> {{ tema.tema() === 'claro' ? 'Modo escuro' : 'Modo claro' }}
-            </button>
             <button role="menuitem" type="button" (click)="sair()"><app-icone nome="logout" /> Sair</button>
           </div>
         }

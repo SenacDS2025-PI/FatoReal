@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 import { Fonte } from '../core/modelos';
 import { modoDemo } from '../core/supabase';
 import { imagemSegura, linkSeguro } from '../core/util';
@@ -18,8 +18,8 @@ export class Icone {
 @Component({
   selector: 'app-avatar',
   template: `
-    @if (foto()) {
-      <img [src]="foto()" alt="" loading="lazy" />
+    @if (foto() && !falhou()) {
+      <img [src]="foto()" alt="" loading="lazy" (error)="falhou.set(true)" />
     } @else {
       <span aria-hidden="true">{{ iniciais() }}</span>
     }
@@ -31,6 +31,14 @@ export class Avatar {
   readonly url = input<string | null | undefined>(null);
   readonly tamanho = input(40);
   protected readonly foto = computed(() => imagemSegura(this.url()));
+  /** Se o link não for uma imagem válida, mostra as iniciais em vez do ícone de imagem quebrada. */
+  protected readonly falhou = signal(false);
+  constructor() {
+    effect(() => {
+      this.url();
+      this.falhou.set(false);
+    });
+  }
   protected readonly iniciais = computed(() =>
     this.nome()
       .replace(/[^\p{L}\s]/gu, '')
