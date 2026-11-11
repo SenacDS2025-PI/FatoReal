@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, computed, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, computed, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icone } from '../../shared/componentes';
 
@@ -23,7 +23,8 @@ interface Trilha {
       <p>Aprender política sem precisar já entender de política. Explicações curtas sobre como o Brasil funciona, com link para a fonte oficial.</p>
     </header>
 
-    <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario">
+    <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario"
+      (mouseenter)="pausado.set(true)" (mouseleave)="pausado.set(false)" (focusin)="aoFocar($event)" (focusout)="pausado.set(false)">
       <div class="glossario-topo">
         <h2 id="titulo-glossario"><app-icone nome="menu_book" /> Glossário</h2>
         <div class="glossario-controles">
@@ -34,7 +35,7 @@ interface Trilha {
       </div>
       <ul #trilho class="glossario-trilho" (scroll)="aoRolar()" tabindex="0" aria-label="Termos do glossário" (keydown.arrowRight)="$event.preventDefault(); ir(atual() + 1)" (keydown.arrowLeft)="$event.preventDefault(); ir(atual() - 1)">
         @for (g of glossario; track g[0]; let i = $index) {
-          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + glossario.length">
+          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + glossario.length" [attr.data-cor]="i % 3">
             <span class="glossario-letra" aria-hidden="true">{{ g[0].charAt(0) }}</span>
             <dl><dt>{{ g[0] }}</dt><dd>{{ g[1] }}</dd></dl>
           </li>
@@ -42,7 +43,9 @@ interface Trilha {
       </ul>
       <div class="glossario-pontos" role="tablist" aria-label="Escolher termo">
         @for (i of posicoes(); track i) {
-          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + glossario[i][0]" (click)="ir(i)"></button>
+          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + glossario[i][0]" (click)="ir(i)">
+            <span [style.animation-play-state]="pausado() ? 'paused' : 'running'"></span>
+          </button>
         }
       </div>
       <p class="fonte">
@@ -71,7 +74,7 @@ interface Trilha {
     </div>
   `,
 })
-export class BasePoliticaPage implements AfterViewInit {
+export class BasePoliticaPage implements AfterViewInit, OnDestroy {
   private readonly trilho = viewChild.required<ElementRef<HTMLUListElement>>('trilho');
   /** Índice do primeiro termo visível. */
   protected readonly atual = signal(0);
@@ -80,8 +83,31 @@ export class BasePoliticaPage implements AfterViewInit {
   protected readonly ultimaPosicao = computed(() => Math.max(0, this.glossario.length - this.visiveis()));
   protected readonly posicoes = computed(() => Array.from({ length: this.ultimaPosicao() + 1 }, (_, i) => i));
 
+  /** Carrossel "vivo": avança sozinho a cada 3 s; pausa com o mouse em cima ou com o foco do teclado. */
+  protected readonly pausado = signal(false);
+  private timer?: ReturnType<typeof setInterval>;
+  private decorrido = 0;
+  private static readonly INTERVALO = 3;
+
   ngAfterViewInit() {
     this.medir();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.timer = setInterval(() => {
+      if (this.pausado() || document.hidden) {
+        this.decorrido = 0;
+        return;
+      }
+      if (++this.decorrido >= BasePoliticaPage.INTERVALO) this.ir(this.atual() >= this.ultimaPosicao() ? 0 : this.atual() + 1);
+    }, 1000);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.timer);
+  }
+
+  /** Pausa quando a pessoa navega pelo teclado (Tab); um clique com o mouse não trava o carrossel. */
+  protected aoFocar(e: FocusEvent) {
+    if ((e.target as HTMLElement).matches(':focus-visible')) this.pausado.set(true);
   }
 
   @HostListener('window:resize')
@@ -97,6 +123,8 @@ export class BasePoliticaPage implements AfterViewInit {
     const lista = this.trilho().nativeElement;
     const destino = Math.max(0, Math.min(i, this.ultimaPosicao()));
     lista.scrollTo({ left: destino * this.passo(lista), behavior: 'smooth' });
+    this.atual.set(destino);
+    this.decorrido = 0;
   }
 
   /** Atualiza o contador conforme a pessoa arrasta ou rola o carrossel. */

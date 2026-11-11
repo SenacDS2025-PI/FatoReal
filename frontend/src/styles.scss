@@ -842,16 +842,19 @@ legend { font-weight: 700; padding: 0 6px; }
   &:focus-visible { box-shadow: 0 0 0 3px rgba(0, 133, 90, 0.35); }
 }
 .glossario-item {
+  --cor-g: #14a370; --cor-g-texto: #fff;
   scroll-snap-align: start; display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: var(--raio-p);
-  background: var(--superficie-2); border: 1px solid var(--borda); transition: border-color 0.2s;
-  &.ativo { border-color: var(--primaria); }
+  background: var(--superficie-2); border: 1px solid var(--borda); border-top: 4px solid var(--cor-g); transition: border-color 0.2s;
+  &[data-cor='1'] { --cor-g: #f2b705; --cor-g-texto: #2b2100; }
+  &[data-cor='2'] { --cor-g: #2f6fb0; }
   dl { margin: 0; } dt { font-weight: 800; font-size: 1.05rem; margin-bottom: 6px; } dd { margin: 0; color: var(--texto-suave); font-size: 0.93rem; line-height: 1.5; }
 }
-.glossario-letra { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--primaria); color: #fff; font-weight: 800; font-size: 1.1rem; }
+.glossario-letra { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--cor-g); color: var(--cor-g-texto); font-weight: 800; font-size: 1.1rem; }
 .glossario-pontos {
   display: flex; justify-content: center; gap: 6px; margin-top: 14px;
-  button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: var(--borda); cursor: pointer; transition: width 0.2s, background 0.2s; }
-  button[aria-selected='true'] { width: 22px; background: var(--primaria); }
+  button { position: relative; overflow: hidden; width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: var(--borda); cursor: pointer; transition: width 0.25s; }
+  button[aria-selected='true'] { width: 30px; }
+  button[aria-selected='true'] span { position: absolute; inset: 0; background: var(--primaria); transform-origin: left; animation: progresso-glossario 3s linear; }
 }
 @media (max-width: 1100px) { .glossario-trilho { grid-auto-columns: calc((100% - 16px) / 2); } }
 @media (max-width: 640px) { .glossario-trilho { grid-auto-columns: 86%; } .glossario-contador { display: none; } }
@@ -1072,3 +1075,5 @@ legend { font-weight: 700; padding: 0 6px; }
 }
 .msg-grupo-foto { flex: none; width: 32px; display: inline-flex; }
 .msg-autor-grupo { display: block; font-size: 0.75rem; font-weight: 800; color: var(--link); }
+
+@keyframes progresso-glossario { from { transform: scaleX(0); } to { transform: scaleX(1); } }
