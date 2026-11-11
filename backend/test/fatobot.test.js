@@ -75,6 +75,12 @@ test('responde com evidências, fontes e aviso quando encontra o deputado', asyn
   assert.match(body.resposta, /PSB-SP/);
   assert.match(body.resposta, /01\/02\/2023/);
   assert.equal(body.fontes.length, 1);
+  // Formato que o front espera
+  assert.match(body.fontes[0].titulo, /Tabata Amaral/);
+  assert.match(body.fontes[0].url, /dadosabertos\.camara\.leg\.br/);
+  assert.ok(body.fontes[0].data);
+  assert.equal(body.sem_evidencia, false);
+  assert.ok(!Number.isNaN(Date.parse(body.consultado_em)));
   assert.match(body.aviso, /pode errar/);
   assert.ok(!JSON.stringify(body).includes('00000000000'), 'não pode vazar CPF');
 });
@@ -88,6 +94,7 @@ test('sem deputado na pergunta → declara que não encontrou evidência', async
   const body = await (await perguntar('Qual a capital da França?')).json();
   assert.equal(body.tipo, 'sem_evidencia');
   assert.deepEqual(body.evidencias, []);
+  assert.equal(body.sem_evidencia, true);
   assert.match(body.resposta, /Não encontrei evidência/);
   assert.match(body.aviso, /não significa que a informação é falsa/);
 });

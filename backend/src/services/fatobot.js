@@ -79,6 +79,8 @@ export async function responder(pergunta) {
         'tente incluir o nome parlamentar completo (ex.: "Quem é Tabata Amaral?").',
       evidencias: [],
       fontes: [],
+      consultado_em: new Date().toISOString(),
+      sem_evidencia: true,
       aviso: AVISO,
     };
   }
@@ -86,10 +88,11 @@ export async function responder(pergunta) {
   const perfis = await Promise.all(deputados.map((d) => obterDeputado(d.id)));
   const evidencias = perfis.flatMap(evidenciasDoPerfil);
 
-  const fontes = [...new Map(evidencias.map((e) => [e.url, e])).values()].map((e) => ({
-    nome: e.fonte,
-    url: e.url,
-    consultadoEm: e.consultadoEm,
+  // Formato que o front usa (frontend/src/app/core/modelos.ts → Fonte): { titulo, url, data }.
+  const fontes = perfis.map(({ dados, fonte }) => ({
+    titulo: `${fonte.nome}: ${dados.nome}`,
+    url: fonte.url,
+    data: fonte.consultadoEm,
   }));
 
   const sintese = await sintetizarComIA(pergunta, evidencias);
@@ -104,6 +107,8 @@ export async function responder(pergunta) {
         evidencias.map((e) => `• ${e.texto}`).join('\n'),
     evidencias,
     fontes,
+    consultado_em: new Date().toISOString(),
+    sem_evidencia: false,
     aviso: AVISO,
   };
 }

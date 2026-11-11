@@ -113,7 +113,9 @@ Se a pergunta não cita nenhum deputado, o Gemini **nem é chamado**: a resposta
   "modo": "ia_com_fontes",
   "resposta": "Tabata Amaral é deputada federal pelo PSB de São Paulo [1].",
   "evidencias": [{ "texto": "...", "fonte": "Dados Abertos da Câmara dos Deputados", "url": "https://...", "consultadoEm": "..." }],
-  "fontes": [{ "nome": "...", "url": "https://...", "consultadoEm": "..." }],
+  "fontes": [{ "titulo": "Dados Abertos da Câmara dos Deputados: Tabata Amaral", "url": "https://...", "data": "..." }],
+  "consultado_em": "2026-11-10T12:43:09.986Z",
+  "sem_evidencia": false,
   "aviso": "O FatoBot pode errar. Confira sempre as fontes oficiais. Não encontrar evidência não significa que a informação é falsa."
 }
 ```
