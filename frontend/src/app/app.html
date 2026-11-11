@@ -61,7 +61,6 @@
           <div class="menu-conta-lista" role="menu">
             <div class="menu-conta-quem"><strong>{{ u.nome }}</strong><small>{{ u.email }}</small></div>
             <a role="menuitem" routerLink="/perfil"><app-icone nome="account_circle" /> Meu perfil</a>
-            @if (auth.moderador()) { <a role="menuitem" routerLink="/moderacao"><app-icone nome="shield" /> Moderação</a> }
             <button role="menuitem" type="button" (click)="sair()"><app-icone nome="logout" /> Sair</button>
           </div>
         }

@@ -3,7 +3,6 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { modoDemo } from '../../core/supabase';
-import { TemaService } from '../../core/tema.service';
 import { Icone } from '../../shared/componentes';
 
 @Component({
@@ -12,30 +11,18 @@ import { Icone } from '../../shared/componentes';
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="settings" /> Configurações</h1>
-      <p>Aparência, conta e privacidade.</p>
+      <p>Conta e privacidade.</p>
     </header>
 
     <div class="grade-2">
-      <section class="card">
-        <h2><app-icone nome="palette" /> Aparência</h2>
-        <div class="opcoes-tema" role="radiogroup" aria-label="Tema">
-          <button type="button" role="radio" [attr.aria-checked]="tema.tema() === 'claro'" [class.ativo]="tema.tema() === 'claro'" (click)="definir('claro')">
-            <app-icone nome="light_mode" /> Claro
-          </button>
-          <button type="button" role="radio" [attr.aria-checked]="tema.tema() === 'escuro'" [class.ativo]="tema.tema() === 'escuro'" (click)="definir('escuro')">
-            <app-icone nome="dark_mode" /> Escuro
-          </button>
-        </div>
-      </section>
-
       <section class="card">
         <h2><app-icone nome="manage_accounts" /> Conta</h2>
         @if (auth.usuario(); as u) {
           <p class="texto-suave">Conectado como <strong>{{ u.nome }}</strong> ({{ u.email }}).</p>
           <ul class="lista-links">
-            <li><a routerLink="/perfil"><app-icone nome="edit" /> Editar perfil e foto</a></li>
+            <li><a routerLink="/perfil/editar"><app-icone nome="edit" /> Editar perfil e foto</a></li>
             <li><a routerLink="/recuperar-senha"><app-icone nome="key" /> Trocar senha</a></li>
-            <li><a routerLink="/perfil"><app-icone nome="delete" /> Excluir minha conta</a></li>
+            <li><a routerLink="/perfil/editar"><app-icone nome="delete" /> Excluir minha conta</a></li>
           </ul>
           <button type="button" class="botao botao-fantasma" (click)="sair()"><app-icone nome="logout" /> Sair</button>
         } @else {
@@ -67,14 +54,9 @@ import { Icone } from '../../shared/componentes';
 })
 export class ConfiguracoesPage {
   protected auth = inject(AuthService);
-  protected tema = inject(TemaService);
   private avisos = inject(AvisosService);
   private router = inject(Router);
   protected readonly demo = modoDemo;
-
-  protected definir(t: 'claro' | 'escuro') {
-    if (this.tema.tema() !== t) this.tema.alternar();
-  }
 
   protected async sair() {
     await this.auth.sair();
