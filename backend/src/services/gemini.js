@@ -7,6 +7,8 @@ import { GoogleGenAI, ApiError } from '@google/genai';
 export const MODELO_PADRAO = 'gemini-3.8-flash';
 const SEM_EVIDENCIA = 'SEM_EVIDENCIA';
 const TIMEOUT_MS = 20_000; // se o Gemini não responder em 20s, o FatoBot responde sem IA
+// Uma nova tentativa quando o Gemini está sobrecarregado (503) ou no limite (429).
+const RETRY = { attempts: 2, initialDelay: 1, maxDelay: 2, httpStatusCodes: [429, 500, 503] };
 
 const SYSTEM = `Você é o FatoBot, assistente da plataforma cívica FATO REAL.
 
@@ -62,7 +64,7 @@ export async function sintetizarComIA(pergunta, evidencias) {
     const response = await getClient().models.generateContent({
       model: modelo,
       contents: montarMensagem(pergunta, evidencias),
-      config: { systemInstruction: SYSTEM, httpOptions: { timeout: TIMEOUT_MS } },
+      config: { systemInstruction: SYSTEM, httpOptions: { timeout: TIMEOUT_MS, retryOptions: RETRY } },
     });
 
     if (response.promptFeedback?.blockReason) {
@@ -85,6 +87,8 @@ export async function sintetizarComIA(pergunta, evidencias) {
         console.error(`FatoBot: GEMINI_API_KEY ou modelo inválido (erro ${err.status})`);
       } else if (err.status === 429) {
         console.error('FatoBot: limite de uso da API do Gemini atingido');
+      } else if (err.status === 503) {
+        console.error('FatoBot: Gemini sobrecarregado (503). Tente de novo ou troque GEMINI_MODEL.');
       } else {
         console.error(`FatoBot: erro ${err.status} na API do Gemini`);
       }
