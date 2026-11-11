@@ -42,7 +42,7 @@ backend/
 │   │   ├── evidencias.js → busca documental e filtro de evidência (usado pelo FatoBot e pela verificação)
 │   │   ├── fatobot.js    → FatoBot: instruções da IA e montagem da resposta
 │   │   ├── verificar.js  → verificação assistida de afirmações
-│   │   └── ia.js         → conexão com o Claude (Anthropic)
+│   │   └── gemini.js     → conexão com o Gemini (Google)
 │   ├── data/
 │   │   └── base-conhecimento.js → fatos da Constituição que o FatoBot pode citar
 │   └── utils/            → cache em memória, normalização de texto e limite de pedidos por IP
@@ -104,7 +104,7 @@ Responde **somente com base em fontes oficiais** (RN02 e RN04). As evidências v
 - **Base de conhecimento** (`src/data/base-conhecimento.js`): fatos da Constituição de 1988 sobre
   como a política funciona (Poderes, Congresso, PEC, veto, eleições...), cada um com o artigo.
 
-Com a IA ligada, o **Claude** escreve a resposta em linguagem simples usando só essas evidências e diz
+Com a IA ligada, o **Gemini** escreve a resposta em linguagem simples usando só essas evidências e diz
 quais usou (pelo código, ex.: `B08`, `D1`). O backend monta os links a partir desses códigos, então a
 IA não tem como inventar fontes. Se nada responder à pergunta, a resposta diz que **não encontrou evidência**.
 
@@ -127,7 +127,7 @@ fatos encontrados por palavras-chave.
 
 - `resposta`, `fontes`, `consultado_em` e `sem_evidencia` são o que o front usa (`RespostaFatoBot` em `frontend/src/app/core/modelos.ts`).
 - `fontes[].data`: data da consulta (Câmara) ou `null` (Constituição, que não muda).
-- `modo`: `ia_com_fontes` (Claude) ou `somente_fontes` (sem IA).
+- `modo`: `ia_com_fontes` (Gemini) ou `somente_fontes` (sem IA).
 - O front deve **sempre** mostrar o aviso e os links de `fontes`.
 
 ### `POST /api/verificar`
@@ -149,23 +149,26 @@ Se a IA disser que sustenta ou contradiz sem citar nenhuma fonte válida, o back
 `/api/fatobot` e `/api/verificar` aceitam até 30 pedidos a cada 10 minutos por IP (ajuste com
 `LIMITE_IA_POR_IP`). Acima disso respondem `429`. Isso evita que alguém gaste os créditos da IA à toa.
 
-## Ligar a IA (Claude)
+## Ligar a IA (Gemini)
 
-1. Crie uma conta em [platform.claude.com](https://platform.claude.com), coloque créditos e gere uma **API key**.
-2. Coloque a chave em `ANTHROPIC_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
+1. Entre em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) com uma conta Google e gere uma **API key**.
+2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
    **Nunca** coloque a chave no código, no Angular ou no GitHub.
 3. Reinicie o servidor. A resposta do FatoBot passa a vir com `"modo": "ia_com_fontes"`.
 
 Opcionais no `.env`:
 
-| Variável           | Padrão            | Para quê |
-|--------------------|-------------------|----------|
-| `AI_MODEL`         | `claude-opus-5-5` | Modelo do Claude. `claude-haiku-5-5` é bem mais barato, mas escreve respostas mais simples. |
-| `AI_EFFORT`        | `low`             | Quanto o modelo "pensa" antes de responder (`low`, `medium`, `high`). Mais alto = mais lento e mais caro. |
-| `LIMITE_IA_POR_IP` | `30`              | Pedidos por IP a cada 10 minutos. |
+| Variável           | Padrão             | Para quê |
+|--------------------|--------------------|----------|
+| `GEMINI_MODEL`     | `gemini-3.8-flash` | Modelo do Gemini. Se a API responder 400/404, confira o nome do modelo em [ai.google.dev](https://ai.google.dev/gemini-api/docs/models). |
+| `LIMITE_IA_POR_IP` | `30`               | Pedidos por IP a cada 10 minutos. |
 
-Se o Claude recusar uma pergunta por política de segurança, a Anthropic tenta de novo automaticamente
-com outro modelo (parâmetro `fallbacks`). Se mesmo assim falhar, o FatoBot cai no modo somente fontes.
+Como funciona a chamada (`src/services/gemini.js`):
+
+- A resposta vem em **JSON com formato fixo** (`responseJsonSchema`): o texto, os códigos das evidências usadas e se faltou evidência.
+- Limite de **20 segundos** e **uma nova tentativa** quando o Gemini está sobrecarregado (429/500/503).
+- Se o Gemini bloquear a pergunta, cortar a resposta, mandar JSON inválido ou falhar, o FatoBot
+  responde no modo somente fontes. O usuário nunca fica sem resposta.
 
 Para ensinar algo novo ao FatoBot, acrescente um item em `src/data/base-conhecimento.js`
 (com o artigo da fonte) e rode `npm test`.

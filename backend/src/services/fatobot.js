@@ -4,11 +4,11 @@
 //   1. Pergunta  →  2. Busca documental  →  3. Filtro de evidência
 //   →  4. Síntese  →  5. Exibição com fontes e aviso
 //
-// Etapa 4: com ANTHROPIC_API_KEY configurada, o Claude escreve a resposta usando só as
+// Etapa 4: com GEMINI_API_KEY configurada, o Gemini escreve a resposta usando só as
 // evidências recebidas e diz quais usou (pelo código, ex.: B08, D1). O backend monta as
 // referências a partir desses códigos, então a IA não tem como inventar links.
 // Sem chave (ou se a IA falhar), o FatoBot responde no modo "somente fontes": lista os fatos encontrados.
-import { gerarJson, iaLigada } from './ia.js';
+import { gerarJson, iaConfigurada } from './gemini.js';
 import {
   EVIDENCIAS_BASE,
   coletarEvidencias,
@@ -75,7 +75,7 @@ function montarMensagem(pergunta, dinamicas, falhaCamara) {
 }
 
 async function sintetizarComIA(pergunta, { dinamicas, falhaCamara }) {
-  if (!iaLigada()) return null;
+  if (!iaConfigurada()) return null;
 
   const saida = await gerarJson({
     instrucoes: INSTRUCOES,

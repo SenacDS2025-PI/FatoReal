@@ -4,7 +4,7 @@
 // certificação automática. Estados (os mesmos do front, em pages/verificar):
 //   Evidências sustentam · Evidências contradizem · Fora de contexto
 //   · Evidência insuficiente · Em análise (quando a IA não está disponível)
-import { gerarJson, iaLigada } from './ia.js';
+import { gerarJson, iaConfigurada } from './gemini.js';
 import {
   EVIDENCIAS_BASE,
   coletarEvidencias,
@@ -50,7 +50,7 @@ const SCHEMA = {
 };
 
 async function avaliarComIA(afirmacao, { dinamicas, falhaCamara }) {
-  if (!iaLigada()) return null;
+  if (!iaConfigurada()) return null;
 
   const contexto = dinamicas.length
     ? `Evidências da Câmara para esta afirmação:\n${formatarEvidencias(dinamicas)}`
