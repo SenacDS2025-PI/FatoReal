@@ -44,25 +44,30 @@
 }
 
 :root[data-tema='escuro'] {
-  --moldura: #071a33;
-  --moldura-2: #0c2547;
-  --moldura-borda: rgba(255, 255, 255, 0.1);
-  --moldura-texto: #d3dee8;
-  --moldura-suave: #98aabb;
-  --moldura-titulo: #ffffff;
-  --moldura-campo: rgba(255, 255, 255, 0.08);
-  --moldura-hover: rgba(255, 255, 255, 0.07);
-  --painel: #04122a;
-  --superficie: #0b2142;
-  --superficie-2: #11305c;
-  --texto: #eaf2fb;
-  --texto-suave: #a3b8cf;
-  --borda: #1c3d6b;
-  --primaria: #00d084;
-  --primaria-texto: #021a10;
-  --link: #3df2a6;
-  --perigo: #ff6b7a;
-  --sombra: 0 6px 18px rgba(0, 0, 0, 0.35);
+  /* Modo escuro: grafite neutro com um leve toque de verde, sem azul saturado nem neon. */
+  --moldura: #101513;
+  --moldura-2: #171d1a;
+  --moldura-borda: #232b27;
+  --moldura-texto: #d3dbd7;
+  --moldura-suave: #8c9993;
+  --moldura-titulo: #f1f5f3;
+  --moldura-campo: #1a201d;
+  --moldura-hover: rgba(255, 255, 255, 0.05);
+  --painel: #0b0f0d;
+  --superficie: #141a17;
+  --superficie-2: #1b2320;
+  --texto: #e5ebe8;
+  --texto-suave: #9ba8a2;
+  --borda: #27302c;
+  --primaria: #3ac48d;
+  --primaria-texto: #04150d;
+  --link: #5fd4a3;
+  --perigo: #ef6f7c;
+  --verde-vivo: #3ac48d;
+  --azul-selo: #6aa7ff;
+  --azul-vivo: #6aa7ff;
+  --destaque: #e8b93a;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
   color-scheme: dark;
 }
 
@@ -236,7 +241,7 @@ main { flex: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: 22px 24
 }
 .botao-verde { background: var(--primaria); color: var(--primaria-texto); }
 .botao-escuro { background: linear-gradient(135deg, #1e6bff, #0b3fbf); color: #fff; box-shadow: 0 4px 14px rgba(30, 107, 255, 0.35); }
-:root[data-tema='escuro'] .botao-escuro { background: linear-gradient(135deg, #3b82ff, #1e6bff); color: #fff; }
+:root[data-tema='escuro'] .botao-escuro { background: var(--primaria); color: var(--primaria-texto); box-shadow: none; }
 .botao-fantasma { background: transparent; color: var(--texto); border-color: var(--borda); }
 .botao-perigo { background: var(--perigo); color: #fff; }
 :root[data-tema='escuro'] .botao-perigo { color: #2a0603; }
@@ -521,7 +526,7 @@ legend { font-weight: 700; padding: 0 6px; }
   button { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--borda); background: var(--superficie); cursor: pointer; font-weight: 600; white-space: nowrap; }
   button[aria-selected="true"] { background: var(--primaria); color: #fff; border-color: transparent; }
 }
-:root[data-tema='escuro'] .abas button[aria-selected='true'] { background: var(--verde-vivo); color: #03140d; border-color: var(--verde-vivo); }
+:root[data-tema='escuro'] .abas button[aria-selected='true'] { background: var(--primaria); color: var(--primaria-texto); border-color: var(--primaria); }
 .aviso-participar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; p { flex: 1; margin: 0; } > .icone { font-size: 1.6rem; color: var(--verde-vivo); } }
 .lista-membros { list-style: none; display: grid; gap: 10px; li { display: flex; align-items: center; gap: 10px; } }
 .avatares { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -1077,3 +1082,31 @@ legend { font-weight: 700; padding: 0 6px; }
 .msg-autor-grupo { display: block; font-size: 0.75rem; font-weight: 800; color: var(--link); }
 
 @keyframes progresso-glossario { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Modo escuro: ajustes de componentes que tinham cor fixa */
+:root[data-tema='escuro'] {
+  .aviso-demo { background: #221d10; color: #ecd9a2; border-color: #3d3317; }
+  .tag-verde { background: rgba(58, 196, 141, 0.16); color: var(--link); }
+  .etiqueta-verde, .selo-verificado, .post-tipo-verificado { background: rgba(58, 196, 141, 0.14); color: var(--link); }
+  .chip { box-shadow: none; }
+  .botao-fantasma { border-color: var(--borda); color: var(--texto); }
+  .card-ia {
+    background: radial-gradient(circle at 20% 65%, rgba(58, 196, 141, 0.22) 0%, transparent 55%), linear-gradient(135deg, #15362a, #172235 85%);
+    border-color: var(--borda);
+  }
+  .destaque { background: #0f1412; }
+  .menu a.ativo { background: rgba(58, 196, 141, 0.12); }
+  .post-verificado { border-color: rgba(58, 196, 141, 0.45); box-shadow: var(--sombra), inset 4px 0 0 var(--primaria); }
+  .abas-celular a.ativo { background: var(--primaria); color: var(--primaria-texto); }
+  .filtro-mensagens button[aria-selected='true'] { color: var(--primaria-texto); }
+  .msg-voce { color: var(--primaria-texto); }
+  .noticia-tema { background: rgba(16, 21, 19, 0.88); color: var(--texto); }
+  .noticias-seta { background: rgba(20, 26, 23, 0.95); color: var(--texto); }
+  .zona-anexo:hover, .zona-anexo.arrastando { background: rgba(58, 196, 141, 0.06); }
+  .glossario-item[data-cor='1'] { --cor-g: #e8b93a; --cor-g-texto: #261c00; }
+  .glossario-item[data-cor='2'] { --cor-g: #5b93d6; --cor-g-texto: #06121f; }
+  .glossario-item { --cor-g-texto: #04150d; }
+}
+:root[data-tema='escuro'] {
+  .card-comunidade-capa img, .comunidade-capa img, .mini-comunidade img, .noticia-imagem img, .perfil-x-capa, .destaque img { filter: brightness(0.82) saturate(0.9); }
+}
