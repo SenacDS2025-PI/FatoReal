@@ -39,7 +39,6 @@ export class App {
     { rota: '/fatobot', icone: 'smart_toy', texto: 'IA FatoBot' },
     { rota: '/verificar', icone: 'fact_check', texto: 'Verificar Informação' },
     { rota: '/mensagens', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
-    { rota: '/perfil', icone: 'account_circle', texto: 'Meu Perfil' },
   ];
 
   protected readonly abas = [
