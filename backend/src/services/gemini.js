@@ -6,6 +6,7 @@ import { GoogleGenAI, ApiError } from '@google/genai';
 
 export const MODELO_PADRAO = 'gemini-3.8-flash';
 const SEM_EVIDENCIA = 'SEM_EVIDENCIA';
+const TIMEOUT_MS = 20_000; // se o Gemini não responder em 20s, o FatoBot responde sem IA
 
 const SYSTEM = `Você é o FatoBot, assistente da plataforma cívica FATO REAL.
 
@@ -61,7 +62,7 @@ export async function sintetizarComIA(pergunta, evidencias) {
     const response = await getClient().models.generateContent({
       model: modelo,
       contents: montarMensagem(pergunta, evidencias),
-      config: { systemInstruction: SYSTEM },
+      config: { systemInstruction: SYSTEM, httpOptions: { timeout: TIMEOUT_MS } },
     });
 
     if (response.promptFeedback?.blockReason) {
