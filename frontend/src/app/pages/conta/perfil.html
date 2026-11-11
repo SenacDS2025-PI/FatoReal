@@ -1,0 +1,174 @@
+@if (carregando() && !perfil()) {
+  <div class="perfil-x card" aria-busy="true">
+    <div class="perfil-x-capa esqueleto" style="border-radius: 0"></div>
+    <div class="perfil-x-corpo"><div class="esqueleto-linhas" style="padding-top: 70px"><span class="esqueleto" style="width: 40%"></span><span class="esqueleto" style="width: 70%"></span></div></div>
+  </div>
+} @else if (perfil(); as p) {
+  <div class="perfil-x">
+    <!-- Cabeçalho -->
+    <header class="card perfil-x-cabecalho">
+      <div class="perfil-x-capa" [style.background]="capa().fundo" aria-hidden="true"></div>
+      <div class="perfil-x-corpo">
+        <div class="perfil-x-linha">
+          <app-avatar class="perfil-x-foto" [nome]="p.nome" [url]="p.foto_url" [tamanho]="128" />
+          <div class="perfil-x-acao">
+            @if (ehMeu()) {
+              <a routerLink="/perfil/editar" class="botao botao-fantasma">Editar perfil</a>
+            } @else if (auth.usuario()) {
+              <button type="button" class="botao" [class.botao-fantasma]="euSigo()" [class.botao-seguindo]="euSigo()" (click)="alternarSeguir()" [disabled]="ocupado()">
+                @if (euSigo()) { <span class="texto-seguindo">Seguindo</span><span class="texto-deixar">Deixar de seguir</span> } @else { Seguir }
+              </button>
+            } @else {
+              <a routerLink="/entrar" class="botao">Entrar para seguir</a>
+            }
+          </div>
+        </div>
+
+        <h1 class="perfil-x-nome">
+          {{ p.nome }}
+          @if (p.moderador) { <app-icone nome="verified_user" class="perfil-x-selo" title="Moderador(a) da plataforma" /> }
+        </h1>
+
+        @if (p.bio) {
+          <p class="perfil-x-bio">{{ p.bio }}</p>
+        } @else if (ehMeu()) {
+          <a routerLink="/perfil/editar" class="link-sutil"><app-icone nome="add" /> Escreva uma bio</a>
+        }
+
+        <ul class="perfil-x-meta">
+          @if (p.cidade || p.uf) {
+            <li><app-icone nome="location_on" /> {{ p.cidade }}{{ p.cidade && p.uf ? ', ' : '' }}{{ p.uf }}</li>
+          } @else if (ehMeu()) {
+            <li><a routerLink="/perfil/editar"><app-icone nome="add_location" /> Adicionar cidade</a></li>
+          }
+          @if (p.uf) {
+            <li><a routerLink="/politicos" [queryParams]="{ uf: p.uf }"><app-icone nome="account_balance" /> Deputados de {{ p.uf }}</a></li>
+          }
+          @if (p.criado_em) { <li><app-icone nome="calendar_month" /> Entrou em {{ p.criado_em | date: "MMMM 'de' yyyy" : '' : 'pt-BR' }}</li> }
+        </ul>
+
+        <div class="perfil-x-seguir">
+          <button type="button" (click)="lista.set('seguindo')"><strong>{{ seguindo().length }}</strong> Seguindo</button>
+          <button type="button" (click)="lista.set('seguidores')"><strong>{{ seguidores().length }}</strong> {{ seguidores().length === 1 ? 'Seguidor' : 'Seguidores' }}</button>
+        </div>
+
+        <div class="perfil-x-conquistas" aria-label="Conquistas">
+          <span class="perfil-x-conquistas-titulo">Conquistas · {{ conquistasFeitas() }}/{{ conquistas().length }}</span>
+          <ul>
+            @for (c of conquistas(); track c.titulo) {
+              <li [class.ok]="c.ok" [title]="c.ok ? c.titulo : 'Falta: ' + c.requisito">
+                <app-icone [nome]="c.ok ? c.icone : 'lock'" /> <span>{{ c.titulo }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <nav class="perfil-x-abas" role="tablist" aria-label="Seções do perfil">
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'publicacoes'" (click)="aba.set('publicacoes')">Publicações</button>
+        @if (ehMeu()) {
+          <button type="button" role="tab" [attr.aria-selected]="aba() === 'curtidas'" (click)="aba.set('curtidas')">Curtidas</button>
+        }
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'comunidades'" (click)="aba.set('comunidades')">Comunidades</button>
+      </nav>
+    </header>
+
+    <!-- Quem seguir (no meu perfil, enquanto sigo pouca gente) -->
+    @if (ehMeu() && sugestoes().length && seguindo().length < 3) {
+      <section class="card perfil-x-sugestoes">
+        <h2 class="titulo-secao">Quem seguir</h2>
+        <ul>
+          @for (s of sugestoes(); track s.id) {
+            <li>
+              <a [routerLink]="['/pessoas', s.id]" class="perfil-x-pessoa"><app-avatar [nome]="s.nome" [url]="s.foto_url" [tamanho]="44" /><strong>{{ s.nome }}</strong></a>
+              <button type="button" class="botao" (click)="seguirSugestao(s)">Seguir</button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- Conteúdo da aba -->
+    <section class="perfil-x-conteudo" role="tabpanel">
+      @if (carregando()) {
+        <div class="card"><div class="esqueleto-linhas"><span class="esqueleto" style="width: 40%"></span><span class="esqueleto"></span></div></div>
+      } @else {
+        @switch (aba()) {
+          @case ('publicacoes') {
+            @for (pub of publicacoes(); track pub.id) {
+              <app-publicacao [pub]="pub" [mostrarComunidade]="true" (mudou)="recarregar()" />
+            } @empty {
+              <div class="card vazio perfil-x-vazio">
+                <app-icone nome="edit_note" />
+                @if (ehMeu()) {
+                  <strong>Sua primeira publicação começa aqui</strong>
+                  <span>Escolha uma comunidade e compartilhe uma informação, sempre com a fonte.</span>
+                  <a routerLink="/comunidades" class="botao">Escolher comunidade</a>
+                } @else {
+                  <strong>{{ primeiroNome() }} ainda não publicou</strong>
+                  <span>Quando publicar, aparece aqui.</span>
+                }
+              </div>
+            }
+          }
+          @case ('curtidas') {
+            @for (pub of curtidas(); track pub.id) {
+              <app-publicacao [pub]="pub" [mostrarComunidade]="true" (mudou)="recarregar()" />
+            } @empty {
+              <div class="card vazio perfil-x-vazio">
+                <app-icone nome="favorite" />
+                <strong>Nenhuma curtida ainda</strong>
+                <span>Curta publicações no feed e elas aparecem aqui. Só você vê esta aba.</span>
+                <a routerLink="/" class="botao botao-fantasma">Ir para o feed</a>
+              </div>
+            }
+          }
+          @case ('comunidades') {
+            <ul class="perfil-x-comunidades">
+              @for (c of comunidades(); track c.id) {
+                <li>
+                  <a [routerLink]="['/comunidades', c.slug]" class="card perfil-rede-comunidade" [style.--cor-tema]="corTema[c.tema]">
+                    @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" class="capa-icone" /> }
+                    @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+                    <span><strong>{{ c.nome }}</strong><small>{{ c.tema }} · {{ c.total_membros }} {{ c.total_membros === 1 ? 'membro' : 'membros' }}</small></span>
+                  </a>
+                </li>
+              } @empty {
+                <li class="card vazio perfil-x-vazio">
+                  <app-icone nome="groups" />
+                  <strong>{{ ehMeu() ? 'Você ainda não participa de nenhuma comunidade' : 'Nenhuma comunidade ainda' }}</strong>
+                  @if (ehMeu()) { <a routerLink="/comunidades" class="botao">Encontrar comunidades</a> }
+                </li>
+              }
+            </ul>
+          }
+        }
+      }
+    </section>
+  </div>
+
+  <!-- Lista de seguidores / seguindo -->
+  @if (lista(); as tipo) {
+    <div class="modal-fundo" (click)="fecharLista()">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-lista" (click)="$event.stopPropagation()">
+        <div class="modal-topo">
+          <h2 id="titulo-lista">{{ tipo === 'seguidores' ? 'Seguidores' : 'Seguindo' }}</h2>
+          <button type="button" class="botao-seta" (click)="fecharLista()" aria-label="Fechar"><app-icone nome="close" /></button>
+        </div>
+        <ul class="lista-pessoas">
+          @for (s of (tipo === 'seguidores' ? seguidores() : seguindo()); track s.id) {
+            <li><a [routerLink]="['/pessoas', s.id]" class="perfil-x-pessoa" (click)="fecharLista()"><app-avatar [nome]="s.nome" [url]="s.foto_url" [tamanho]="44" /><strong>{{ s.nome }}</strong></a></li>
+          } @empty {
+            <li class="texto-suave">{{ tipo === 'seguidores' ? 'Ninguém segue ainda.' : 'Não segue ninguém ainda.' }}</li>
+          }
+        </ul>
+      </section>
+    </div>
+  }
+} @else {
+  <div class="card vazio">
+    <app-icone nome="person_off" />
+    <strong>Perfil não encontrado</strong>
+    <a routerLink="/" class="botao botao-fantasma">Voltar ao início</a>
+  </div>
+}

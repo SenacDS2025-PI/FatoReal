@@ -1,0 +1,31 @@
+<a routerLink="/comunidades" class="link-voltar"><app-icone nome="arrow_back" /> Comunidades</a>
+
+<section class="card formulario">
+  <h1>Criar comunidade</h1>
+  <p class="texto-suave">No piloto, todas as comunidades são abertas: qualquer pessoa com conta pode entrar.</p>
+
+  <form #f="ngForm" (ngSubmit)="f.valid && criar()">
+    <div class="campo-form">
+      <label for="c-nome">Nome *</label>
+      <input id="c-nome" name="nome" [(ngModel)]="dados.nome" required minlength="3" maxlength="60" placeholder="Ex.: Transparência no DF" />
+    </div>
+    <div class="campo-form">
+      <label for="c-tema">Tema *</label>
+      <select id="c-tema" name="tema" [(ngModel)]="dados.tema" required>
+        @for (t of temas; track t) { <option [value]="t">{{ t }}</option> }
+      </select>
+    </div>
+    <div class="campo-form">
+      <label for="c-desc">Descrição *</label>
+      <textarea id="c-desc" name="descricao" [(ngModel)]="dados.descricao" required maxlength="300" rows="3" placeholder="Sobre o que a comunidade conversa?"></textarea>
+    </div>
+    <div class="campo-form">
+      <label for="c-regras">Regras da comunidade *</label>
+      <textarea id="c-regras" name="regras" [(ngModel)]="dados.regras" required maxlength="1500" rows="6"></textarea>
+      <small class="texto-suave">Elas valem junto com as <a routerLink="/regras">regras gerais do Fato Real</a>.</small>
+    </div>
+    <button class="botao" type="submit" [disabled]="f.invalid || enviando()">
+      {{ enviando() ? 'Criando...' : 'Criar comunidade' }}
+    </button>
+  </form>
+</section>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2a4a"/><stop offset=".7" stop-color="#14705a"/><stop offset="1" stop-color="#e0c454"/></linearGradient>
+    <radialGradient id="luz" cx=".5" cy=".85" r=".6"><stop offset="0" stop-color="#ffe07a" stop-opacity=".55"/><stop offset="1" stop-color="#ffe07a" stop-opacity="0"/></radialGradient>
+    <symbol id="bandeira" viewBox="0 0 70 49"><path d="M0 4c12-6 24 4 36 0s22-6 34 0v41c-12-6-22-4-34 0s-24-6-36 0z" fill="#009c3b"/><path d="M6 24.5 35 8l29 16.5L35 41z" fill="#ffdf00"/><circle cx="35" cy="24.5" r="10" fill="#002776"/><path d="M26 22c6-2 14-1 19 3l-1 2c-5-4-12-5-18-3z" fill="#fff"/></symbol>
+  </defs>
+  <rect width="600" height="300" fill="url(#ceu)"/>
+  <rect width="600" height="300" fill="url(#luz)"/>
+  <!-- mastros e bandeiras -->
+  <rect x="300" y="40" width="4" height="200" fill="#dfe5ea"/><use href="#bandeira" x="304" y="42" width="150" height="105"/>
+  <rect x="150" y="120" width="3" height="120" fill="#dfe5ea"/><use href="#bandeira" x="153" y="120" width="70" height="49"/>
+  <rect x="455" y="130" width="3" height="110" fill="#dfe5ea"/><use href="#bandeira" x="458" y="130" width="62" height="43"/>
+  <!-- multidão -->
+  <rect y="262" width="600" height="38" fill="#081b2c"/>
+  <g fill="#081b2c">
+    <path d="M0 300V250c10-8 22-8 30 0 6-14 26-14 32 0 8-10 24-10 30 2 8-14 28-14 34 0 6-10 22-10 30 0 8-14 28-14 34 0 6-10 22-10 30 0 8-12 26-12 32 0 6-14 28-14 34 0 8-10 22-10 30 0 8-14 28-14 34 0 6-10 22-10 30 0 8-12 26-12 32 0 6-14 28-14 34 0 8-10 22-10 30 0 8-14 28-14 34 0 6-10 22-10 30 0 6-8 16-8 20 0V300z"/>
+    <circle cx="16" cy="238" r="11"/><circle cx="46" cy="232" r="12"/><circle cx="78" cy="240" r="10"/><circle cx="110" cy="230" r="12"/><circle cx="142" cy="238" r="11"/><circle cx="174" cy="230" r="12"/><circle cx="206" cy="238" r="11"/><circle cx="238" cy="232" r="12"/><circle cx="270" cy="240" r="10"/><circle cx="302" cy="230" r="12"/><circle cx="334" cy="238" r="11"/><circle cx="366" cy="230" r="12"/><circle cx="398" cy="238" r="11"/><circle cx="430" cy="232" r="12"/><circle cx="462" cy="240" r="10"/><circle cx="494" cy="230" r="12"/><circle cx="526" cy="238" r="11"/><circle cx="558" cy="232" r="12"/><circle cx="588" cy="240" r="10"/>
+  </g>
+  <g stroke="#081b2c" stroke-width="7" stroke-linecap="round"><path d="M96 236 84 196M262 236l12-36M420 232l-6-40M540 232l14-38"/></g>
+</svg>

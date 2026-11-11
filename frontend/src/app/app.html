@@ -1,0 +1,135 @@
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ===== Barra superior ===== -->
+<header class="topo">
+  <a routerLink="/" class="marca" aria-label="Fato Real, página inicial">
+    <img src="logo.svg" alt="" width="40" height="40" />
+    <span>
+      <strong>Fato Real</strong>
+      <small>Informação • Comunidade • Cidadania</small>
+    </span>
+  </a>
+
+  <form class="busca-topo" role="search" (submit)="$event.preventDefault(); buscar(campoBusca.value)">
+    <label for="busca-topo" class="sr-only">Pesquisar</label>
+    <app-icone nome="search" />
+    <input id="busca-topo" #campoBusca type="search" placeholder="Pesquisar por candidatos, partidos, estados..." />
+  </form>
+
+  <div class="topo-acoes">
+    <a routerLink="/politicos" class="sino so-celular" aria-label="Pesquisar" title="Pesquisar"><app-icone nome="search" /></a>
+    <div class="menu-conta">
+      <button type="button" class="sino" (click)="alternarNotificacoes()" [attr.aria-expanded]="notifAberto()" aria-haspopup="dialog"
+        [attr.aria-label]="'Notificações' + (notificacoes.naoLidas() ? ', ' + notificacoes.naoLidas() + ' novas' : '')" title="Notificações">
+        <app-icone nome="notifications" />
+        @if (notificacoes.naoLidas()) { <span class="contador contador-sino">{{ notificacoes.naoLidas() }}</span> }
+      </button>
+      @if (notifAberto()) {
+        <div class="menu-conta-fundo" (click)="fecharNotificacoes()"></div>
+        <section class="menu-conta-lista painel-notif" role="dialog" aria-label="Notificações">
+          <header class="painel-notif-topo">
+            <strong>Notificações</strong>
+            <a routerLink="/notificacoes" (click)="fecharNotificacoes()">Ver todas</a>
+          </header>
+          @for (n of notificacoes.lista().slice(0, 6); track n.id) {
+            <a [routerLink]="n.rota" (click)="fecharNotificacoes()" class="painel-notif-item">
+              <span class="notif-icone" [attr.data-tipo]="n.tipo"><app-icone [nome]="iconesNotif[n.tipo]" /></span>
+              <span><span class="painel-notif-texto">{{ n.texto }}</span><small>{{ tempo(n.data) }}</small></span>
+            </a>
+          } @empty {
+            <p class="painel-notif-vazio"><app-icone nome="notifications_off" /> Nenhuma notificação por enquanto.</p>
+          }
+        </section>
+      }
+    </div>
+    <a routerLink="/configuracoes" class="sino" aria-label="Configurações" title="Configurações" routerLinkActive="sino-ativo">
+      <app-icone nome="settings" />
+    </a>
+    @if (auth.usuario(); as u) {
+      <div class="menu-conta">
+        <button type="button" class="botao-conta" (click)="notifAberto.set(false); menuAberto.set(!menuAberto())" [attr.aria-expanded]="menuAberto()" aria-haspopup="menu" aria-label="Menu da conta">
+          <app-avatar [nome]="u.nome" [url]="u.foto_url" [tamanho]="42" />
+          <app-icone nome="expand_more" class="so-desktop" />
+        </button>
+        @if (menuAberto()) {
+          <div class="menu-conta-fundo" (click)="menuAberto.set(false)"></div>
+          <div class="menu-conta-lista" role="menu">
+            <div class="menu-conta-quem"><strong>{{ u.nome }}</strong><small>{{ u.email }}</small></div>
+            <a role="menuitem" routerLink="/perfil"><app-icone nome="account_circle" /> Meu perfil</a>
+            @if (auth.moderador()) { <a role="menuitem" routerLink="/moderacao"><app-icone nome="shield" /> Moderação</a> }
+            <button role="menuitem" type="button" (click)="tema.alternar()">
+              <app-icone [nome]="tema.tema() === 'claro' ? 'dark_mode' : 'light_mode'" /> {{ tema.tema() === 'claro' ? 'Modo escuro' : 'Modo claro' }}
+            </button>
+            <button role="menuitem" type="button" (click)="sair()"><app-icone nome="logout" /> Sair</button>
+          </div>
+        }
+      </div>
+    } @else {
+      <a routerLink="/entrar" class="botao botao-verde">Entrar</a>
+    }
+  </div>
+</header>
+
+<!-- Abas do topo (celular) -->
+<nav class="abas-celular so-celular" aria-label="Seções">
+  @for (a of abas; track a.rota) {
+    <a [routerLink]="a.rota" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: a.exato }">{{ a.texto }}</a>
+  }
+</nav>
+
+<div class="corpo">
+  <!-- ===== Menu lateral (computador) ===== -->
+  <aside class="lateral" aria-label="Menu principal">
+    <nav class="menu">
+      @for (item of menu; track item.rota) {
+        <a [routerLink]="item.rota" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: !!item.exato }">
+          <app-icone [nome]="item.icone" /> <span class="menu-texto">{{ item.texto }}</span>
+          @if (contador(item.contador); as n) { <span class="contador" [attr.aria-label]="n + ' novos'">{{ n }}</span> }
+        </a>
+      }
+      @if (auth.moderador()) {
+        <a routerLink="/moderacao" routerLinkActive="ativo"><app-icone nome="shield" /> <span class="menu-texto">Moderação</span></a>
+      }
+    </nav>
+
+    <nav class="lateral-rodape" aria-label="Institucional">
+      <a routerLink="/sobre">Sobre e fontes</a>
+      <a routerLink="/regras">Regras</a>
+      <a routerLink="/termos">Termos</a>
+      <a routerLink="/privacidade">Privacidade</a>
+      <a routerLink="/contato">Contato</a>
+    </nav>
+  </aside>
+
+  <!-- ===== Painel de conteúdo ===== -->
+  <div class="painel">
+    <app-aviso-demo />
+    <main id="conteudo" tabindex="-1">
+      <router-outlet />
+    </main>
+    <footer class="rodape-celular so-celular">
+      <a routerLink="/sobre">Sobre</a> · <a routerLink="/regras">Regras</a> · <a routerLink="/termos">Termos</a> ·
+      <a routerLink="/privacidade">Privacidade</a> · <a routerLink="/contato">Contato</a>
+    </footer>
+  </div>
+</div>
+
+<!-- ===== Navegação inferior (celular) ===== -->
+<nav class="nav-inferior" aria-label="Navegação">
+  <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }"><app-icone nome="home" />Início</a>
+  <a routerLink="/comunidades" routerLinkActive="ativo"><app-icone nome="groups" />Comunidades</a>
+  <a routerLink="/fatobot" routerLinkActive="ativo" class="nav-robo" aria-label="FatoBot">
+    <img src="img/fatobot-rosto.svg" alt="" width="52" height="52" />
+  </a>
+  <a routerLink="/mensagens" routerLinkActive="ativo" class="com-contador"><app-icone nome="chat" />Mensagens
+    @if (mensagens.naoLidas()) { <span class="contador">{{ mensagens.naoLidas() }}</span> }
+  </a>
+  <a routerLink="/perfil" routerLinkActive="ativo"><app-icone nome="account_circle" />Perfil</a>
+</nav>
+
+<!-- ===== Pop-ups de aviso ===== -->
+<div class="avisos" aria-live="polite">
+  @for (a of avisos.lista(); track a.id) {
+    <div class="aviso" [class.aviso-erro]="a.tipo === 'erro'" role="status">{{ a.texto }}</div>
+  }
+</div>

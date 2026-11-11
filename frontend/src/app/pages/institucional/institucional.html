@@ -1,0 +1,99 @@
+<article class="card texto-longo">
+  @switch (pagina()) {
+    @case ('sobre') {
+      <h1>Sobre o Fato Real e nossa política de fontes</h1>
+      <p>O <strong>Fato Real</strong> é uma rede social de informação cívica criada como Projeto Integrador do Senac. A ideia: <em>pesquise, entenda, confira as fontes e converse sobre política em um só lugar</em>.</p>
+
+      <h2>Finalidade</h2>
+      <p>Facilitar o acesso a informações políticas verificáveis e compreensíveis, promovendo pensamento crítico e debate informado. O Fato Real <strong>não recomenda voto</strong>, não faz propaganda política e não dá notas de caráter ou honestidade a ninguém.</p>
+
+      <h2>De onde vêm os dados</h2>
+      <ul>
+        <li><strong>Perfis de políticos:</strong> API de Dados Abertos da Câmara dos Deputados (<a href="https://dadosabertos.camara.leg.br/" target="_blank" rel="noopener noreferrer">dadosabertos.camara.leg.br</a>). No piloto, usamos um conjunto pequeno de deputados federais.</li>
+        <li>Cada dado mostra <strong>a fonte</strong> (com link para o original) e <strong>a data de coleta</strong>. Quando um dado não existe, mostramos “não disponível”.</li>
+        <li>Dados eleitorais do TSE ficam para uma próxima etapa.</li>
+      </ul>
+
+      <h2>Sobre o FatoBot (IA)</h2>
+      <p>O FatoBot responde <strong>só com base nas fontes</strong> que consultou e mostra as referências e a data da consulta. Quando não há evidência suficiente, ele diz isso em vez de inventar. <strong>A resposta é automatizada e pode conter erros</strong>: confira sempre as fontes.</p>
+
+      <h2>Política de fontes</h2>
+      <ol>
+        <li>Priorizamos <strong>fontes oficiais e primárias</strong> (documentos, votações, textos legais).</li>
+        <li>Fontes secundárias (imprensa, checagem) podem dar contexto, mas são identificadas como tais.</li>
+        <li>Aplicamos <strong>os mesmos critérios a todos os partidos e políticos</strong>.</li>
+        <li><strong>Ausência de evidência não é prova de falsidade.</strong></li>
+        <li>Quando fontes confiáveis divergem, mostramos a divergência.</li>
+        <li>Separamos visualmente <strong>informação verificada pela plataforma</strong> de <strong>publicação de usuário</strong>.</li>
+      </ol>
+      <p>Achou um erro? <a routerLink="/contato">Fale com a gente</a> para pedir correção.</p>
+    }
+
+    @case ('regras') {
+      <h1>Regras da comunidade</h1>
+      <p>As comunidades do Fato Real existem para debater com respeito e com base em fatos.</p>
+      <h2>O que é permitido</h2>
+      <ul>
+        <li>Opiniões, críticas e análises, mesmo controversas. <strong>Opinião não é desinformação.</strong></li>
+        <li>Publicar textos e links, comentar e curtir.</li>
+      </ul>
+      <h2>O que não é permitido</h2>
+      <ul>
+        <li><strong>Desinformação:</strong> afirmação factual desmentida por fonte primária (documento oficial, votação, texto legal) ou por organização de checagem reconhecida.</li>
+        <li>Discurso de ódio, assédio, ameaças ou ataques pessoais.</li>
+        <li>Publicar dados pessoais de outras pessoas.</li>
+        <li>Spam, propaganda eleitoral paga ou tentativas de manipular discussões.</li>
+        <li>Acusações sem prova apresentadas como fato.</li>
+      </ul>
+      <h2>Como funciona a moderação</h2>
+      <ol>
+        <li>Qualquer pessoa pode <strong>denunciar</strong> uma publicação ou comentário.</li>
+        <li>Uma <strong>pessoa da moderação</strong> analisa, consulta as fontes e decide se remove ou mantém, registrando o motivo.</li>
+        <li>A IA pode, no máximo, sugerir revisão. <strong>Ela nunca decide sozinha.</strong></li>
+        <li>Se discordar de uma decisão, <a routerLink="/contato">entre em contato</a> para pedir revisão.</li>
+      </ol>
+    }
+
+    @case ('termos') {
+      <h1>Termos de uso</h1>
+      <p class="texto-suave">Versão do piloto acadêmico. Atualizado em {{ atualizado }}.</p>
+      <ol>
+        <li><strong>O que é o serviço:</strong> plataforma de informação cívica com busca de políticos, assistente de IA (FatoBot) e comunidades. É um projeto acadêmico do Senac, em fase de piloto.</li>
+        <li><strong>Conta:</strong> você é responsável pela sua senha e pelo que publica. Use um e-mail válido.</li>
+        <li><strong>Conteúdo:</strong> ao publicar, você declara que o conteúdo é seu ou que pode compartilhá-lo, e concorda com as <a routerLink="/regras">regras da comunidade</a>.</li>
+        <li><strong>Moderação:</strong> conteúdos que violem as regras podem ser removidos após análise humana, com motivo registrado.</li>
+        <li><strong>IA:</strong> as respostas do FatoBot são automatizadas e podem conter erros. Elas não substituem a consulta às fontes oficiais.</li>
+        <li><strong>Dados oficiais:</strong> exibimos dados públicos com fonte e data. Eles podem estar desatualizados; o link para o original sempre vale mais.</li>
+        <li><strong>Encerramento:</strong> você pode excluir sua conta a qualquer momento na página <a routerLink="/perfil">Meu perfil</a>.</li>
+      </ol>
+    }
+
+    @case ('privacidade') {
+      <h1>Política de privacidade (LGPD)</h1>
+      <p class="texto-suave">Atualizado em {{ atualizado }}. Seguimos a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p>
+      <h2>Quais dados coletamos</h2>
+      <ul>
+        <li><strong>Cadastro:</strong> nome (pode ser apelido), e-mail e senha (guardada de forma criptografada pelo Supabase Auth).</li>
+        <li><strong>Opcional:</strong> link de uma foto de perfil.</li>
+        <li><strong>O que você publica:</strong> publicações, comentários, curtidas, comunidades de que participa e denúncias que envia.</li>
+      </ul>
+      <h2>O que NÃO coletamos</h2>
+      <ul>
+        <li>Não pedimos CPF, endereço, telefone nem preferência política.</li>
+        <li>Não tentamos adivinhar sua orientação política nem fazemos segmentação política. Opinião política é <strong>dado sensível</strong> pela LGPD.</li>
+        <li>Não vendemos nem compartilhamos seus dados com anunciantes.</li>
+      </ul>
+      <h2>Para que usamos</h2>
+      <p>Só para permitir login, mostrar seu nome nas comunidades e moderar conteúdo. As perguntas feitas ao FatoBot são enviadas ao serviço de IA apenas para gerar a resposta.</p>
+      <h2>Seus direitos</h2>
+      <p>Você pode ver e corrigir seus dados em <a routerLink="/perfil">Meu perfil</a>, excluir sua conta a qualquer momento e pedir informações pelo <a routerLink="/contato">canal de contato</a>.</p>
+    }
+
+    @case ('contato') {
+      <h1>Contato</h1>
+      <p>Encontrou um dado errado, quer pedir correção, recorrer de uma decisão da moderação ou exercer seus direitos da LGPD? Fale com a equipe:</p>
+      <p><a class="botao" [href]="'mailto:' + email + '?subject=Fato%20Real%20-%20Contato'"><app-icone nome="mail" /> {{ email }}</a></p>
+      <p class="texto-suave">Inclua o link da página ou da publicação e, se for correção, a fonte oficial.</p>
+    }
+  }
+</article>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#173a7a"/><stop offset=".55" stop-color="#5b64b0"/><stop offset=".85" stop-color="#e99a7a"/><stop offset="1" stop-color="#f8c98a"/></linearGradient>
+    <linearGradient id="dobra" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset=".6" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient>
+    <clipPath id="pano"><path d="M260 70c90-24 170 24 260 0s170-24 250 4v250c-80-28-160-28-250-4s-170-24-260 0z"/></clipPath>
+  </defs>
+  <rect width="1200" height="400" fill="url(#ceu)"/>
+  <!-- Congresso ao fundo, à direita -->
+  <g opacity=".9">
+    <rect x="930" y="170" width="30" height="150" fill="#e9e2d8"/><rect x="960" y="170" width="7" height="150" fill="#8d89a8"/>
+    <rect x="972" y="170" width="30" height="150" fill="#e9e2d8"/><rect x="1002" y="170" width="7" height="150" fill="#8d89a8"/>
+    <path d="M820 322c0-26 26-40 55-40s55 14 55 40z" fill="#efe6da"/>
+    <path d="M1030 286c30-4 104-4 134 0-13 22-39 36-67 36s-54-14-67-36z" fill="#efdcc0"/>
+    <rect x="780" y="320" width="420" height="10" fill="#efe7dc"/>
+  </g>
+  <!-- árvores à esquerda -->
+  <path d="M0 400V220c30-30 60-20 80-50s70-20 90 10 50 10 70 40 20 60 30 180z" fill="#0f2d22"/>
+  <path d="M0 400V280c40-20 70 0 100-10s60 20 90 10l40 120z" fill="#0b2219"/>
+  <!-- mastro -->
+  <rect x="250" y="40" width="9" height="360" rx="3" fill="#d9dde3"/><circle cx="254.5" cy="38" r="8" fill="#eceff3"/>
+  <!-- bandeira ondulando -->
+  <g clip-path="url(#pano)">
+    <rect x="250" y="40" width="540" height="320" fill="#009c3b"/>
+    <path d="M300 200 515 92 735 200 515 308z" fill="#ffdf00"/>
+    <circle cx="515" cy="200" r="78" fill="#002776"/>
+    <path d="M440 182c48-16 108-10 152 22l-4 14c-42-30-100-36-146-22z" fill="#fff"/>
+    <g fill="#fff"><circle cx="480" cy="232" r="3"/><circle cx="505" cy="250" r="3"/><circle cx="535" cy="242" r="3"/><circle cx="555" cy="262" r="2.6"/><circle cx="470" cy="256" r="2.6"/><circle cx="520" cy="270" r="2.4"/></g>
+    <rect x="250" y="40" width="540" height="320" fill="url(#dobra)"/>
+  </g>
+  <rect y="360" width="1200" height="40" fill="#0b2219" opacity=".7"/>
+</svg>

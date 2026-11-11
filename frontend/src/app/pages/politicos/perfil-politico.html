@@ -1,0 +1,144 @@
+<a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para a busca</a>
+
+@if (carregando()) {
+  <div class="card perfil-cabecalho" aria-busy="true">
+    <span class="esqueleto esqueleto-foto"></span>
+    <div class="esqueleto-linhas"><span class="esqueleto" style="width: 40%"></span><span class="esqueleto" style="width: 25%"></span></div>
+  </div>
+} @else if (erro()) {
+  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
+} @else if (politico(); as p) {
+  <article class="perfil">
+    <header class="card perfil-cabecalho">
+      <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="128" />
+      <div class="perfil-identidade">
+        <p class="sobretitulo">{{ p.cargo || 'Deputado(a) Federal' }}</p>
+        <h1>{{ p.nome }}</h1>
+        <p class="perfil-partido">{{ p.partido || 'Partido não informado' }} · {{ p.uf || 'UF não informada' }}</p>
+        <div class="etiquetas">
+          @if (p.situacao) { <span class="etiqueta etiqueta-verde"><span class="ponto"></span>{{ p.situacao === 'Exercício' ? 'Em exercício' : p.situacao }}</span> }
+          @if (detalhes()?.condicaoEleitoral; as c) { <span class="etiqueta">{{ c }}</span> }
+        </div>
+        @if (fonte(); as f) { <app-fonte [fonte]="f" /> }
+      </div>
+      <div class="perfil-acoes">
+        <a class="botao botao-verde" [routerLink]="['/fatobot']" [queryParams]="{ p: perguntaIa() }"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</a>
+        <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Página na Câmara</a>
+      </div>
+    </header>
+
+    <!-- Números principais -->
+    <ul class="indicadores" aria-label="Resumo da atuação">
+      <li class="card">
+        <span class="indicador-rotulo"><app-icone nome="description" /> Proposições apresentadas</span>
+        @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
+        @else { <strong>{{ detalhes()?.totalProposicoes ?? '—' }}</strong> }
+        <small>desde {{ detalhes()?.desdeLegislatura | date: 'MM/yyyy' }} (legislatura atual)</small>
+      </li>
+      <li class="card">
+        <span class="indicador-rotulo"><app-icone nome="account_balance" /> Comissões atuais</span>
+        @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
+        @else { <strong>{{ detalhes() ? detalhes()!.comissoes.length : '—' }}</strong> }
+        <small>como titular ou suplente</small>
+      </li>
+      <li class="card">
+        <span class="indicador-rotulo"><app-icone nome="payments" /> Cota parlamentar</span>
+        @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
+        @else if (detalhes()?.despesas; as g) {
+          <strong>{{ g.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong>
+          <small>gastos em {{ g.ano }}{{ g.parcial ? ' (parcial)' : '' }}</small>
+        } @else { <strong>—</strong><small>sem dados no momento</small> }
+      </li>
+    </ul>
+
+    <div class="grade-perfil">
+      <div class="coluna">
+        <section class="card">
+          <h2 class="titulo-secao">Proposições recentes</h2>
+          @if (carregandoDetalhes()) {
+            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto" style="width: 70%"></span></div>
+          } @else if (detalhes()?.proposicoes?.length) {
+            <ul class="lista-proposicoes">
+              @for (pr of detalhes()!.proposicoes; track pr.id) {
+                <li>
+                  <a [href]="pr.url" target="_blank" rel="noopener noreferrer">{{ pr.titulo }} <app-icone nome="open_in_new" /></a>
+                  <p>{{ pr.ementa }}</p>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="texto-suave">Nenhuma proposição de autoria encontrada nesta legislatura.</p>
+          }
+        </section>
+
+        <section class="card">
+          <h2 class="titulo-secao">Gastos da cota parlamentar</h2>
+          @if (carregandoDetalhes()) {
+            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+          } @else if (detalhes()?.despesas; as g) {
+            <p class="texto-p">Maiores categorias em {{ g.ano }} · {{ g.lancamentos | number: '1.0-0' : 'pt-BR' }} lançamentos{{ g.parcial ? ' (parcial: primeiros 500)' : '' }}</p>
+            <ul class="barras-gasto">
+              @for (t of g.porTipo; track t.tipo) {
+                <li>
+                  <span class="barras-gasto-texto"><span>{{ t.tipo }}</span><strong>{{ t.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></span>
+                  <span class="barras-gasto-trilha"><span [style.width.%]="(t.valor / maiorGasto()) * 100"></span></span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="texto-suave">Não foi possível carregar os gastos agora.</p>
+          }
+          <app-fonte [fonte]="fonteCamara()" rotulo="consultado em" />
+        </section>
+      </div>
+
+      <div class="coluna">
+        <section class="card">
+          <h2 class="titulo-secao">Contato e gabinete</h2>
+          <dl class="lista-campos">
+            <app-campo rotulo="E-mail" [valor]="detalhes()?.gabinete?.email || p.email" />
+            <app-campo rotulo="Telefone" [valor]="detalhes()?.gabinete?.telefone ? '(61) ' + detalhes()!.gabinete!.telefone : null" />
+            <app-campo rotulo="Gabinete" [valor]="local()" />
+          </dl>
+          @if (detalhes()?.redesSociais?.length) {
+            <ul class="redes">
+              @for (r of detalhes()!.redesSociais; track r.url) {
+                @if (link(r.url); as u) { <li><a [href]="u" target="_blank" rel="noopener noreferrer">{{ r.rede }}</a></li> }
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="card">
+          <h2 class="titulo-secao">Comissões</h2>
+          @if (carregandoDetalhes()) {
+            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+          } @else if (detalhes()?.comissoes?.length) {
+            <ul class="lista-comissoes">
+              @for (c of detalhes()!.comissoes; track c.sigla) {
+                <li><span class="sigla">{{ c.sigla }}</span><span>{{ c.nome }}@if (c.papel) {<small>{{ c.papel }}</small>}</span></li>
+              }
+            </ul>
+          } @else {
+            <p class="texto-suave">Nenhuma comissão atual encontrada.</p>
+          }
+        </section>
+
+        <section class="card">
+          <h2 class="titulo-secao">Dados pessoais</h2>
+          <dl class="lista-campos">
+            <app-campo rotulo="Nome civil" [valor]="p.nome_civil" />
+            <app-campo rotulo="Nascimento" [valor]="p.data_nascimento ? (p.data_nascimento | date: 'dd/MM/yyyy') : null" />
+            <app-campo rotulo="Naturalidade" [valor]="p.municipio_nascimento" />
+            <app-campo rotulo="Escolaridade" [valor]="p.escolaridade" />
+          </dl>
+        </section>
+      </div>
+    </div>
+  </article>
+} @else {
+  <div class="card vazio">
+    <h1>Perfil não encontrado</h1>
+    <p>Esse político não está no nosso conjunto de dados.</p>
+  </div>
+}

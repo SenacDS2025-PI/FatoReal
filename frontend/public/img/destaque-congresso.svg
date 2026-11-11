@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14295e"/><stop offset=".45" stop-color="#4c4f9a"/><stop offset=".72" stop-color="#d97a6a"/><stop offset=".86" stop-color="#f6b26b"/><stop offset="1" stop-color="#fbd38a"/>
+    </linearGradient>
+    <radialGradient id="sol" cx=".32" cy=".78" r=".45"><stop offset="0" stop-color="#ffe2a3" stop-opacity=".9"/><stop offset="1" stop-color="#ffe2a3" stop-opacity="0"/></radialGradient>
+    <linearGradient id="torreLuz" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fbf4ea"/><stop offset="1" stop-color="#d8cfc6"/></linearGradient>
+    <linearGradient id="torreSombra" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8f8aa6"/><stop offset="1" stop-color="#6f6b88"/></linearGradient>
+    <linearGradient id="cupula" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8ee"/><stop offset="1" stop-color="#d9cbbb"/></linearGradient>
+    <linearGradient id="cuia" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe3c0"/><stop offset="1" stop-color="#c9b29a"/></linearGradient>
+    <linearGradient id="agua" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3f7a"/><stop offset="1" stop-color="#0b1b33"/></linearGradient>
+    <linearGradient id="nuvem" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffd1b3" stop-opacity="0"/><stop offset=".5" stop-color="#ffd1b3" stop-opacity=".55"/><stop offset="1" stop-color="#ffd1b3" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="1200" height="400" fill="url(#ceu)"/>
+  <rect width="1200" height="400" fill="url(#sol)"/>
+  <g fill="url(#nuvem)"><ellipse cx="260" cy="150" rx="260" ry="10"/><ellipse cx="900" cy="120" rx="300" ry="9"/><ellipse cx="620" cy="190" rx="380" ry="7"/></g>
+  <g fill="#fff" opacity=".7"><circle cx="120" cy="40" r="1.2"/><circle cx="1040" cy="60" r="1.4"/><circle cx="820" cy="30" r="1"/><circle cx="420" cy="55" r="1"/></g>
+  <!-- árvores ao fundo -->
+  <path d="M0 300c40-14 70-8 110-16s70 6 110-4 80 8 120 0 60-14 110-6 90 10 140 2 80-12 130-4 90 8 140 0 80-10 120-2 70 6 120-2v40H0z" fill="#1b2a3c" opacity=".85"/>
+  <!-- torres -->
+  <rect x="544" y="84" width="46" height="222" fill="url(#torreLuz)"/>
+  <rect x="590" y="84" width="10" height="222" fill="url(#torreSombra)"/>
+  <rect x="606" y="84" width="46" height="222" fill="url(#torreLuz)"/>
+  <rect x="652" y="84" width="10" height="222" fill="url(#torreSombra)"/>
+  <rect x="598" y="190" width="10" height="6" fill="#cfc5bb"/>
+  <g stroke="#b7aea6" stroke-width="1" opacity=".55">
+    <path d="M550 110h38M550 140h38M550 170h38M550 200h38M550 230h38M550 260h38M612 110h38M612 140h38M612 170h38M612 200h38M612 230h38M612 260h38"/>
+  </g>
+  <!-- cúpula do Senado -->
+  <path d="M330 302c0-40 40-62 85-62s85 22 85 62z" fill="url(#cupula)"/>
+  <path d="M352 290c18-30 70-38 104-22" fill="none" stroke="#fff" stroke-width="3" opacity=".6"/>
+  <!-- cuia da Câmara -->
+  <path d="M722 244c46-6 160-6 206 0 4 1 4 4 0 6-20 30-60 52-103 52s-83-22-103-52c-4-2-4-5 0-6z" fill="url(#cuia)"/>
+  <ellipse cx="825" cy="246" rx="103" ry="6" fill="#fff4e3"/>
+  <!-- plataforma -->
+  <rect x="170" y="300" width="880" height="12" rx="2" fill="#efe7dc"/>
+  <rect x="190" y="312" width="840" height="20" fill="#1c2640"/>
+  <g fill="#ffcf7a" opacity=".85"><rect x="200" y="316" width="820" height="2"/></g>
+  <g fill="#2c3958"><rect x="230" y="312" width="4" height="20"/><rect x="330" y="312" width="4" height="20"/><rect x="430" y="312" width="4" height="20"/><rect x="530" y="312" width="4" height="20"/><rect x="630" y="312" width="4" height="20"/><rect x="730" y="312" width="4" height="20"/><rect x="830" y="312" width="4" height="20"/><rect x="930" y="312" width="4" height="20"/></g>
+  <!-- espelho d'água com reflexo -->
+  <rect y="332" width="1200" height="68" fill="url(#agua)"/>
+  <g opacity=".25"><rect x="544" y="336" width="118" height="60" fill="#f4e6d6"/><path d="M330 336c0 20 40 30 85 30s85-10 85-30z" fill="#f4e6d6"/><path d="M722 336c46 4 160 4 206 0-20 18-60 30-103 30s-83-12-103-30z" fill="#f4e6d6"/></g>
+  <g stroke="#9fb3d9" stroke-width="2" opacity=".35"><path d="M120 360h140M420 372h90M700 356h160M960 376h120"/></g>
+</svg>

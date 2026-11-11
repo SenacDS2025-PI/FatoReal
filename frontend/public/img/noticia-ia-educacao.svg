@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a1259"/><stop offset=".55" stop-color="#5b2bb5"/><stop offset="1" stop-color="#0e7490"/></linearGradient>
+    <radialGradient id="b" cx=".3" cy=".3" r=".55"><stop offset="0" stop-color="#b48cff" stop-opacity=".45"/><stop offset="1" stop-color="#b48cff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#f)"/><rect width="1200" height="630" fill="url(#b)"/>
+  <!-- rede neural ao fundo -->
+  <g stroke="#fff" stroke-opacity=".14" stroke-width="2" fill="#fff" fill-opacity=".25">
+    <path d="M80 120 260 60 420 150 600 70 780 140 960 60 1120 130M80 120l180 140 160-110M600 70l180 70 180-80M260 260l160-110"/>
+    <circle cx="80" cy="120" r="7"/><circle cx="260" cy="60" r="7"/><circle cx="420" cy="150" r="7"/><circle cx="600" cy="70" r="7"/><circle cx="780" cy="140" r="7"/><circle cx="960" cy="60" r="7"/><circle cx="1120" cy="130" r="7"/><circle cx="260" cy="260" r="7"/>
+  </g>
+  <!-- notebook -->
+  <g transform="translate(330 210)">
+    <rect width="420" height="270" rx="18" fill="#140a2e"/>
+    <rect x="16" y="16" width="388" height="238" rx="10" fill="#f3efff"/>
+    <rect x="-50" y="270" width="520" height="26" rx="13" fill="#d9d0f5"/>
+    <!-- chip de IA na tela -->
+    <g transform="translate(160 70)">
+      <rect width="100" height="100" rx="16" fill="#5b2bb5"/>
+      <text x="50" y="64" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="800" fill="#fff">IA</text>
+      <g stroke="#5b2bb5" stroke-width="8" stroke-linecap="round"><path d="M25 -6v-18M50 -6v-18M75 -6v-18M25 106v18M50 106v18M75 106v18M-6 25h-18M-6 50h-18M-6 75h-18M106 25h18M106 50h18M106 75h18"/></g>
+    </g>
+  </g>
+  <!-- capelo de formatura -->
+  <g transform="translate(830 330)">
+    <path d="M0 60 120 0l120 60-120 60z" fill="#ffc21a"/>
+    <path d="M45 85v55c0 22 150 22 150 0V85l-75 37z" fill="#e0a800"/>
+    <path d="M215 72v80" stroke="#ffc21a" stroke-width="8" stroke-linecap="round"/><circle cx="215" cy="160" r="12" fill="#ffc21a"/>
+  </g>
+  <!-- livro -->
+  <g transform="translate(120 400)">
+    <path d="M0 20q80-30 150 0v150q-70-30-150 0z" fill="#fff" opacity=".92"/>
+    <path d="M150 20q70-30 150 0v150q-80-30-150 0z" fill="#e8e1ff"/>
+    <g stroke="#b9a8ee" stroke-width="5" stroke-linecap="round"><path d="M28 60h95M28 85h95M28 110h70M178 60h95M178 85h95M178 110h70"/></g>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+<header class="cabecalho-pagina cabecalho-com-acao">
+  <div>
+    <h1>Comunidades</h1>
+    <p>Grupos abertos para debater temas de interesse público, com regras claras e moderação humana.</p>
+  </div>
+  <a routerLink="/comunidades/nova" class="botao"><app-icone nome="add" /> Criar comunidade</a>
+</header>
+
+<form class="card filtros" role="search" (submit)="$event.preventDefault(); carregar()">
+  <div class="campo-form campo-largo">
+    <label for="busca-comunidade">Buscar comunidade</label>
+    <input id="busca-comunidade" name="termo" type="search" [(ngModel)]="termo" (ngModelChange)="carregar()" placeholder="Nome ou tema" autocomplete="off" />
+  </div>
+</form>
+
+@if (erro()) {
+  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
+}
+
+<ul class="grade-cards">
+  @for (c of lista(); track c.id) {
+    <li>
+      <a [routerLink]="['/comunidades', c.slug]" class="card card-comunidade" [style.--cor-tema]="corTema[c.tema]">
+        <div class="card-comunidade-capa">
+          @if (capa(c.slug); as img) { <img [src]="img" alt="" /> } @else { <app-icone [nome]="iconeTema[c.tema] || 'groups'" class="capa-marca" /> }
+        </div>
+        <div class="card-comunidade-corpo">
+          @if (avatar(c.slug); as a) { <img [src]="a" alt="" class="card-comunidade-avatar" /> }
+          @else { <span class="card-comunidade-avatar capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+          <strong>{{ c.nome }}</strong>
+          <span class="tag-verde tag-p">{{ c.tema }}</span>
+          <p>{{ c.descricao }}</p>
+          <small class="texto-suave"><app-icone nome="group" /> {{ c.total_membros }} membro(s)</small>
+        </div>
+      </a>
+    </li>
+  } @empty {
+    <li class="card vazio">Nenhuma comunidade encontrada.</li>
+  }
+</ul>
