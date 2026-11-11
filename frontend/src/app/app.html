@@ -87,9 +87,6 @@
           @if (contador(item.contador); as n) { <span class="contador" [attr.aria-label]="n + ' novos'">{{ n }}</span> }
         </a>
       }
-      @if (auth.moderador()) {
-        <a routerLink="/moderacao" routerLinkActive="ativo"><app-icone nome="shield" /> <span class="menu-texto">Moderação</span></a>
-      }
     </nav>
 
     <nav class="lateral-rodape" aria-label="Institucional">

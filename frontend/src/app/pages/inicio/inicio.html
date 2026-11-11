@@ -43,7 +43,7 @@
         @for (c of (minhas().length ? minhas() : destaquesComunidade()); track c.id) {
           <li>
             <a [routerLink]="['/comunidades', c.slug]" class="mini-comunidade" [style.--cor-tema]="corTema[c.tema]">
-              @if (capaComunidade(c.slug); as capa) { <img [src]="capa" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
+              @if (capaComunidade(c.slug, c.tema); as capa) { <img [src]="capa" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
               <strong>{{ c.nome }}</strong>
               <small><app-icone nome="group" /> {{ c.total_membros }}</small>
             </a>

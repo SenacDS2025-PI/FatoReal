@@ -22,7 +22,7 @@
     <li>
       <a [routerLink]="['/comunidades', c.slug]" class="card card-comunidade" [style.--cor-tema]="corTema[c.tema]">
         <div class="card-comunidade-capa">
-          @if (capa(c.slug); as img) { <img [src]="img" alt="" /> } @else { <app-icone [nome]="iconeTema[c.tema] || 'groups'" class="capa-marca" /> }
+          @if (capa(c.slug, c.tema); as img) { <img [src]="img" alt="" /> } @else { <app-icone [nome]="iconeTema[c.tema] || 'groups'" class="capa-marca" /> }
         </div>
         <div class="card-comunidade-corpo">
           @if (avatar(c.slug); as a) { <img [src]="a" alt="" class="card-comunidade-avatar" /> }

@@ -6,12 +6,33 @@ const IMAGENS: Record<string, { avatar: string; capa: string }> = {
   'educacao-para-todos': { avatar: 'img/com-educacao.svg', capa: 'img/destaque-congresso.svg' },
 };
 
+/** Capas ilustradas das comunidades temáticas (o ícone quadrado continua na cor do tema). */
+const CAPAS_SLUG = [
+  'eleicoes-e-voto', 'camara-e-senado-em-pauta', 'politica-na-minha-cidade', 'checagem-de-fatos', 'contas-publicas',
+  'saude-publica-e-sus', 'meio-ambiente-e-clima', 'seguranca-publica', 'tecnologia-e-democracia', 'juventude-e-participacao',
+];
+
+/** Capa padrão por tema, para comunidades criadas pelos usuários. */
+const CAPA_TEMA: Record<string, string> = {
+  Política: 'img/capa-camara-e-senado-em-pauta.svg',
+  Educação: 'img/destaque-congresso.svg',
+  Cidadania: 'img/capa-juventude-e-participacao.svg',
+  Economia: 'img/capa-contas-publicas.svg',
+  Saúde: 'img/capa-saude-publica-e-sus.svg',
+  'Meio ambiente': 'img/capa-meio-ambiente-e-clima.svg',
+  Segurança: 'img/capa-seguranca-publica.svg',
+  Tecnologia: 'img/capa-tecnologia-e-democracia.svg',
+};
+
 export function avatarComunidade(slug?: string | null): string | null {
   return (slug && IMAGENS[slug]?.avatar) || null;
 }
 
-export function capaComunidade(slug?: string | null): string | null {
-  return (slug && IMAGENS[slug]?.capa) || null;
+/** Toda comunidade tem capa: a própria, a ilustrada do slug ou a do tema. */
+export function capaComunidade(slug?: string | null, tema?: string | null): string | null {
+  if (slug && IMAGENS[slug]?.capa) return IMAGENS[slug].capa;
+  if (slug && CAPAS_SLUG.includes(slug)) return `img/capa-${slug}.svg`;
+  return (tema && CAPA_TEMA[tema]) || 'img/destaque-bandeira.svg';
 }
 
 /** Ícone (Material Symbols) para cada tema, usado quando a comunidade não tem imagem. */

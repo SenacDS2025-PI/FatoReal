@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+  <defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#08343f"/><stop offset=".6" stop-color="#0e7490"/><stop offset="1" stop-color="#22a6c4"/></linearGradient></defs>
+  <rect width="1200" height="400" fill="url(#f)"/>
+
+  <g stroke="#7fe1f5" stroke-opacity=".35" stroke-width="4" fill="none">
+    <path d="M0 120h220l40 40h160M0 260h180l60-60h120M1200 110H980l-40 50H820M1200 280H1010l-50-50H840"/>
+  </g>
+  <g fill="#7fe1f5" opacity=".6"><circle cx="420" cy="160" r="8"/><circle cx="360" cy="200" r="8"/><circle cx="820" cy="160" r="8"/><circle cx="840" cy="230" r="8"/></g>
+  <g transform="translate(500 40)">
+    <rect width="200" height="330" rx="30" fill="#05202a"/>
+    <rect x="14" y="20" width="172" height="290" rx="20" fill="#e8f7fb"/>
+    <rect x="40" y="70" width="120" height="110" rx="14" fill="#0e7490"/>
+    <path d="M72 125l20 20 40-42" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="40" y="200" width="120" height="12" rx="6" fill="#9cc9d6"/><rect x="40" y="224" width="90" height="12" rx="6" fill="#9cc9d6"/>
+  </g>
+
+</svg>

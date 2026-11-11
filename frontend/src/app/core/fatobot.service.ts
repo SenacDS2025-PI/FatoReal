@@ -47,27 +47,40 @@ export class FatoBotService {
   }
 
   /**
-   * Verificação assistida de uma afirmação.
-   * Contrato: POST {API_URL}/verificar  body { "afirmacao": "..." }
+   * Verificação assistida de uma afirmação, com link e anexos opcionais.
+   * Contrato: POST {API_URL}/verificar
+   *   - sem anexos: JSON { "afirmacao": "...", "link": "https://..." | null }
+   *   - com anexos: multipart/form-data com os campos afirmacao, link e anexos (um ou mais arquivos)
    *   200 → { estado, explicacao, fontes, consultado_em }
    */
-  async verificar(afirmacao: string): Promise<ResultadoVerificacao> {
+  async verificar(pedido: { afirmacao: string; link?: string | null; anexos?: File[] }): Promise<ResultadoVerificacao> {
+    const anexos = pedido.anexos ?? [];
     try {
-      const resp = await fetch(`${apiUrl}/verificar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ afirmacao }),
-      });
+      let corpo: BodyInit;
+      const headers: Record<string, string> = {};
+      if (anexos.length) {
+        const form = new FormData();
+        form.append('afirmacao', pedido.afirmacao);
+        if (pedido.link) form.append('link', pedido.link);
+        for (const a of anexos) form.append('anexos', a, a.name);
+        corpo = form; // o navegador define o Content-Type com o boundary
+      } else {
+        headers['Content-Type'] = 'application/json';
+        corpo = JSON.stringify({ afirmacao: pedido.afirmacao, link: pedido.link ?? null });
+      }
+      const resp = await fetch(`${apiUrl}/verificar`, { method: 'POST', headers, body: corpo });
       if (resp.ok && resp.headers.get('content-type')?.includes('json')) return (await resp.json()) as ResultadoVerificacao;
       if (!modoDemo) throw new Error();
     } catch {
       if (!modoDemo) throw new Error('A verificação não respondeu agora. Tente de novo em instantes.');
     }
+    const extras = [pedido.link ? 'o link' : '', anexos.length ? `${anexos.length} anexo(s)` : ''].filter(Boolean).join(' e ');
     return {
       estado: 'Em análise',
       explicacao:
-        'Recebemos a afirmação. No modo demonstração ainda não há busca automática de fontes, então ela fica em análise. ' +
-        'Enquanto isso, confira nas agências de checagem e nas fontes oficiais listadas ao lado.',
+        `Recebemos ${extras ? 'o pedido com ' + extras : 'a afirmação'}. No modo demonstração ainda não há busca automática de fontes ` +
+        (anexos.length ? 'nem análise de fotos, vídeos e documentos (isso passa por revisão humana), ' : '') +
+        'então ele fica em análise. Enquanto isso, confira nas agências de checagem e nas fontes oficiais listadas ao lado.',
       fontes: [],
       consultado_em: new Date().toISOString(),
     };
