@@ -30,6 +30,9 @@ export interface Usuario {
   nome: string;
   foto_url?: string | null;
   moderador: boolean;
+  /** Frase curta de apresentação (até 160 caracteres). */
+  bio?: string | null;
+  criado_em?: string | null;
 }
 
 export interface Autor {

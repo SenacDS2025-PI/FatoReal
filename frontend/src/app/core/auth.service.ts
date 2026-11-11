@@ -10,6 +10,8 @@ import { lerDemo, salvarDemo } from './demo-store';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly usuario = signal<Usuario | null>(null);
+  /** No modo demonstração a bio sempre funciona; no Supabase, só se a tabela perfis tiver a coluna bio. */
+  readonly aceitaBio = signal(true);
   readonly logado = computed(() => this.usuario() !== null);
   readonly moderador = computed(() => this.usuario()?.moderador ?? false);
 
@@ -40,22 +42,26 @@ export class AuthService {
     }
     const { data } = await supabase
       .from('perfis')
-      .select('id, nome, foto_url, is_moderador')
+      .select('*')
       .eq('id', id)
       .maybeSingle();
+    // A coluna "bio" é opcional no banco: só oferecemos o campo se ela existir.
+    this.aceitaBio.set(!!data && 'bio' in data);
     this.usuario.set({
       id,
       email: email ?? '',
       nome: data?.nome ?? email?.split('@')[0] ?? 'Usuário',
       foto_url: data?.foto_url ?? null,
       moderador: data?.is_moderador ?? false,
+      bio: data?.bio ?? null,
+      criado_em: data?.criado_em ?? null,
     });
   }
 
   async cadastrar(nome: string, email: string, senha: string): Promise<{ confirmarEmail: boolean }> {
     if (!supabase) {
       // Demo: todo usuário é moderador para dar para mostrar o painel na apresentação.
-      this.salvarDemo({ id: crypto.randomUUID(), email, nome, foto_url: null, moderador: true });
+      this.salvarDemo({ id: crypto.randomUUID(), email, nome, foto_url: null, moderador: true, criado_em: new Date().toISOString() });
       return { confirmarEmail: false };
     }
     const { data, error } = await supabase.auth.signUp({
@@ -101,13 +107,14 @@ export class AuthService {
     if (error) throw new Error(traduzirErro(error.message));
   }
 
-  async atualizarPerfil(dados: { nome: string; foto_url: string | null }): Promise<void> {
+  async atualizarPerfil(dados: { nome: string; foto_url: string | null; bio?: string | null }): Promise<void> {
     const atual = this.usuario();
     if (!atual) return;
     if (!supabase) {
       this.salvarDemo({ ...atual, ...dados });
       return;
     }
+    if (!this.aceitaBio()) delete dados.bio;
     const { error } = await supabase.from('perfis').update(dados).eq('id', atual.id);
     if (error) throw new Error(traduzirErro(error.message));
     this.usuario.set({ ...atual, ...dados });

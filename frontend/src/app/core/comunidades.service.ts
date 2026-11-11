@@ -115,6 +115,38 @@ export class ComunidadesService {
     return (data as Linha[]).map((m) => mapComunidade(m['comunidade']));
   }
 
+  /** Publicações escritas por uma pessoa (aba "Publicações" do perfil). */
+  async publicacoesDe(usuarioId: string): Promise<Publicacao[]> {
+    const eu = this.auth.usuario()?.id;
+    if (!supabase) return this.demo.feed(eu).filter((p) => p.autor.id === usuarioId);
+    const { data, error } = await supabase
+      .from('publicacoes')
+      .select(SELECT_PUBLICACAO)
+      .eq('autor_id', usuarioId)
+      .eq('removida', false)
+      .order('criado_em', { ascending: false })
+      .limit(50);
+    if (error) throw new Error('Não foi possível carregar as publicações.');
+    return (data as Linha[]).map((p) => mapPublicacao(p, eu));
+  }
+
+  /** Publicações que a pessoa curtiu (aba "Curtidas" do perfil). */
+  async curtidasDe(usuarioId: string): Promise<Publicacao[]> {
+    const eu = this.auth.usuario()?.id;
+    if (!supabase) return this.demo.feed(eu).filter((p) => this.demo.curtiu(p.id, usuarioId));
+    const { data, error } = await supabase
+      .from('curtidas')
+      .select(`publicacao:publicacoes(${SELECT_PUBLICACAO})`)
+      .eq('usuario_id', usuarioId)
+      .limit(50);
+    if (error) throw new Error('Não foi possível carregar as curtidas.');
+    return (data as Linha[])
+      .map((c) => c['publicacao'])
+      .filter((p) => p && !p['removida'])
+      .map((p) => mapPublicacao(p, eu))
+      .sort((a, b) => b.criado_em.localeCompare(a.criado_em));
+  }
+
   // ---------- Mural ----------
   async publicacoes(comunidadeId: number): Promise<Publicacao[]> {
     const eu = this.auth.usuario()?.id;
@@ -488,6 +520,9 @@ class DemoSocial {
   }
   membros(comunidadeId: number) {
     return this.db.membros.filter((m) => m.comunidade_id === comunidadeId).map((m) => ({ ...m.usuario, papel: m.papel }));
+  }
+  curtiu(publicacaoId: number, usuarioId: string): boolean {
+    return this.db.curtidas.some((c) => c.publicacao_id === publicacaoId && c.usuario_id === usuarioId);
   }
   minhas(usuarioId: string): Comunidade[] {
     const db = this.db;
