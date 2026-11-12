@@ -13,6 +13,11 @@ create table if not exists public.perfis (
   is_moderador boolean not null default false,
   criado_em    timestamptz not null default now()
 );
+-- Campos opcionais do perfil (tela "Editar perfil"). "add column if not exists" deixa rodar de novo sem erro.
+alter table public.perfis add column if not exists bio    text check (bio is null or char_length(bio) <= 160);
+alter table public.perfis add column if not exists cidade text check (cidade is null or char_length(cidade) <= 60);
+alter table public.perfis add column if not exists uf     text check (uf is null or uf ~ '^[A-Z]{2}$');
+alter table public.perfis add column if not exists capa   text check (capa is null or capa in ('verde', 'azul', 'roxo', 'laranja', 'grafite', 'brasil'));
 
 create or replace function public.criar_perfil()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -148,6 +153,16 @@ create index if not exists idx_publicacoes_comunidade on public.publicacoes (com
 create index if not exists idx_comentarios_publicacao on public.comentarios (publicacao_id, criado_em);
 create index if not exists idx_denuncias_status on public.denuncias (status, criado_em desc);
 
+-- ---------- SEGUIDORES ("seguir pessoas" no perfil) ----------
+create table if not exists public.seguidores (
+  seguidor_id uuid not null references public.perfis(id) on delete cascade,
+  seguido_id  uuid not null references public.perfis(id) on delete cascade,
+  criado_em   timestamptz not null default now(),
+  primary key (seguidor_id, seguido_id),
+  check (seguidor_id <> seguido_id)
+);
+create index if not exists seguidores_seguido_idx on public.seguidores (seguido_id);
+
 -- =====================================================================
 -- SEGURANÇA (Row Level Security)
 -- =====================================================================
@@ -160,6 +175,7 @@ alter table public.comentarios        enable row level security;
 alter table public.curtidas           enable row level security;
 alter table public.denuncias          enable row level security;
 alter table public.mensagens          enable row level security;
+alter table public.seguidores         enable row level security;
 
 -- Perfis: nome e foto aparecem nas comunidades; cada um edita só o seu e ninguém vira moderador sozinho
 drop policy if exists "perfis: todos veem" on public.perfis;
@@ -240,6 +256,14 @@ create policy "denuncias: moderador ve" on public.denuncias for select using (pu
 drop policy if exists "denuncias: moderador decide" on public.denuncias;
 create policy "denuncias: moderador decide" on public.denuncias for update using (public.eh_moderador());
 
+-- Seguidores: todos veem quem segue quem; cada um segue/deixa de seguir só por si
+drop policy if exists "seguidores: todos veem" on public.seguidores;
+create policy "seguidores: todos veem" on public.seguidores for select using (true);
+drop policy if exists "seguidores: seguir" on public.seguidores;
+create policy "seguidores: seguir" on public.seguidores for insert with check (seguidor_id = auth.uid());
+drop policy if exists "seguidores: deixar de seguir" on public.seguidores;
+create policy "seguidores: deixar de seguir" on public.seguidores for delete using (seguidor_id = auth.uid());
+
 -- Mensagens: só quem enviou ou recebeu vê; só o destinatário marca como lida
 drop policy if exists "mensagens: ver as minhas" on public.mensagens;
 create policy "mensagens: ver as minhas" on public.mensagens for select
@@ -258,6 +282,23 @@ insert into public.comunidades (slug, nome, tema, descricao, regras) values
   ('politica-brasileira', 'Política Brasileira', 'Política', 'Debate sobre o Congresso, o governo e as eleições, sempre com fontes.', 'Respeite as pessoas. Cite fontes ao afirmar fatos. Opinião não é desinformação.'),
   ('educacao-para-todos', 'Educação para Todos', 'Educação', 'Educação pública, escolas, universidades e políticas educacionais.', 'Respeite as pessoas. Cite fontes ao afirmar fatos. Opinião não é desinformação.'),
   ('direitos-e-cidadania', 'Direitos e Cidadania', 'Cidadania', 'Direitos do cidadão, serviços públicos e participação social.', 'Respeite as pessoas. Cite fontes ao afirmar fatos. Opinião não é desinformação.')
+on conflict (slug) do nothing;
+
+-- Comunidades temáticas (as mesmas do modo demonstração do front)
+insert into public.comunidades (slug, nome, tema, descricao, regras)
+select v.slug, v.nome, v.tema, v.descricao, E'1. Respeite as pessoas: critique ideias, não ataque quem pensa diferente.\n2. Ao afirmar um fato, cite a fonte (de preferência oficial).\n3. Opinião é bem-vinda e não é desinformação.\n4. Não publique conteúdo sabidamente falso nem dados pessoais de outras pessoas.\n5. Denuncie o que violar estas regras: a moderação humana analisa.'
+from (values
+  ('eleicoes-e-voto', 'Eleições e Voto', 'Política', 'Calendário eleitoral, regras do TSE, urna eletrônica e como conferir candidaturas.'),
+  ('camara-e-senado-em-pauta', 'Câmara e Senado em Pauta', 'Política', 'Acompanhe projetos, votações e comissões do Congresso Nacional, com link para a tramitação oficial.'),
+  ('politica-na-minha-cidade', 'Política na Minha Cidade', 'Política', 'Câmaras municipais, prefeituras e orçamento local. O que é decidido perto de você.'),
+  ('checagem-de-fatos', 'Checagem de Fatos', 'Cidadania', 'Recebeu um boato? Traga aqui para a comunidade conferir junto, sempre com fonte.'),
+  ('contas-publicas', 'Contas Públicas', 'Economia', 'Orçamento, impostos, gastos do governo e cota parlamentar, com dados abertos.'),
+  ('saude-publica-e-sus', 'Saúde Pública e SUS', 'Saúde', 'Políticas de saúde, vacinação e funcionamento do SUS, com informação oficial.'),
+  ('meio-ambiente-e-clima', 'Meio Ambiente e Clima', 'Meio ambiente', 'Desmatamento, clima, energia e as leis ambientais em debate no país.'),
+  ('seguranca-publica', 'Segurança Pública', 'Segurança', 'Políticas de segurança, dados de violência e o papel de cada esfera de governo.'),
+  ('tecnologia-e-democracia', 'Tecnologia e Democracia', 'Tecnologia', 'Desinformação, inteligência artificial, privacidade (LGPD) e regras para as plataformas.'),
+  ('juventude-e-participacao', 'Juventude e Participação', 'Cidadania', 'Para quem vota pela primeira vez: título de eleitor, conselhos, grêmios e como participar.')
+) as v(slug, nome, tema, descricao)
 on conflict (slug) do nothing;
 
 -- =====================================================================
