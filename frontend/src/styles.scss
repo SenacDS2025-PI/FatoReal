@@ -44,30 +44,30 @@
 }
 
 :root[data-tema='escuro'] {
-  /* Modo escuro: cinzas quentes e neutros (sem azul nem verde no fundo); verde só nos botões e links. */
-  --moldura: #1f1e1d;
-  --moldura-2: #262624;
-  --moldura-borda: #34332f;
-  --moldura-texto: #dedcd3;
-  --moldura-suave: #9c9a92;
-  --moldura-titulo: #faf9f5;
-  --moldura-campo: #30302e;
-  --moldura-hover: rgba(255, 255, 255, 0.06);
-  --painel: #262624;
-  --superficie: #30302e;
-  --superficie-2: #3a3936;
-  --texto: #f0eee6;
-  --texto-suave: #a8a69d;
-  --borda: #45443f;
-  --primaria: #4cb88a;
-  --primaria-texto: #0e1a14;
-  --link: #79c9a6;
-  --perigo: #ef7a72;
-  --verde-vivo: #4cb88a;
-  --azul-selo: #7fb0ff;
-  --azul-vivo: #7fb0ff;
-  --destaque: #e3b55a;
-  --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.2);
+  /* Modo escuro: preto puro com cards cinza bem escuro (estilo X/Twitter); verde só nos destaques. */
+  --moldura: #000000;
+  --moldura-2: #16181c;
+  --moldura-borda: #2f3336;
+  --moldura-texto: #e7e9ea;
+  --moldura-suave: #8b9096;
+  --moldura-titulo: #e7e9ea;
+  --moldura-campo: #202327;
+  --moldura-hover: rgba(231, 233, 234, 0.1);
+  --painel: #000000;
+  --superficie: #16181c;
+  --superficie-2: #202327;
+  --texto: #e7e9ea;
+  --texto-suave: #8b9096;
+  --borda: #2f3336;
+  --primaria: #00ba7c;
+  --primaria-texto: #00140c;
+  --link: #2fd096;
+  --perigo: #f4212e;
+  --verde-vivo: #00ba7c;
+  --azul-selo: #1d9bf0;
+  --azul-vivo: #1d9bf0;
+  --destaque: #ffd400;
+  --sombra: none;
   color-scheme: dark;
 }
 
@@ -1115,24 +1115,26 @@ legend { font-weight: 700; padding: 0 6px; }
 
 /* Modo escuro: ajustes de componentes que tinham cor fixa */
 :root[data-tema='escuro'] {
-  .aviso-demo { background: #3a3224; color: #efdcb2; border-color: #4f442f; }
-  .tag-verde { background: rgba(76, 184, 138, 0.16); color: var(--link); }
-  .etiqueta-verde, .selo-verificado, .post-tipo-verificado { background: rgba(76, 184, 138, 0.14); color: var(--link); }
+  .aviso-demo { background: #16140c; color: #e9d9a6; border-color: #3a3317; }
+  .tag-verde { background: rgba(0, 186, 124, 0.16); color: var(--link); }
+  .etiqueta-verde, .selo-verificado, .post-tipo-verificado { background: rgba(0, 186, 124, 0.14); color: var(--link); }
   .chip { box-shadow: none; }
-  .botao-fantasma { border-color: var(--borda); color: var(--texto); }
+  .botao-fantasma { border-color: #536471; color: var(--texto); }
   .card-ia { background: var(--superficie); border-color: var(--borda); color: var(--texto); h2 { color: var(--texto); } }
-  .destaque { background: #1f1e1d; }
-  .menu a.ativo { background: rgba(255, 255, 255, 0.08); color: var(--moldura-titulo); .icone { color: var(--link); } }
-  .post-verificado { border-color: var(--borda); box-shadow: var(--sombra), inset 4px 0 0 var(--primaria); }
+  .destaque { background: #000; }
+  .menu a.ativo { background: rgba(231, 233, 234, 0.1); color: var(--moldura-titulo); .icone { color: var(--link); } }
+  .post-verificado { border-color: var(--borda); box-shadow: inset 4px 0 0 var(--primaria); }
   .abas-celular a.ativo { background: var(--primaria); color: var(--primaria-texto); }
   .filtro-mensagens button[aria-selected='true'] { color: var(--primaria-texto); }
   .msg-voce { color: var(--primaria-texto); }
-  .noticia-tema { background: rgba(31, 30, 29, 0.9); color: var(--texto); }
-  .noticias-seta { background: rgba(48, 48, 46, 0.95); color: var(--texto); }
+  .noticia-tema { background: rgba(0, 0, 0, 0.8); color: var(--texto); }
+  .noticias-seta { background: rgba(22, 24, 28, 0.95); color: var(--texto); }
   .zona-anexo:hover, .zona-anexo.arrastando { background: rgba(255, 255, 255, 0.04); }
-  .glossario-item { --cor-g-texto: #0e1a14; }
-  .glossario-item[data-cor='1'] { --cor-g: #e3b55a; --cor-g-texto: #2a1f05; }
-  .glossario-item[data-cor='2'] { --cor-g: #6f9fd8; --cor-g-texto: #0b1626; }
+  .glossario-item { --cor-g-texto: #00140c; }
+  .glossario-item[data-cor='1'] { --cor-g: #ffd400; --cor-g-texto: #261f00; }
+  .glossario-item[data-cor='2'] { --cor-g: #1d9bf0; --cor-g-texto: #001526; }
+  .glossario-item:hover { box-shadow: none; }
+  .painel { border-left: 1px solid var(--borda); }
 }
 :root[data-tema='escuro'] {
   .card-comunidade-capa img, .comunidade-capa img, .mini-comunidade img, .noticia-imagem img, .perfil-x-capa, .destaque img { filter: brightness(0.82) saturate(0.9); }
