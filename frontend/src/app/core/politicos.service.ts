@@ -1,8 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Politico } from './modelos';
+import { AlertaJuridico, Politico } from './modelos';
 import { supabase } from './supabase';
 
 const CAMARA_API = 'https://dadosabertos.camara.leg.br/api/v2';
+const SENADO_API = 'https://legis.senado.leg.br/dadosabertos';
+
+/** Cargos do filtro. "fonte" diz de onde vêm os dados no modo demonstração (sem Supabase). */
+export const CARGOS: { nome: string; fonte: 'camara' | 'senado' | null }[] = [
+  { nome: 'Deputado(a) Federal', fonte: 'camara' },
+  { nome: 'Senador(a)', fonte: 'senado' },
+  { nome: 'Governador(a)', fonte: null },
+  { nome: 'Presidente', fonte: null },
+  { nome: 'Deputado(a) Estadual', fonte: null },
+  { nome: 'Prefeito(a)', fonte: null },
+  { nome: 'Vereador(a)', fonte: null },
+];
 
 export interface FiltroPoliticos {
   termo?: string;
@@ -219,6 +231,122 @@ function nomeRede(url: string): string {
     'youtube.com': 'YouTube', 'tiktok.com': 'TikTok', 'linkedin.com': 'LinkedIn', 'threads.net': 'Threads',
   };
   return nomes[host] ?? host;
+}
+
+/** Listas completas já carregadas (para não buscar de novo a cada filtro). */
+const cache = new Map<string, Promise<Politico[]>>();
+
+/**
+ * Todos os políticos de um cargo, em ordem alfabética.
+ * - Supabase: tabela "politicos" filtrada pelo cargo.
+ * - Demo: Deputados pela API da Câmara (513, em páginas de 100) e Senadores pela API do Senado (81).
+ *   Os outros cargos não têm API pública: retornam lista vazia até a equipe importar os dados do TSE.
+ */
+export function todosDoCargo(cargo: string): Promise<Politico[]> {
+  if (!cache.has(cargo)) {
+    const p = carregarCargo(cargo).catch((e) => {
+      cache.delete(cargo);
+      throw e;
+    });
+    cache.set(cargo, p);
+  }
+  return cache.get(cargo)!;
+}
+
+async function carregarCargo(cargo: string): Promise<Politico[]> {
+  if (supabase) {
+    const { data, error } = await supabase.from('politicos').select('*').eq('cargo', cargo).order('nome').limit(2000);
+    if (error) throw new Error('Não foi possível carregar os políticos.');
+    return (data as Politico[]).map((p) => ({ ...p, casa: p.casa ?? (cargo === 'Senador(a)' ? 'senado' : cargo === 'Deputado(a) Federal' ? 'camara' : 'outro') }));
+  }
+  const fonte = CARGOS.find((c) => c.nome === cargo)?.fonte;
+  if (fonte === 'camara') return deputadosCamara();
+  if (fonte === 'senado') return senadoresSenado();
+  return [];
+}
+
+async function deputadosCamara(): Promise<Politico[]> {
+  const agora = new Date().toISOString();
+  const lista: Politico[] = [];
+  let url: string | undefined = `${CAMARA_API}/deputados?itens=100&ordem=ASC&ordenarPor=nome`;
+  for (let pagina = 0; url && pagina < 10; pagina++) {
+    const resp = await buscarCamara(url);
+    if (!resp.ok) throw new Error('A API da Câmara não respondeu. Tente de novo em instantes.');
+    const json = (await resp.json()) as { dados: DeputadoResumo[]; links?: { rel: string; href: string }[] };
+    for (const d of json.dados) {
+      lista.push({
+        id: d.id, nome: d.nome, partido: d.siglaPartido, uf: d.siglaUf, cargo: 'Deputado(a) Federal', foto_url: d.urlFoto,
+        email: d.email, fonte_url: `https://www.camara.leg.br/deputados/${d.id}`, data_coleta: agora, casa: 'camara',
+      });
+    }
+    url = json.links?.find((l) => l.rel === 'next')?.href;
+  }
+  return ordenar(lista);
+}
+
+async function senadoresSenado(): Promise<Politico[]> {
+  let resp: Response;
+  try {
+    resp = await fetch(`${SENADO_API}/senador/lista/atual.json`, { headers: { Accept: 'application/json' } });
+  } catch {
+    throw new Error('Não foi possível acessar a API do Senado. Verifique sua conexão e tente de novo.');
+  }
+  if (!resp.ok) throw new Error('A API do Senado não respondeu. Tente de novo em instantes.');
+  const json = await resp.json();
+  const brutos = json?.ListaParlamentarEmExercicio?.Parlamentares?.Parlamentar ?? [];
+  const agora = new Date().toISOString();
+  return ordenar(
+    (Array.isArray(brutos) ? brutos : [brutos]).map((p: { IdentificacaoParlamentar: SenadorIdentificacao }) => {
+      const i = p.IdentificacaoParlamentar;
+      return {
+        id: Number(i.CodigoParlamentar), nome: i.NomeParlamentar, nome_civil: i.NomeCompletoParlamentar, partido: i.SiglaPartidoParlamentar,
+        uf: i.UfParlamentar, cargo: 'Senador(a)', foto_url: i.UrlFotoParlamentar, email: i.EmailParlamentar ?? null,
+        fonte_url: i.UrlPaginaParlamentar || `https://www25.senado.leg.br/web/senadores/senador/-/perfil/${i.CodigoParlamentar}`,
+        data_coleta: agora, casa: 'senado' as const,
+      };
+    }),
+  );
+}
+
+/** Perfil de um senador (a partir da lista oficial do Senado). */
+export async function obterSenador(id: number): Promise<Politico | null> {
+  return (await todosDoCargo('Senador(a)')).find((p) => p.id === id) ?? null;
+}
+
+/**
+ * Alertas jurídicos de um político. Só existem quando a equipe cadastra, com fonte oficial,
+ * na tabela "politico_alertas" do Supabase. Nada é gerado automaticamente.
+ */
+export async function alertasDe(p: Politico): Promise<AlertaJuridico[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('politico_alertas')
+    .select('*')
+    .eq('politico_id', p.id)
+    .eq('casa', p.casa ?? 'camara')
+    .order('data', { ascending: false });
+  if (error) return [];
+  return data as AlertaJuridico[];
+}
+
+/** Primeira letra do nome, sem acento (para o índice A–Z). */
+export function letraDe(nome: string): string {
+  return semAcento(nome.trim().charAt(0)).toUpperCase();
+}
+
+function ordenar(lista: Politico[]): Politico[] {
+  return lista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+}
+
+interface SenadorIdentificacao {
+  CodigoParlamentar: string;
+  NomeParlamentar: string;
+  NomeCompletoParlamentar?: string;
+  SiglaPartidoParlamentar?: string;
+  UfParlamentar?: string;
+  UrlFotoParlamentar?: string;
+  UrlPaginaParlamentar?: string;
+  EmailParlamentar?: string;
 }
 
 /** fetch com mensagem amigável quando não há internet ou a API está fora do ar. */

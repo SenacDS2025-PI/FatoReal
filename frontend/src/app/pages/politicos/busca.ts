@@ -1,104 +1,148 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { POR_PAGINA, PoliticosService, partidosCamara } from '../../core/politicos.service';
+import { CARGOS, letraDe, todosDoCargo } from '../../core/politicos.service';
+import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
 
+const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const POR_VEZ = 48;
+
+/** Candidatos: todos os políticos de cada cargo, em ordem alfabética, com índice A–Z e filtros. */
 @Component({
   selector: 'app-busca',
   imports: [FormsModule, RouterLink, Icone, Avatar],
   templateUrl: './busca.html',
 })
 export class BuscaPage implements OnInit {
-  private service = inject(PoliticosService);
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
 
+  protected readonly cargos = CARGOS;
+  protected readonly letras = LETRAS;
   protected readonly ufs = UFS;
-  protected termo = '';
-  protected partido = '';
-  protected uf = '';
-  protected readonly resultados = signal<Politico[]>([]);
+  protected readonly demo = modoDemo;
+
+  protected readonly cargo = signal(CARGOS[0].nome);
+  protected readonly letra = signal('');
+  protected readonly termo = signal('');
+  protected readonly partido = signal('');
+  protected readonly uf = signal('');
+  protected readonly todos = signal<Politico[]>([]);
   protected readonly carregando = signal(false);
-  protected readonly carregandoMais = signal(false);
-  protected readonly temMais = signal(false);
-  private pagina = 1;
   protected readonly erro = signal('');
-  private espera?: ReturnType<typeof setTimeout>;
-  private pedido = 0;
-  /** Siglas sugeridas no campo de partido (lista da Câmara; se falhar, o campo continua livre). */
-  protected readonly partidos = signal<string[]>([]);
+  protected readonly limite = signal(POR_VEZ);
   protected readonly esqueletos = Array.from({ length: 6 });
 
-  protected get temFiltro(): boolean {
-    return !!(this.termo || this.partido || this.uf);
-  }
+  /** Cargo sem fonte automática no modo demonstração (governador, presidente...). */
+  protected readonly semFonte = computed(() => this.demo && !CARGOS.find((c) => c.nome === this.cargo())?.fonte);
+
+  /** Lista depois dos filtros de nome, partido e estado (antes da letra). */
+  private readonly filtrados = computed(() => {
+    const t = normalizar(this.termo());
+    const partido = this.partido();
+    const uf = this.uf();
+    return this.todos().filter(
+      (p) => (!t || normalizar(p.nome).includes(t)) && (!partido || p.partido === partido) && (!uf || p.uf === uf),
+    );
+  });
+  protected readonly contagemLetra = computed(() => {
+    const mapa: Record<string, number> = {};
+    for (const p of this.filtrados()) mapa[letraDe(p.nome)] = (mapa[letraDe(p.nome)] ?? 0) + 1;
+    return mapa;
+  });
+  protected readonly resultados = computed(() => (this.letra() ? this.filtrados().filter((p) => letraDe(p.nome) === this.letra()) : this.filtrados()));
+  protected readonly visiveis = computed(() => this.resultados().slice(0, this.limite()));
+  /** Resultados agrupados por letra, para os títulos "A", "B"... */
+  protected readonly grupos = computed(() => {
+    const grupos: { letra: string; pessoas: Politico[] }[] = [];
+    for (const p of this.visiveis()) {
+      const l = letraDe(p.nome);
+      if (grupos.at(-1)?.letra !== l) grupos.push({ letra: l, pessoas: [] });
+      grupos.at(-1)!.pessoas.push(p);
+    }
+    return grupos;
+  });
+  protected readonly partidos = computed(() => [...new Set(this.todos().map((p) => p.partido).filter((x): x is string => !!x))].sort());
+  protected readonly temFiltro = computed(() => !!(this.termo() || this.partido() || this.uf() || this.letra()));
 
   ngOnInit() {
     const q = this.rota.snapshot.queryParamMap;
-    this.termo = q.get('q') ?? '';
-    this.partido = q.get('partido') ?? '';
-    this.uf = q.get('uf') ?? '';
-    this.pesquisar();
-    partidosCamara().then((l) => this.partidos.set(l)).catch(() => {});
+    const cargo = q.get('cargo');
+    if (cargo && CARGOS.some((c) => c.nome === cargo)) this.cargo.set(cargo);
+    this.termo.set(q.get('q') ?? '');
+    this.partido.set((q.get('partido') ?? '').toUpperCase());
+    this.uf.set(q.get('uf') ?? '');
+    this.letra.set(q.get('letra') ?? '');
+    this.carregar();
   }
 
-  /** Filtra enquanto a pessoa digita (espera 350 ms para não chamar a API a cada tecla). */
-  protected aoDigitar() {
-    clearTimeout(this.espera);
-    this.espera = setTimeout(() => this.pesquisar(), 350);
-  }
-
-  protected async pesquisar() {
-    const meu = ++this.pedido;
+  protected async carregar() {
     this.carregando.set(true);
     this.erro.set('');
-    this.router.navigate([], {
-      queryParams: { q: this.termo || null, partido: this.partido || null, uf: this.uf || null },
-      replaceUrl: true,
-    });
+    this.todos.set([]);
+    const cargo = this.cargo();
     try {
-      this.pagina = 1;
-      const lista = await this.service.buscar(this.filtro());
-      if (meu === this.pedido) {
-        this.resultados.set(lista);
-        this.temMais.set(lista.length === POR_PAGINA);
-      }
+      const lista = await todosDoCargo(cargo);
+      if (cargo === this.cargo()) this.todos.set(lista);
     } catch (e) {
-      if (meu === this.pedido) {
-        this.resultados.set([]);
-        this.erro.set(e instanceof Error ? e.message : 'Erro na busca.');
-      }
+      if (cargo === this.cargo()) this.erro.set(e instanceof Error ? e.message : 'Erro ao carregar.');
     } finally {
-      if (meu === this.pedido) this.carregando.set(false);
+      if (cargo === this.cargo()) this.carregando.set(false);
     }
   }
 
-  protected async carregarMais() {
-    const meu = this.pedido;
-    this.carregandoMais.set(true);
-    try {
-      const lista = await this.service.buscar({ ...this.filtro(), pagina: this.pagina + 1 });
-      if (meu !== this.pedido) return;
-      this.pagina++;
-      const vistos = new Set(this.resultados().map((p) => p.id));
-      this.resultados.update((r) => [...r, ...lista.filter((p) => !vistos.has(p.id))]);
-      this.temMais.set(lista.length === POR_PAGINA);
-    } catch {
-      this.erro.set('Não foi possível carregar mais resultados. Tente de novo.');
-    } finally {
-      this.carregandoMais.set(false);
-    }
+  protected escolherCargo(c: string) {
+    if (c === this.cargo()) return;
+    this.cargo.set(c);
+    this.partido.set('');
+    this.letra.set('');
+    this.limite.set(POR_VEZ);
+    this.atualizarUrl();
+    this.carregar();
   }
 
-  private filtro() {
-    return { termo: this.termo, partido: this.partido, uf: this.uf };
+  protected escolherLetra(l: string) {
+    this.letra.set(this.letra() === l ? '' : l);
+    this.limite.set(POR_VEZ);
+    this.atualizarUrl();
+  }
+
+  protected mudouFiltro() {
+    this.limite.set(POR_VEZ);
+    this.atualizarUrl();
+  }
+
+  protected mostrarMais() {
+    this.limite.update((n) => n + POR_VEZ);
   }
 
   protected limpar() {
-    this.termo = this.partido = this.uf = '';
-    this.pesquisar();
+    this.termo.set('');
+    this.partido.set('');
+    this.uf.set('');
+    this.letra.set('');
+    this.mudouFiltro();
   }
+
+  /** Link do perfil: deputados e itens do Supabase em /politicos/:id; senadores (demo) em /politicos/senado/:id. */
+  protected linkPerfil(p: Politico): (string | number)[] {
+    return p.casa === 'senado' && this.demo ? ['/politicos/senado', p.id] : ['/politicos', p.id];
+  }
+
+  private atualizarUrl() {
+    this.router.navigate([], {
+      queryParams: {
+        cargo: this.cargo() === CARGOS[0].nome ? null : this.cargo(),
+        q: this.termo() || null, partido: this.partido() || null, uf: this.uf() || null, letra: this.letra() || null,
+      },
+      replaceUrl: true,
+    });
+  }
+}
+
+function normalizar(t: string): string {
+  return t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }

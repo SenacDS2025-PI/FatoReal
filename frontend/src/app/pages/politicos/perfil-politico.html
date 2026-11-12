@@ -1,4 +1,4 @@
-<a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para a busca</a>
+<a routerLink="/politicos" [queryParams]="casa() === 'senado' ? { cargo: 'Senador(a)' } : {}" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para a busca</a>
 
 @if (carregando()) {
   <div class="card perfil-cabecalho" aria-busy="true">
@@ -23,11 +23,45 @@
       </div>
       <div class="perfil-acoes">
         <a class="botao botao-verde" [routerLink]="['/fatobot']" [queryParams]="{ p: perguntaIa() }"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</a>
-        <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Página na Câmara</a>
+        <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ casa() === 'senado' ? 'Página no Senado' : 'Página na Câmara' }}</a>
       </div>
     </header>
 
+    <!-- Alertas jurídicos -->
+    @if (!carregandoAlertas()) {
+      @if (alertas().length) {
+        <section class="card alertas-juridicos" aria-labelledby="titulo-alertas">
+          <h2 id="titulo-alertas" class="titulo-secao"><app-icone nome="warning" /> Atenção: registros na Justiça e em órgãos de controle</h2>
+          <ul>
+            @for (a of alertas(); track a.id) {
+              <li [attr.data-gravidade]="gravidade[a.tipo]">
+                <span class="alerta-tipo">{{ a.tipo }}</span>
+                <strong>{{ a.titulo }}</strong>
+                <p>{{ a.descricao }}</p>
+                <small>{{ a.orgao }}@if (a.data) { · {{ a.data | date: 'dd/MM/yyyy' }} } · <a [href]="a.fonte_url" target="_blank" rel="noopener noreferrer">Ver fonte oficial</a></small>
+              </li>
+            }
+          </ul>
+          <p class="texto-p">Processo em andamento não é condenação: todos têm direito à presunção de inocência até decisão final. Cada registro tem link para a fonte oficial.</p>
+        </section>
+      } @else {
+        <section class="card alertas-vazio" aria-labelledby="titulo-alertas">
+          <div class="alertas-vazio-topo">
+            <app-icone nome="verified_user" />
+            <div>
+              <h2 id="titulo-alertas" class="titulo-secao">Situação na Justiça</h2>
+              <p>Nenhum alerta jurídico registrado pela equipe do Fato Real para {{ p.nome }}. Isso não garante que não existam processos: confira nas fontes oficiais.</p>
+            </div>
+          </div>
+          <ul class="consultas-oficiais">
+            @for (c of consultas; track c.url) { <li><a [href]="c.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ c.nome }}</a></li> }
+          </ul>
+        </section>
+      }
+    }
+
     <!-- Números principais -->
+    @if (casa() === 'camara') {
     <ul class="indicadores" aria-label="Resumo da atuação">
       <li class="card">
         <span class="indicador-rotulo"><app-icone nome="description" /> Proposições apresentadas</span>
@@ -135,6 +169,27 @@
         </section>
       </div>
     </div>
+    } @else {
+      <div class="grade-2">
+        <section class="card">
+          <h2 class="titulo-secao">Atuação no Senado</h2>
+          <p class="texto-suave">Projetos, votações, comissões e discursos de cada senador ficam no site oficial do Senado.</p>
+          <ul class="lista-links">
+            <li><a [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Página oficial no Senado</a></li>
+            <li><a href="https://www12.senado.leg.br/transparencia" target="_blank" rel="noopener noreferrer"><app-icone nome="payments" /> Gastos e verbas (Transparência do Senado)</a></li>
+          </ul>
+        </section>
+        <section class="card">
+          <h2 class="titulo-secao">Dados</h2>
+          <dl class="lista-campos">
+            <app-campo rotulo="Nome completo" [valor]="p.nome_civil" />
+            <app-campo rotulo="Partido" [valor]="p.partido" />
+            <app-campo rotulo="Estado" [valor]="p.uf" />
+            <app-campo rotulo="E-mail" [valor]="p.email" />
+          </dl>
+        </section>
+      </div>
+    }
   </article>
 } @else {
   <div class="card vazio">

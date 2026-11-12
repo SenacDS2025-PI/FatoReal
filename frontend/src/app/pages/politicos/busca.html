@@ -1,89 +1,122 @@
 <header class="cabecalho-pagina">
   <p class="sobretitulo">Candidatos</p>
-  <h1>Deputados federais</h1>
-  <p>Consulte quem representa cada estado na Câmara dos Deputados: partido, comissões, proposições e gastos, sempre com a fonte oficial.</p>
+  <h1>Quem representa você</h1>
+  <p>Todos os políticos de cada cargo, em ordem alfabética, com partido, estado e a fonte oficial de cada dado.</p>
 </header>
 
-<form class="card filtros" role="search" (submit)="$event.preventDefault(); pesquisar()">
+<!-- Cargos -->
+<nav class="cargos" role="tablist" aria-label="Cargo">
+  @for (c of cargos; track c.nome) {
+    <button type="button" role="tab" [attr.aria-selected]="cargo() === c.nome" (click)="escolherCargo(c.nome)">{{ c.nome }}</button>
+  }
+</nav>
+
+<!-- Filtros -->
+<form class="card filtros" role="search" (submit)="$event.preventDefault()">
   <div class="campo-form campo-largo">
     <label for="f-nome">Nome</label>
     <div class="campo-com-icone">
       <app-icone nome="search" />
-      <input id="f-nome" name="termo" type="search" [(ngModel)]="termo" (ngModelChange)="aoDigitar()" placeholder="Digite pelo menos 3 letras" autocomplete="off" />
+      <input id="f-nome" name="termo" type="search" [ngModel]="termo()" (ngModelChange)="termo.set($event); mudouFiltro()" placeholder="Digite um nome" autocomplete="off" />
     </div>
   </div>
   <div class="campo-form">
     <label for="f-partido">Partido</label>
-    <input id="f-partido" name="partido" type="text" list="lista-partidos" [(ngModel)]="partido" (ngModelChange)="aoDigitar()" placeholder="Todos" maxlength="20" autocomplete="off" />
-    <datalist id="lista-partidos">
-      @for (s of partidos(); track s) { <option [value]="s"></option> }
-    </datalist>
+    <select id="f-partido" name="partido" [ngModel]="partido()" (ngModelChange)="partido.set($event); mudouFiltro()">
+      <option value="">Todos</option>
+      @for (s of partidos(); track s) { <option [value]="s">{{ s }}</option> }
+    </select>
   </div>
   <div class="campo-form">
     <label for="f-uf">Estado</label>
-    <select id="f-uf" name="uf" [(ngModel)]="uf" (ngModelChange)="pesquisar()">
+    <select id="f-uf" name="uf" [ngModel]="uf()" (ngModelChange)="uf.set($event); mudouFiltro()">
       <option value="">Todos</option>
-      @for (u of ufs; track u) {
-        <option [value]="u">{{ u }}</option>
-      }
+      @for (u of ufs; track u) { <option [value]="u">{{ u }}</option> }
     </select>
   </div>
-  @if (temFiltro) {
-    <button class="botao botao-fantasma" type="button" (click)="limpar()"><app-icone nome="close" /> Limpar filtros</button>
+  @if (temFiltro()) {
+    <button class="botao botao-fantasma" type="button" (click)="limpar()"><app-icone nome="close" /> Limpar</button>
   }
 </form>
 
+@if (!semFonte()) {
+  <!-- Índice A–Z -->
+  <nav class="indice-az" aria-label="Filtrar pela primeira letra do nome">
+    <button type="button" class="indice-todos" [attr.aria-pressed]="!letra()" (click)="letra.set(''); mudouFiltro()">Todos</button>
+    @for (l of letras; track l) {
+      <button type="button" [attr.aria-pressed]="letra() === l" [disabled]="!contagemLetra()[l]" (click)="escolherLetra(l)"
+        [attr.aria-label]="l + ': ' + (contagemLetra()[l] || 0) + ' nomes'" [title]="(contagemLetra()[l] || 0) + ' nomes'">{{ l }}</button>
+    }
+  </nav>
+}
+
 <p class="status-lista" aria-live="polite">
   @if (carregando()) {
-    Buscando...
-  } @else if (!erro()) {
-    {{ resultados().length }}{{ temMais() ? '+' : '' }} {{ resultados().length === 1 ? 'deputado encontrado' : 'deputados encontrados' }}
+    Carregando a lista completa...
+  } @else if (!erro() && !semFonte()) {
+    <strong>{{ resultados().length }}</strong> {{ resultados().length === 1 ? 'pessoa' : 'pessoas' }}
+    @if (letra()) { com a letra <strong>{{ letra() }}</strong> } · {{ cargo() }}
   }
 </p>
 
 @if (erro()) {
-  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
+  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }} <button type="button" class="botao botao-fantasma" (click)="carregar()">Tentar de novo</button></div>
 }
 
-<ul class="grade-politicos">
-  @if (carregando() && !resultados().length) {
-    @for (e of esqueletos; track $index) {
-      <li class="card card-politico" aria-hidden="true">
-        <span class="esqueleto esqueleto-foto-p"></span>
-        <span class="esqueleto-linhas"><span class="esqueleto" style="width: 70%"></span><span class="esqueleto" style="width: 40%"></span></span>
-      </li>
-    }
+@if (semFonte()) {
+  <div class="card vazio aviso-cargo">
+    <app-icone nome="database" />
+    <strong>{{ cargo() }}: dados ainda não importados</strong>
+    <span>Não existe uma API pública que o site consiga consultar direto para este cargo. A lista entra quando a equipe importar os dados oficiais do TSE para o banco (tabela <code>politicos</code>, coluna <code>cargo</code>).</span>
+    <a class="botao botao-fantasma" href="https://divulgacandcontas.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Consultar no TSE (DivulgaCandContas)</a>
+  </div>
+} @else {
+  @if (carregando()) {
+    <ul class="grade-politicos">
+      @for (e of esqueletos; track $index) {
+        <li class="card card-politico" aria-hidden="true">
+          <span class="esqueleto esqueleto-foto-p"></span>
+          <span class="esqueleto-linhas"><span class="esqueleto" style="width: 70%"></span><span class="esqueleto" style="width: 40%"></span></span>
+        </li>
+      }
+    </ul>
   }
-  @for (p of resultados(); track p.id) {
-    <li>
-      <a [routerLink]="['/politicos', p.id]" class="card card-politico">
-        <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="64" />
-        <span class="card-politico-texto">
-          <strong>{{ p.nome }}</strong>
-          <span class="card-politico-partido">{{ p.partido || 'Partido n/d' }} · {{ p.uf || 'UF n/d' }}</span>
-          <small>{{ p.cargo || 'Deputado(a) Federal' }}</small>
-        </span>
-        <app-icone nome="chevron_right" class="card-politico-seta" />
-      </a>
-    </li>
+
+  @for (g of grupos(); track g.letra) {
+    <section class="grupo-letra" [attr.aria-label]="'Letra ' + g.letra">
+      <h2 class="grupo-letra-titulo">{{ g.letra }}</h2>
+      <ul class="grade-politicos">
+        @for (p of g.pessoas; track p.id) {
+          <li>
+            <a [routerLink]="linkPerfil(p)" class="card card-politico">
+              <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="64" />
+              <span class="card-politico-texto">
+                <strong>{{ p.nome }}</strong>
+                <span class="card-politico-partido">{{ p.partido || 'Partido n/d' }} · {{ p.uf || 'UF n/d' }}</span>
+                <small>{{ p.cargo || cargo() }}</small>
+              </span>
+              <app-icone nome="chevron_right" class="card-politico-seta" />
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
   } @empty {
     @if (!carregando() && !erro()) {
-      <li class="card vazio">
+      <div class="card vazio">
         <app-icone nome="person_search" />
-        <strong>Nenhum deputado encontrado</strong>
+        <strong>Ninguém encontrado</strong>
         <span>Confira a grafia do nome ou remova algum filtro.</span>
-        @if (temFiltro) { <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar filtros</button> }
-      </li>
+        @if (temFiltro()) { <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar filtros</button> }
+      </div>
     }
   }
-</ul>
 
-@if (temMais() && !carregando()) {
-  <div class="carregar-mais">
-    <button class="botao botao-fantasma" type="button" (click)="carregarMais()" [disabled]="carregandoMais()">
-      {{ carregandoMais() ? 'Carregando...' : 'Carregar mais deputados' }}
-    </button>
-  </div>
+  @if (resultados().length > visiveis().length) {
+    <div class="carregar-mais">
+      <button class="botao botao-fantasma" type="button" (click)="mostrarMais()">Mostrar mais ({{ resultados().length - visiveis().length }} restantes)</button>
+    </div>
+  }
 }
 
-<p class="nota-fontes"><app-icone nome="verified" /> Dados da <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener noreferrer">API de Dados Abertos da Câmara dos Deputados</a></p>
+<p class="nota-fontes"><app-icone nome="verified" /> Deputados: API de Dados Abertos da Câmara. Senadores: Dados Abertos do Senado Federal.</p>

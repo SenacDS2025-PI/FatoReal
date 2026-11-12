@@ -1139,3 +1139,49 @@ legend { font-weight: 700; padding: 0 6px; }
 :root[data-tema='escuro'] {
   .card-comunidade-capa img, .comunidade-capa img, .mini-comunidade img, .noticia-imagem img, .perfil-x-capa, .destaque img { filter: brightness(0.82) saturate(0.9); }
 }
+
+/* Candidatos: cargos, índice A–Z e grupos por letra */
+.cargos {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 14px; padding-bottom: 2px;
+  button { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); font-weight: 600; font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
+  button:hover { border-color: var(--primaria); }
+  button[aria-selected='true'] { background: var(--primaria); border-color: var(--primaria); color: var(--primaria-texto); }
+}
+.indice-az {
+  position: sticky; top: 84px; z-index: 5; display: flex; flex-wrap: nowrap; gap: 2px; padding: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none;
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px; box-shadow: var(--sombra);
+  button {
+    flex: 1 0 30px; min-width: 30px; height: 34px; padding: 0 4px; border-radius: 8px; border: 0; background: none; color: var(--texto);
+    font-weight: 700; font-size: 0.9rem; cursor: pointer;
+    &:hover:not(:disabled) { background: var(--superficie-2); }
+    &:disabled { color: var(--texto-suave); opacity: 0.35; cursor: default; }
+    &[aria-pressed='true'], &[aria-pressed='true']:hover { background: var(--primaria); color: var(--primaria-texto); }
+  }
+  .indice-todos { flex: none; padding: 0 12px; }
+}
+.grupo-letra { margin-bottom: 18px; }
+.grupo-letra-titulo {
+  display: flex; align-items: center; gap: 12px; margin: 0 0 10px; font-size: 1.4rem; color: var(--link);
+  &::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
+}
+.aviso-cargo { padding: 32px 20px; strong { font-size: 1.1rem; color: var(--texto); } span { max-width: 560px; } code { font-size: 0.85em; } }
+@media (max-width: 760px) {
+  .indice-az { top: 112px; button { flex: none; min-width: 34px; } }
+}
+
+/* Perfil do político: alertas jurídicos */
+.alertas-juridicos {
+  border-left: 4px solid #d97706;
+  h2 { display: flex; align-items: center; gap: 8px; .icone { color: #d97706; } }
+  ul { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 10px; }
+  li { padding: 12px 14px; border-radius: 12px; background: var(--superficie-2); border-left: 4px solid #d97706; display: grid; gap: 4px; }
+  li[data-gravidade='alta'] { border-left-color: var(--perigo); .alerta-tipo { background: color-mix(in srgb, var(--perigo) 16%, transparent); color: var(--perigo); } }
+  li[data-gravidade='neutra'] { border-left-color: var(--borda); .alerta-tipo { background: var(--superficie); color: var(--texto-suave); } }
+  p { margin: 0; font-size: 0.92rem; } small { color: var(--texto-suave); }
+}
+.alerta-tipo { justify-self: start; padding: 2px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; background: rgba(217, 119, 6, 0.15); color: #b45309; }
+:root[data-tema='escuro'] .alerta-tipo { color: #f5a524; }
+.alertas-vazio {
+  .alertas-vazio-topo { display: flex; gap: 12px; align-items: flex-start; > .icone { font-size: 1.8rem; color: var(--link); } h2 { margin-bottom: 4px; } p { margin: 0; color: var(--texto-suave); font-size: 0.92rem; } }
+}
+.consultas-oficiais { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px; a { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border: 1px solid var(--borda); border-radius: 999px; font-size: 0.85rem; text-decoration: none; } }

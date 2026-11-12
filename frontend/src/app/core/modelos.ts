@@ -22,6 +22,20 @@ export interface Politico {
   municipio_nascimento?: string | null;
   fonte_url: string;
   data_coleta?: string | null;
+  /** De onde vem o dado: Câmara, Senado ou importação da equipe (TSE etc.). */
+  casa?: 'camara' | 'senado' | 'outro';
+}
+
+/** Registro jurídico ou administrativo de um político, sempre com fonte oficial. */
+export interface AlertaJuridico {
+  id: number;
+  tipo: 'Condenação' | 'Processo em andamento' | 'Inelegibilidade' | 'Cassação' | 'Sanção administrativa' | 'Absolvição ou arquivamento';
+  titulo: string;
+  descricao: string;
+  /** Tribunal ou órgão responsável (STF, TSE, TCU, TJ etc.). */
+  orgao: string;
+  data?: string | null;
+  fonte_url: string;
 }
 
 export interface Usuario {
