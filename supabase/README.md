@@ -10,4 +10,6 @@
 
 ## Tabela `politicos`
 
-O front lê desta tabela quando o Supabase está ligado. Os 10 a 20 deputados do piloto devem ser importados da API de Dados Abertos da Câmara (`https://dadosabertos.camara.leg.br/api/v2/deputados/{id}`), preenchendo sempre `fonte_url` e `data_coleta`. O `id` é o próprio id do deputado na Câmara.
+**Hoje o front não usa esta tabela:** a busca e o perfil de políticos vêm sempre ao vivo da API da Câmara (com fonte e data), com ou sem Supabase. A tabela fica para uso futuro (ex.: guardar um retrato dos dados).
+
+Se um dia o front voltar a ler daqui, os 10 a 20 deputados do piloto devem ser importados da API de Dados Abertos da Câmara (`https://dadosabertos.camara.leg.br/api/v2/deputados/{id}`), preenchendo sempre `fonte_url` e `data_coleta`. O `id` é o próprio id do deputado na Câmara.

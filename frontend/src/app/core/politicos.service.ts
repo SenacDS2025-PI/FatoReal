@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Politico } from './modelos';
-import { supabase } from './supabase';
 
 const CAMARA_API = 'https://dadosabertos.camara.leg.br/api/v2';
 
@@ -15,10 +14,9 @@ export interface FiltroPoliticos {
 export const POR_PAGINA = 30;
 
 /**
- * Busca e perfil de políticos.
- * - Com Supabase: lê a tabela "politicos" (10 a 20 deputados importados pela equipe de back).
- * - Sem Supabase (demo): consulta direto a API de Dados Abertos da Câmara.
- * Em ambos os casos, todo dado vem com fonte e data de coleta.
+ * Busca e perfil de políticos, sempre ao vivo na API de Dados Abertos da Câmara
+ * (com ou sem Supabase). Assim os dados estão sempre atualizados e todo item traz
+ * fonte oficial e data da consulta.
  */
 @Injectable({ providedIn: 'root' })
 export class PoliticosService {
@@ -27,16 +25,6 @@ export class PoliticosService {
     const partido = filtro.partido?.trim().toUpperCase() ?? '';
     const uf = filtro.uf ?? '';
     const pagina = Math.max(1, filtro.pagina ?? 1);
-
-    if (supabase) {
-      let q = supabase.from('politicos').select('*').order('nome').range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
-      if (termo) q = q.ilike('nome', `%${termo}%`);
-      if (partido) q = q.ilike('partido', partido);
-      if (uf) q = q.eq('uf', uf);
-      const { data, error } = await q;
-      if (error) throw new Error('Não foi possível buscar os políticos.');
-      return data as Politico[];
-    }
 
     const params = new URLSearchParams({ itens: String(POR_PAGINA), pagina: String(pagina), ordem: 'ASC', ordenarPor: 'nome' });
     if (termo.length >= 3) params.set('nome', termo);
@@ -62,12 +50,6 @@ export class PoliticosService {
   }
 
   async obter(id: number): Promise<Politico | null> {
-    if (supabase) {
-      const { data, error } = await supabase.from('politicos').select('*').eq('id', id).maybeSingle();
-      if (error) throw new Error('Não foi possível carregar o perfil.');
-      return data as Politico | null;
-    }
-
     const resp = await buscarCamara(`${CAMARA_API}/deputados/${id}`);
     if (resp.status === 404) return null;
     if (!resp.ok) throw new Error('A API da Câmara não respondeu. Tente de novo em instantes.');
