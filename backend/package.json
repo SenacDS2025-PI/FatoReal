@@ -8,14 +8,17 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
-    "test": "NODE_ENV=test node --test"
+    "test": "node --test",
+    "importar": "node --env-file-if-exists=.env scripts/importar-deputados.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@google/genai": "^3.1.0",
+    "@supabase/supabase-js": "^2.119.0",
     "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "multer": "^2.5.0"
   }
 }
