@@ -154,7 +154,39 @@ Se a pergunta não cita nenhum deputado, o Gemini **nem é chamado**: a resposta
 - O front deve **sempre** mostrar o `aviso` e os links de `fontes`, e pode transformar `[n]`
   em link para `evidencias[n-1].url`.
 
-#### Configurar o Gemini
+### `POST /api/verificar`
+
+Verifica uma afirmação e devolve um dos **5 estados** do Quadro 3 da documentação.
+É a rota usada pela tela **Verificar informação** do front.
+
+Aceita JSON `{ "afirmacao": "...", "link": "https://..." }` ou formulário (multipart)
+com `afirmacao`, `link` e até 5 `anexos` de no máximo 4 MB cada.
+
+```json
+{
+  "estado": "Evidências sustentam",
+  "explicacao": "Tabata Amaral é deputada federal pelo PSB de São Paulo [1].",
+  "fontes": [{ "titulo": "Dados Abertos da Câmara dos Deputados: Tabata Amaral", "url": "https://...", "data": "..." }],
+  "consultado_em": "2026-11-13T12:00:00.000Z",
+  "aviso": "O FatoBot pode errar. ..."
+}
+```
+
+| Estado | Quando |
+|---|---|
+| Evidências sustentam | O Gemini confirma **citando** as evidências oficiais |
+| Evidências contradizem | O Gemini nega **citando** as evidências oficiais |
+| Fora de contexto | Há base verdadeira, mas data, local, autoria ou sentido foram alterados (com citação) |
+| Evidência insuficiente | Nenhum deputado citado, ou a IA não citou fonte válida. Ausência de evidência ≠ falsidade |
+| Em análise | A IA está indisponível: mostra os fatos encontrados, sem confirmar nem negar |
+
+Regras que **não dependem da IA**:
+- Sem citação válida, o sistema **nunca** confirma nem nega: vira "Evidência insuficiente".
+- O **link** enviado não é acessado nem usado como fonte.
+- Os **anexos** não são analisados nem guardados (mídia precisa de revisão humana). Na Vercel,
+  o pedido inteiro tem limite de ~4,5 MB.
+
+
 
 1. Entre em https://aistudio.google.com/apikey com uma conta Google e clique em **Create API key**.
 2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.

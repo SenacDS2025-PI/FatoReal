@@ -64,6 +64,20 @@ export function evidenciasDoPerfil({ dados: p, fonte }) {
   return evidencias;
 }
 
+// Etapas 2b e 3: busca o perfil de cada deputado e monta evidências e fontes.
+// Formato das fontes = o que o front usa (frontend/src/app/core/modelos.ts → Fonte).
+export async function evidenciasDosDeputados(deputados) {
+  const perfis = await Promise.all(deputados.map((d) => obterDeputado(d.id)));
+  return {
+    evidencias: perfis.flatMap(evidenciasDoPerfil),
+    fontes: perfis.map(({ dados, fonte }) => ({
+      titulo: `${fonte.nome}: ${dados.nome}`,
+      url: fonte.url,
+      data: fonte.consultadoEm,
+    })),
+  };
+}
+
 export async function responder(pergunta) {
   const deputados = await identificarDeputados(pergunta);
 
@@ -85,15 +99,7 @@ export async function responder(pergunta) {
     };
   }
 
-  const perfis = await Promise.all(deputados.map((d) => obterDeputado(d.id)));
-  const evidencias = perfis.flatMap(evidenciasDoPerfil);
-
-  // Formato que o front usa (frontend/src/app/core/modelos.ts → Fonte): { titulo, url, data }.
-  const fontes = perfis.map(({ dados, fonte }) => ({
-    titulo: `${fonte.nome}: ${dados.nome}`,
-    url: fonte.url,
-    data: fonte.consultadoEm,
-  }));
+  const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
 
   const sintese = await sintetizarComIA(pergunta, evidencias);
 
