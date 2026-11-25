@@ -63,5 +63,8 @@ export class TemaService {
 
   private aplicar(t: Tema): void {
     document.documentElement.dataset['tema'] = t;
+    // Barra do celular (app instalado) na mesma cor da barra de cima do site.
+    const cor = t === 'escuro' ? '#121316' : '#0e5e3a';
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', cor));
   }
 }

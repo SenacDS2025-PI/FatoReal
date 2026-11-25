@@ -4,16 +4,39 @@
     <meta charset="utf-8" />
     <title>Fato Real</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Fato Real: rede social de informação cívica. Pesquise políticos com fontes oficiais, pergunte ao FatoBot e participe de comunidades." />
-    <meta name="theme-color" content="#102A25" />
+    <!-- Cor da barra do celular: segue o tema do aparelho ; o app ajusta quando a pessoa troca na lâmpada -->
+    <meta name="theme-color" content="#0e5e3a" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
-    <link rel="apple-touch-icon" href="img/logo.svg" />
+    <!-- App instalável (PWA): Android e iPhone -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="img/icones/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Fato Real" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
     <!-- Ícones: só os que o site usa (icon_names). Ao usar um ícone novo, acrescente o nome aqui em ordem alfabética. -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&icon_names=accessibility_new,account_balance,account_balance_wallet,account_circle,add,add_a_photo,apartment,approval,apps,arrow_back,arrow_forward,attach_file,auto_awesome,badge,balance,ballot,block,bolt,brightness_auto,calendar_month,call_split,campaign,cancel,category,chat,chat_bubble,check,check_circle,checklist,chevron_left,chevron_right,close,close_fullscreen,compare_arrows,dark_mode,data_object,database,delete,description,dialpad,diversity_3,do_not_disturb_on,dynamic_feed,eco,edit,edit_document,edit_note,emoji_events,error,event,event_available,event_busy,expand_less,expand_more,explore,fact_check,favorite,flag,flight,forest,format_quote,forum,gavel,gpp_maybe,grid_view,group,group_add,groups,handshake,health_and_safety,help,holiday_village,home,hourglass_top,how_to_reg,how_to_vote,image,inbox,info,interests,ios_share,key,keyboard_arrow_down,leaderboard,library_books,light_mode,lightbulb,link,list,local_fire_department,local_police,location_city,location_on,lock,logout,mail,manage_accounts,manage_search,map,memory,menu_book,mic,military_tech,mood,movie,my_location,newspaper,north_east,notifications,notifications_active,notifications_off,open_in_full,open_in_new,palette,payments,person,person_add,person_off,person_search,play_circle,policy,poll,psychology,public,quiz,radio_button_unchecked,receipt_long,record_voice_over,refresh,report,restart_alt,rocket_launch,route,rule,savings,schedule,school,science,search,search_check,send,settings,share,shield,shield_lock,shield_person,smart_toy,sort,stop,summarize,swap_horiz,sync_alt,tag,target,task_alt,thumb_down,thumb_up,timeline,touch_app,translate,travel_explore,trending_down,trending_up,tune,upload_file,verified,verified_user,visibility,wallpaper,warning&display=block" />
+      <!-- Navegador antigo (Internet Explorer, Safari muito antigo): o Angular não roda. Mostra um aviso no lugar. -->
+    <script nomodule>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.innerHTML = '<div style="font-family:Arial,sans-serif;max-width:560px;margin:60px auto;padding:24px;text-align:center;color:#111a14">' +
+          '<h1 style="color:#0e5e3a">Fato Real</h1>' +
+          '<p style="font-size:18px">Este navegador é muito antigo e não consegue abrir o Fato Real.</p>' +
+          '<p style="font-size:16px">Use o <b>Microsoft Edge</b>, o <b>Google Chrome</b>, o <b>Firefox</b> ou o <b>Safari</b> atualizados.</p></div>';
+      });
+    </script>
+    <script>
+      // Liga o service worker (app instalável e cópia sem internet). Em localhost fica desligado para não atrapalhar o desenvolvimento.
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+      }
+    </script>
   </head>
   <body>
     <app-root>

@@ -318,7 +318,9 @@ main#conteudo > *:nth-child(3) { animation-delay: 80ms; }
 .nt-botao-vidro, .nt-setas button { backdrop-filter: none; }
 /* Listas longas: o navegador só desenha o que está perto da tela */
 app-publicacao { display: block; }
-app-publicacao, .nt-post { content-visibility: auto; contain-intrinsic-size: auto 420px; }
+/* Reserva só a ALTURA de quem está fora da tela (reservar a largura esticava o feed no celular) */
+app-publicacao, .nt-post { content-visibility: auto; contain-intrinsic-block-size: auto 420px; }
+.feed, .nt-feed { grid-template-columns: minmax(0, 1fr); }
 
 /* =========================================================
    Perfil do político: agenda da semana e patrimônio (24 nov. 2026)
@@ -389,3 +391,56 @@ app-publicacao, .nt-post { content-visibility: auto; contain-intrinsic-size: aut
   .salvos-tipo { grid-column: 1; font-family: var(--titulo); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ec-verde); display: inline-flex; gap: 4px; align-items: center; }
   small { grid-column: 1; } app-favoritar { grid-column: 2; grid-row: 1 / span 3; }
   li.vazio { display: grid; grid-template-columns: 1fr; } }
+
+/* =========================================================
+   Celular e tablet (25 nov. 2026)
+   ========================================================= */
+/* Texto só para leitor de tela: a regra global de campos (width: 100%) não pode esticar estes */
+.sr-only { width: 1px !important; height: 1px !important; padding: 0 !important; border: 0 !important; }
+/* Cartões em grade não podem ficar mais largos que a tela por causa de um conteúdo comprido */
+.nt-post { grid-template-columns: minmax(0, 1fr); }
+.post, .nt-post, .card { min-width: 0; overflow-wrap: anywhere; }
+.post-topo { flex-wrap: wrap; }
+.visoes { display: flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; button { flex: none; } }
+
+@media (max-width: 900px) {
+  .topo { height: 60px; padding: 0 12px; gap: 8px; }
+  .abas-celular { top: 60px; background: var(--moldura); }
+  .marca { width: auto; gap: 8px; img { width: 34px; height: 34px; } strong { font-size: 1.15rem; } }
+  .topo-acoes { gap: 2px; margin-left: auto; }
+  /* "Verificar" vira um quadrado com o ícone (a regra antiga escondia o ícone junto com o texto) */
+  .botao-verificar { padding: 0; width: 40px; height: 40px; justify-content: center; margin-right: 2px;
+    > span { display: none; } .icone, .material-symbols-rounded { display: inline-block !important; font-size: 1.3rem; } }
+  .topo .sino { width: 38px; height: 38px; }
+  .botao-conta .avatar { --tam: 36px !important; width: 36px; height: 36px; }
+  .topo .botao-verde { padding: 8px 12px; font-size: 0.78rem; }
+  .post-selos { margin-left: 0; justify-content: flex-start; flex-basis: 100%; }
+  .wa-botao { width: 44px; height: 44px; svg { width: 24px; height: 24px; } }
+  .ff-hero { padding: 20px; h1 { font-size: 2.1rem !important; } }
+  .h1, main h1 { word-break: break-word; }
+}
+@media (max-width: 480px) {
+  /* Em tela pequena fica só o símbolo da marca: sobra espaço para Verificar, sino, configurações e conta */
+  .marca > span { display: none; }
+  main { padding-left: 12px; padding-right: 12px; }
+  .card { padding: 14px; }
+  .nt-post { padding: 12px; }
+  .ini-ola { font-size: 1.6rem; }
+}
+/* Colunas em grade travadas na largura da tela (1fr sozinho cresce junto com o conteúdo) */
+.coluna-central, .coluna-direita, .painel, main { min-width: 0; }
+@media (max-width: 1100px) { .layout-inicio, .layout-comunidade { grid-template-columns: minmax(0, 1fr); } }
+/* fieldset não encolhe abaixo do conteúdo por padrão: em tela estreita isso empurrava a página */
+fieldset { min-width: 0; }
+.capas { flex-wrap: wrap; }
+.perfil-editar, .perfil-editar form { grid-template-columns: minmax(0, 1fr); }
+/* Fato ou Fake no celular: formas menores, longe do texto */
+@media (max-width: 700px) {
+  .ff-hero::before { width: 110px; height: 110px; right: -55px; top: -55px; }
+  .ff-hero::after { display: none; }
+}
+
+/* Safari antes da 26.2 não entende scrollbar-width: esconde a barra das fileiras que rolam de lado */
+.ini-stories, .abas-celular, .ficha-abas, .visoes, .nt-trilho, .nt-abas, .nt-faixa-trilho, .glossario-trilho, .pp-abas {
+  &::-webkit-scrollbar { display: none; }
+}

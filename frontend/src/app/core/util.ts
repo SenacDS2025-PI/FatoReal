@@ -56,3 +56,14 @@ export function fonteOficial(link: string | null | undefined): string | null {
     return null;
   }
 }
+
+/** Id aleatório. crypto.randomUUID só existe em navegador recente e em endereço https: senão, monta um parecido. */
+export function novoId(): string {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  } catch {
+    /* sem randomUUID: segue abaixo */
+  }
+  const hex = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  return `${hex(8)}-${hex(4)}-4${hex(3)}-${'89ab'[Math.floor(Math.random() * 4)]}${hex(3)}-${hex(12)}`;
+}

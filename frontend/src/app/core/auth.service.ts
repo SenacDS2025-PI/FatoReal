@@ -1,3 +1,4 @@
+import { novoId } from './util';
 import { Injectable, computed, signal } from '@angular/core';
 import { Usuario } from './modelos';
 import { modoDemo, supabase } from './supabase';
@@ -78,7 +79,7 @@ export class AuthService {
   async cadastrar(nome: string, email: string, senha: string): Promise<{ confirmarEmail: boolean }> {
     if (!supabase) {
       // Demo: todo usuário é moderador para dar para mostrar o painel na apresentação.
-      this.salvarDemo({ id: crypto.randomUUID(), email, nome, foto_url: null, moderador: true, criado_em: new Date().toISOString() });
+      this.salvarDemo({ id: novoId(), email, nome, foto_url: null, moderador: true, criado_em: new Date().toISOString() });
       return { confirmarEmail: false };
     }
     const { data, error } = await supabase.auth.signUp({
@@ -94,7 +95,7 @@ export class AuthService {
     if (!supabase) {
       const atual = lerDemo<Usuario | null>('ultimo-usuario', null);
       const nome = atual?.email === email ? atual.nome : email.split('@')[0];
-      this.salvarDemo({ id: atual?.email === email ? atual.id : crypto.randomUUID(), email, nome, foto_url: atual?.foto_url ?? null, moderador: true });
+      this.salvarDemo({ id: atual?.email === email ? atual.id : novoId(), email, nome, foto_url: atual?.foto_url ?? null, moderador: true });
       return;
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
