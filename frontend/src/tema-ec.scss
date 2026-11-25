@@ -444,3 +444,50 @@ fieldset { min-width: 0; }
 .ini-stories, .abas-celular, .ficha-abas, .visoes, .nt-trilho, .nt-abas, .nt-faixa-trilho, .glossario-trilho, .pp-abas {
   &::-webkit-scrollbar { display: none; }
 }
+
+/* =========================================================
+   Celular bem alinhado (25 nov. 2026) — só aparência
+   Barra de cima: logo, lupa, sino e foto/Entrar (Verificar está na aba "Fato ou Fake";
+   Configurações virou aba e item do menu da conta). Margem lateral fixa de 16 px,
+   botões com 44 px de toque e respeito às áreas seguras do iPhone.
+   ========================================================= */
+@media (max-width: 900px) {
+  .topo {
+    height: calc(60px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+  .abas-celular {
+    top: calc(60px + env(safe-area-inset-top)); gap: 8px; padding: 10px 16px 12px; scroll-padding-inline: 16px;
+    a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; }
+  }
+  .topo-acoes { gap: 4px; }
+  .topo .sino, .topo .botao-conta { width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; border-radius: 12px; }
+  .topo .sino .icone { font-size: 1.5rem; }
+  .topo .botao-verde { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; margin-left: 4px; font-size: 0.85rem; }
+  .painel-notif { top: calc(60px + env(safe-area-inset-top)); left: 16px; right: 16px; }
+
+  /* Conteúdo: margem de 16 px dos dois lados e espaço livre embaixo para a navegação */
+  main { padding: 16px 16px calc(104px + env(safe-area-inset-bottom)) !important; }
+  .aviso-demo { margin: 12px 16px 0; }
+  .card { padding: 16px; }
+
+  /* Navegação de baixo: alvos de toque de 44 px e área segura do iPhone */
+  .nav-inferior {
+    padding: 6px max(8px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    a { min-height: 48px; justify-content: center; }
+  }
+  /* Botões flutuantes acima da navegação de baixo, alinhados na margem de 16 px */
+  .fab { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  /* WhatsApp logo acima da navegação; se a página tiver o botão "+", sobe para ficar em cima dele */
+  .wa-botao { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  body:has(.fab) .wa-botao { bottom: calc(152px + env(safe-area-inset-bottom)); }
+  .bolha-painel { bottom: calc(80px + env(safe-area-inset-bottom)); }
+
+  /* Imagens e textos nunca mais largos que o próprio bloco */
+  main img, main video, main iframe { max-width: 100%; }
+  main :is(h1, h2, h3, p, li) { overflow-wrap: break-word; }
+}
+@media (max-width: 480px) {
+  main { padding-left: 16px !important; padding-right: 16px !important; }
+  .card { padding: 16px; }
+}

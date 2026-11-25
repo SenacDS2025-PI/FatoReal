@@ -26,7 +26,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 
 ## Visual (decisões do Luiz)
 - **Mudança de visual = só aparência:** manter todo o conteúdo e todas as funções que já existem (perfil, stories, publicar, feed, memes, enquetes, lateral etc.). Nada some sem o Luiz pedir. O Fato Real é uma **rede social**: o visual tem que lembrar isso.
-- **Foco atual: computador.** Protótipo de celular não é prioridade agora (o layout só não pode quebrar).
+- **Computador e celular** (pedido do Luiz em 25 nov. 2026): o site no navegador do celular também precisa ficar bonito e alinhado. Sem rolagem para o lado em 360, 390 e 430 px; margem lateral de 16 px; botões com 44 px de toque; no celular a barra de cima tem só logo, lupa, sino e foto/Entrar. Conferir prints nos dois tamanhos.
 - **Modo claro:** verde do Fato Real. **Modo escuro:** preto e grafite (`#09090b`, `#121316`, bordas `#33363b`, texto suave `#a3a8ae`; nada de preto puro `#000`), contraste definido e destaques discretos em **verde-limão** (`--lima: #c6f432`). Aprovado pelo Luiz em 18 nov. 2026 (antes era azul-marinho).
 - **Página Políticos:** segue o tema (claro no modo claro, preto/grafite no escuro). **Nada de bloco escuro dentro do modo claro** (pedido do Luiz). Cargos em cartões grandes coloridos, cartões "Explore" com imagem, cartões de políticos com foto oficial (Câmara/Senado). Sem índice A–Z.
 - **Notícias:** formato de portal (abas por assunto, faixa de últimas, carrossel, "Brasil e mundo", feed). Lista em `core/noticias.ts`: só título original + link; resumo só se alguém leu a matéria. Feed automático futuro: `GET {API_URL}/noticias`.

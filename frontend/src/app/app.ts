@@ -65,6 +65,8 @@ export class App {
     { rota: '/fato-ou-fake', texto: 'Fato ou Fake', exato: false },
     { rota: '/comunidades', texto: 'Comunidades', exato: false },
     { rota: '/base-da-politica', texto: 'Base da Política', exato: false },
+    // No celular a engrenagem sai da barra de cima: Configurações fica aqui
+    { rota: '/configuracoes', texto: 'Configurações', exato: false },
   ];
 
   constructor() {
