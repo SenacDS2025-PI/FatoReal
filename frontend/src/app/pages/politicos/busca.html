@@ -119,6 +119,9 @@
 @if (municipal() && !semFonte()) {
   <section class="card pol-local" aria-labelledby="pol-local-titulo">
     <h2 id="pol-local-titulo" class="ps-titulo"><span class="ps-icone"><app-icone nome="location_on" /></span> Onde? Escolha o estado{{ precisaCidade() ? ' e a cidade' : '' }}</h2>
+    @if (semDadosCargo()) {
+      <p class="pol-local-aviso"><app-icone nome="database" /> <span><strong>Sem dados por enquanto.</strong> Os {{ rotuloCargo().toLowerCase() }} ainda não foram importados do TSE para o banco do site. Quando forem, a lista aparece aqui.</span></p>
+    }
     <p class="texto-p">São milhares de {{ rotuloCargo().toLowerCase() }} no Brasil. Escolha o estado no mapa ou na lista{{ precisaCidade() ? ' e depois digite a cidade' : ' e, se quiser, a cidade' }}.</p>
     <div class="pol-local-layout">
       <div class="pol-local-mapa">
@@ -138,7 +141,7 @@
           <label for="pol-local-cidade">2. Cidade{{ precisaCidade() ? '' : ' (opcional)' }}</label>
           <div class="pol-local-linha">
             <input id="pol-local-cidade" name="cidade" type="search" list="pol-local-cidades" autocomplete="off" [disabled]="!uf()"
-              [placeholder]="uf() ? (carregandoCidades() ? 'Carregando as cidades...' : 'Digite o nome da cidade') : 'Escolha o estado primeiro'"
+              [placeholder]="!uf() ? 'Escolha o estado primeiro' : carregandoCidades() ? 'Carregando as cidades...' : cidades().length ? 'Digite o nome da cidade' : 'Digite o nome da cidade (sem sugestões: dados ainda não importados)'"
               [ngModel]="cidade()" (ngModelChange)="digitouCidade($event)" />
             <button type="submit" class="botao botao-p" [disabled]="!uf()"><app-icone nome="search" /> Buscar</button>
           </div>
@@ -249,7 +252,14 @@
       </ul>
     </section>
   } @empty {
-    @if (!carregando() && !erro() && !temFiltro() && !todos().length && !municipal()) {
+    @if (!carregando() && !erro() && !todos().length && semDadosCargo()) {
+      <div class="card vazio">
+        <app-icone nome="database" />
+        <strong>{{ rotuloCargo() }}: sem dados por enquanto</strong>
+        <span>Os nomes deste cargo ainda não foram importados do TSE para o banco. O Fato Real não inventa dados.</span>
+        <a class="botao botao-fantasma" href="https://divulgacandcontas.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Consultar no TSE (DivulgaCandContas)</a>
+      </div>
+    } @else if (!carregando() && !erro() && !temFiltro() && !todos().length && !municipal()) {
       <div class="card vazio">
         <app-icone nome="database" />
         <strong>{{ rotuloCargo() }}: sem dados por enquanto</strong>
