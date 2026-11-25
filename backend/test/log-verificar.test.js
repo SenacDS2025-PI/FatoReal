@@ -56,3 +56,24 @@ test('POST /api/verificar escreve as etapas no console, sem o texto inteiro', as
     await srv.encerrar();
   }
 });
+
+test('só link ou só anexo, sem afirmação → 400 com mensagem que explica o que fazer', async () => {
+  const srv = await iniciar();
+  const info = mock.method(console, 'info', () => {});
+  const warn = mock.method(console, 'warn', () => {});
+  try {
+    const enviar = (corpo) =>
+      fetch(`${srv.base}/api/verificar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+    const soLink = await enviar({ afirmacao: '', link: 'https://www.gov.br/noticia' });
+    assert.equal(soLink.status, 400);
+    assert.match((await soLink.json()).erro, /Escreva a afirmação/);
+    const soAnexo = await enviar({ afirmacao: '', anexos: [{ nome: 'print.png', tipo: 'image/png', tamanho: 1000 }] });
+    assert.match((await soAnexo.json()).erro, /anexos sozinhos não são analisados/);
+    const longa = await enviar({ afirmacao: 'a'.repeat(1001) });
+    assert.match((await longa.json()).erro, /no máximo 1000/);
+  } finally {
+    info.mock.restore();
+    warn.mock.restore();
+    await srv.encerrar();
+  }
+});

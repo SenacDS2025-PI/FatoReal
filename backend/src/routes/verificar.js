@@ -52,13 +52,20 @@ router.post('/', limitarPorIp, aceitarAnexos, async (req, res, next) => {
     });
     if (afirmacao.length < MIN || afirmacao.length > MAX) {
       log.aviso('recusado (400): tamanho da afirmação', { tamanho: afirmacao.length, min: MIN, max: MAX });
-      return res.status(400).json({ erro: `A afirmação deve ter entre ${MIN} e ${MAX} caracteres.` });
+      // Relatório de testes (25/11): mandaram só o link ou só a imagem, sem escrever a afirmação.
+      const soLinkOuAnexo = afirmacao.length === 0 && (req.body?.link || contarAnexos(req) > 0);
+      const erro = soLinkOuAnexo
+        ? 'Escreva a afirmação que você quer verificar. O link e os anexos sozinhos não são analisados: a verificação usa o texto.'
+        : afirmacao.length > MAX
+          ? `A afirmação é longa demais: use no máximo ${MAX} caracteres (resuma o ponto principal).`
+          : `Escreva a afirmação com pelo menos ${MIN} caracteres.`;
+      return res.status(400).json({ erro });
     }
 
     const link = typeof req.body?.link === 'string' && req.body.link.trim() ? req.body.link.trim() : null;
     if (link && !/^https:\/\/[^\s]+$/i.test(link)) {
       log.aviso('recusado (400): link sem https://', { site: dominio(link) });
-      return res.status(400).json({ erro: 'O link precisa começar com https://' });
+      return res.status(400).json({ erro: 'O link precisa começar com https:// e não pode ter espaços.' });
     }
 
     const anexos = contarAnexos(req);

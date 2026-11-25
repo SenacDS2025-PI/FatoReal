@@ -86,3 +86,12 @@ test('Câmara fora e Supabase com prefeitos → ainda responde', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.body.tipo, 'fontes_encontradas');
 });
+
+test('só o sobrenome → não responde como fato, sugere "Você quis dizer"', async () => {
+  const r = await perguntar(srv.base, 'quem foi o teste?'); // "Senadora Teste", "Governador Teste"...
+  assert.equal(r.body.tipo, 'sem_evidencia');
+  assert.deepEqual(r.body.evidencias, []);
+  const nomes = r.body.voce_quis_dizer.map((s) => s.nome);
+  assert.ok(nomes.includes('Senadora Teste (exemplo)'), JSON.stringify(nomes));
+  assert.match(r.body.resposta, /Você quis dizer: .*Senadora Teste \(exemplo\) \(Senador\(a\), ABC-MG\)/);
+});

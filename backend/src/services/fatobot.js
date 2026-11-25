@@ -12,6 +12,7 @@ import { listarDeputados, obterDeputado } from './camara.js';
 import { sintetizarComIA } from './gemini.js';
 import { buscarNaBase, evidenciasDaBase, fontesDaBase } from './base.js';
 import { normalizar } from '../utils/texto.js';
+import { citadosNaPergunta, sugestoesDeNome } from '../utils/nomes.js';
 import { evidenciasDeOutrosPoliticos } from './outros-politicos.js';
 import { sugerirFontes } from '../data/fontes-oficiais.js';
 
@@ -28,13 +29,7 @@ export async function identificarDeputados(pergunta) {
 }
 
 function deputadosCitados(pergunta, dados) {
-  const texto = ` ${normalizar(pergunta).replace(/[^a-z0-9]+/g, ' ')} `;
-  return dados
-    .filter((d) => {
-      const nome = normalizar(d.nome).replace(/[^a-z0-9]+/g, ' ').trim();
-      return nome.includes(' ') && texto.includes(` ${nome} `);
-    })
-    .slice(0, MAX_DEPUTADOS_POR_PERGUNTA);
+  return citadosNaPergunta(pergunta, dados, MAX_DEPUTADOS_POR_PERGUNTA);
 }
 
 function formatarData(iso) {
@@ -112,9 +107,11 @@ export async function buscarEvidencias(texto) {
   const evidencias = [];
   const fontes = [];
   let erroCamara = null;
+  let deputadosDaLista = [];
 
   try {
     const lista = await listarDeputados();
+    deputadosDaLista = lista.dados;
     const deputados = deputadosCitados(texto, lista.dados);
     if (deputados.length) {
       const dep = await evidenciasDosDeputados(deputados);
@@ -146,7 +143,20 @@ export async function buscarEvidencias(texto) {
 
   evidencias.push(...evidenciasDaBase(itensBase));
   fontes.push(...fontesDaBase(itensBase));
-  return { evidencias, fontes };
+  // Nada pelo nome completo: procura pelo sobrenome só para sugerir ("Você quis dizer...?").
+  const sugestoes = evidencias.length
+    ? []
+    : sugestoesDeNome(texto, [...deputadosDaLista.map((d) => ({ ...d, cargo: 'Deputado(a) Federal' })), ...op.candidatos]).map(
+        (p) => ({ nome: p.nome, descricao: [p.cargo, p.partido && p.uf ? `${p.partido}-${p.uf}` : p.partido].filter(Boolean).join(', ') })
+      );
+  return { evidencias, fontes, sugestoes };
+}
+
+// "Você quis dizer: Fulano (Senador(a), PL-RJ) ou Beltrano (...)? Pergunte com o nome completo..."
+export function textoVoceQuisDizer(sugestoes) {
+  if (!sugestoes?.length) return '';
+  const lista = sugestoes.map((s) => (s.descricao ? `${s.nome} (${s.descricao})` : s.nome)).join('; ');
+  return ` Não encontrei esse nome completo. Você quis dizer: ${lista}? Pergunte com o nome completo, ex.: "Quem é ${sugestoes[0].nome}?".`;
 }
 
 export const TEXTO_SEM_EVIDENCIA =
@@ -164,7 +174,7 @@ export function textoOndeConferir(sugestoes) {
 
 export async function responder(pergunta) {
   const prazo = Date.now() + LIMITES_FATOBOT.totalMs;
-  const { evidencias, fontes } = await buscarEvidencias(pergunta);
+  const { evidencias, fontes, sugestoes: quisDizer } = await buscarEvidencias(pergunta);
 
   // Sem documento relacionado → declara incerteza em vez de especular (RN04)
   // e indica onde a pessoa pode conferir (links oficiais, NÃO usados como evidência).
@@ -174,7 +184,8 @@ export async function responder(pergunta) {
       pergunta,
       tipo: 'sem_evidencia',
       modo: 'somente_fontes',
-      resposta: TEXTO_SEM_EVIDENCIA + textoOndeConferir(sugestoes),
+      resposta: TEXTO_SEM_EVIDENCIA + textoVoceQuisDizer(quisDizer) + textoOndeConferir(sugestoes),
+      voce_quis_dizer: quisDizer,
       evidencias: [],
       fontes: [],
       onde_conferir: sugestoes,
