@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { verificar } from '../services/verificar.js';
 import { limitarPorIp } from '../utils/limite.js';
+import { criarLogVerificar, previa, dominio } from '../utils/log-verificar.js';
 
 const router = Router();
 
@@ -41,20 +42,37 @@ const MAX = 1000;
 
 // POST /api/verificar
 router.post('/', limitarPorIp, aceitarAnexos, async (req, res, next) => {
+  const log = criarLogVerificar();
   try {
     const afirmacao = typeof req.body?.afirmacao === 'string' ? req.body.afirmacao.trim() : '';
+    log.info('1. pedido recebido', {
+      formato: req.is('multipart/form-data') ? 'formulário com anexos' : 'json',
+      tamanho: afirmacao.length,
+      previa: previa(afirmacao),
+    });
     if (afirmacao.length < MIN || afirmacao.length > MAX) {
+      log.aviso('recusado (400): tamanho da afirmação', { tamanho: afirmacao.length, min: MIN, max: MAX });
       return res.status(400).json({ erro: `A afirmação deve ter entre ${MIN} e ${MAX} caracteres.` });
     }
 
     const link = typeof req.body?.link === 'string' && req.body.link.trim() ? req.body.link.trim() : null;
     if (link && !/^https:\/\/[^\s]+$/i.test(link)) {
+      log.aviso('recusado (400): link sem https://', { site: dominio(link) });
       return res.status(400).json({ erro: 'O link precisa começar com https://' });
     }
 
     const anexos = contarAnexos(req);
-    res.json(await verificar({ afirmacao, link, anexos, anexosAcimaDoLimite: Boolean(req.anexosAcimaDoLimite) }));
+    log.info('2. dados conferidos', {
+      link: link ? dominio(link) : null,
+      anexos,
+      anexosAcimaDoLimite: Boolean(req.anexosAcimaDoLimite),
+    });
+
+    const resultado = await verificar({ afirmacao, link, anexos, anexosAcimaDoLimite: Boolean(req.anexosAcimaDoLimite), log });
+    log.info('6. resposta enviada', { estado: resultado.estado, fontes: resultado.fontes?.length ?? 0 });
+    res.json(resultado);
   } catch (err) {
+    log.erro('falhou', { erro: err.message });
     next(err);
   }
 });
