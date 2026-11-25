@@ -1,7 +1,7 @@
 // Senadores (correção do relatório da Kelly: a aba Senadores estava vazia).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { senadoresDaLista, idsEmConflito, CARGO_SENADOR } from '../src/services/senado.js';
+import { senadoresDaLista, idsEmConflito, idsParaRemover, CARGO_SENADOR } from '../src/services/senado.js';
 
 const JSON_SENADO = {
   ListaParlamentarEmExercicio: {
@@ -49,4 +49,9 @@ test('Senado: resposta vazia ou estranha → lista vazia (sem quebrar)', () => {
 test('Senado: detecta id repetido entre deputado e senador', () => {
   assert.deepEqual(idsEmConflito([{ id: 1 }, { id: 5012 }], [{ id: 5012 }, { id: 7 }]), [5012]);
   assert.deepEqual(idsEmConflito([{ id: 1 }], [{ id: 2 }]), []);
+});
+
+test('Importação: remove do banco quem saiu da lista oficial', () => {
+  assert.deepEqual(idsParaRemover([1, '2', 74383, 74295], [{ id: 1 }, { id: 2 }]), [74383, 74295]);
+  assert.deepEqual(idsParaRemover([1, 2], [{ id: 1 }, { id: 2 }, { id: 3 }]), []);
 });

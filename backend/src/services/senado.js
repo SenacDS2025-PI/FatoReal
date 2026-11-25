@@ -36,6 +36,13 @@ export function idsEmConflito(deputados, senadores) {
   return senadores.filter((s) => ids.has(Number(s.id))).map((s) => s.id);
 }
 
+// Quem está no banco com esse cargo, mas saiu da lista oficial atual (ex.: deputado que deixou
+// o mandato). Esses precisam sair da tabela, senão continuam aparecendo como se estivessem no cargo.
+export function idsParaRemover(idsNoBanco, linhasAtuais) {
+  const atuais = new Set(linhasAtuais.map((l) => Number(l.id)));
+  return idsNoBanco.map(Number).filter((id) => !atuais.has(id));
+}
+
 export const FONTE_SENADO_NOME = 'Senado Federal — Dados Abertos';
 
 // Lista atual direto da API do Senado (reserva quando o Supabase não tem senadores).

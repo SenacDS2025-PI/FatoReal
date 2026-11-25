@@ -13,7 +13,14 @@
 // Nunca coloque essa chave na Vercel, no Angular ou no GitHub.
 import { createClient } from '@supabase/supabase-js';
 import { CAMARA_API } from '../src/services/camara-fonte.js';
-import { SENADO_LISTA, CARGO_DEPUTADO, senadoresDaLista, idsEmConflito } from '../src/services/senado.js';
+import {
+  SENADO_LISTA,
+  CARGO_DEPUTADO,
+  CARGO_SENADOR,
+  senadoresDaLista,
+  idsEmConflito,
+  idsParaRemover,
+} from '../src/services/senado.js';
 
 const LIMITE = Number(process.argv[2]) || Infinity;
 const CONCORRENCIA = 4;
@@ -109,6 +116,8 @@ async function main() {
 
   await salvar(linhas);
   console.log(`✅ ${linhas.length} deputados salvos na tabela politicos.`);
+  // Só limpa com a lista COMPLETA (no teste rápido com "-- 20" não apaga ninguém).
+  if (LIMITE === Infinity) await removerAntigos(CARGO_DEPUTADO, linhas, 500, 'deputados');
   if (incompletos) {
     console.log(`⚠️  ${incompletos} ficaram só com os dados básicos (a Câmara não respondeu o perfil).`);
     console.log('   Rode de novo mais tarde para completar.');
@@ -123,9 +132,25 @@ async function main() {
     if (conflitos.length) throw new Error(`ids de senador iguais aos de deputados: ${conflitos.join(', ')}`);
     await salvar(senadores);
     console.log(`✅ ${senadores.length} senadores salvos na tabela politicos.`);
+    await removerAntigos(CARGO_SENADOR, senadores, 70, 'senadores');
   } catch (err) {
     console.log(`⚠️  Senadores não importados: ${err.message}. Rode de novo mais tarde.`);
   }
+}
+
+// Apaga do banco quem tem esse cargo mas não está mais na lista oficial (saiu do mandato).
+// Segurança: só roda se a lista nova tiver pelo menos `minimo` pessoas (lista vazia ou cortada
+// por falha da API nunca apaga a tabela).
+async function removerAntigos(cargo, linhasAtuais, minimo, rotulo) {
+  if (linhasAtuais.length < minimo) return;
+  const { data, error } = await supabase.from('politicos').select('id, nome').eq('cargo', cargo);
+  if (error) throw new Error(`Supabase: ${error.message}`);
+  const remover = idsParaRemover((data ?? []).map((d) => d.id), linhasAtuais);
+  if (!remover.length) return;
+  const nomes = data.filter((d) => remover.includes(Number(d.id))).map((d) => d.nome);
+  const { error: erroApagar } = await supabase.from('politicos').delete().eq('cargo', cargo).in('id', remover);
+  if (erroApagar) throw new Error(`Supabase: ${erroApagar.message}`);
+  console.log(`🧹 ${remover.length} ${rotulo} que saíram do cargo foram removidos: ${nomes.join(', ')}`);
 }
 
 async function salvar(linhas) {
