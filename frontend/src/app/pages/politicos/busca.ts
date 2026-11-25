@@ -2,7 +2,10 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { CARGOS, chaveAlerta, contagemAlertas, letraDe, todosDoCargo } from '../../core/politicos.service';
+import {
+  CARGOS, CARGOS_MUNICIPAIS, PRECISA_CIDADE, chaveAlerta, cidadesDoEstado, contagemAlertas, letraDe, normalizarCidade,
+  politicosDoLocal, rotaPolitico, todosDoCargo, totalDoCargo,
+} from '../../core/politicos.service';
 import { verificadosDe } from '../../core/registros-verificados';
 import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
@@ -37,6 +40,9 @@ export class BuscaPage implements OnInit {
     { nome: 'Deputado(a) Estadual', rotulo: 'Deputados estaduais', icone: 'apartment' },
     { nome: 'Prefeito(a)', rotulo: 'Prefeitos', icone: 'holiday_village' },
     { nome: 'Vereador(a)', rotulo: 'Vereadores', icone: 'groups' },
+    { nome: 'Vice-presidente', rotulo: 'Vice-presidente', icone: 'flag' },
+    { nome: 'Vice-governador(a)', rotulo: 'Vice-governadores', icone: 'location_city' },
+    { nome: 'Vice-prefeito(a)', rotulo: 'Vice-prefeitos', icone: 'holiday_village' },
   ];
   protected readonly explorar = [
     { titulo: 'Congresso em ação', texto: 'Agenda, votações e leis', icone: 'account_balance', rota: '/congresso', imagem: 'img/destaque-congresso.svg' },
@@ -106,7 +112,7 @@ export class BuscaPage implements OnInit {
   /** Quantas pessoas do cargo atual há em cada estado (para o mapa). */
   /** Texto do balão do mapa: quantos nomes do cargo cada estado tem. */
   protected readonly textosMapa = computed(() => {
-    const rot = this.cargo() === 'Senador(a)' ? 'senadores' : 'deputados';
+    const rot = this.rotuloCargo().toLowerCase();
     return Object.fromEntries(Object.entries(this.porEstado()).map(([u, n]) => [u, `${n} ${rot}`]));
   });
   protected readonly porEstado = computed(() => {
@@ -131,6 +137,30 @@ export class BuscaPage implements OnInit {
 
   /** Cargo sem fonte automática no modo demonstração (governador, presidente...). */
   protected readonly semFonte = computed(() => this.demo && !CARGOS.find((c) => c.nome === this.cargo())?.fonte);
+
+  // ---------- Prefeitos, vices e vereadores: primeiro o estado, depois a cidade ----------
+  protected readonly municipal = computed(() => CARGOS_MUNICIPAIS.includes(this.cargo()));
+  protected readonly precisaCidade = computed(() => PRECISA_CIDADE.includes(this.cargo()));
+  /** Cidade digitada/escolhida (texto como a pessoa vê, ex.: "São José dos Campos"). */
+  protected readonly cidade = signal('');
+  protected readonly cidades = signal<{ nome: string; busca: string }[]>([]);
+  protected readonly carregandoCidades = signal(false);
+  /** Ainda falta escolher o estado (ou a cidade, para vereador): a lista não é buscada. */
+  protected readonly faltaLocal = computed(() => this.municipal() && (!this.uf() || (this.precisaCidade() && !normalizarCidade(this.cidade()))));
+  private localCarregado = '';
+  private ufDasCidades = '';
+
+  /** "São José dos Campos/SP", "Brasil" (presidente) ou o nome do estado. */
+  protected local(p: Politico): string {
+    if (p.municipio) return `${p.municipio}/${p.uf}`;
+    if (p.uf === 'BR') return 'Brasil';
+    return p.uf ? nomeEstado(p.uf) : 'UF n/d';
+  }
+  /** "Eleito(a) em 2024 · TSE": o TSE mostra quem foi eleito, não quem está no cargo hoje. */
+  protected eleicao(p: Politico): string {
+    const ano = p.situacao?.match(/\d{4}/)?.[0];
+    return ano ? `Eleito(a) em ${ano} · fonte: TSE` : 'Eleito(a) · fonte: TSE';
+  }
 
   /** Lista depois dos filtros de nome, partido e estado (antes da letra). */
   private readonly filtrados = computed(() => {
@@ -179,10 +209,11 @@ export class BuscaPage implements OnInit {
     this.partido.set((q.get('partido') ?? '').toUpperCase());
     this.uf.set(q.get('uf') ?? '');
     this.letra.set(q.get('letra') ?? '');
+    this.cidade.set(q.get('cidade') ?? '');
     this.carregar();
     contagemAlertas().then((m) => this.registros.set(m)).catch(() => {});
     for (const c of CARGOS.filter((x) => this.temDados(x.nome))) {
-      todosDoCargo(c.nome).then((l) => this.totais.update((t) => ({ ...t, [c.nome]: l.length }))).catch(() => {});
+      totalDoCargo(c.nome).then((n) => this.totais.update((t) => ({ ...t, [c.nome]: n }))).catch(() => {});
     }
   }
 
@@ -191,8 +222,16 @@ export class BuscaPage implements OnInit {
     this.erro.set('');
     this.todos.set([]);
     const cargo = this.cargo();
+    const uf = this.uf();
+    const cidade = normalizarCidade(this.cidade());
+    this.localCarregado = `${cargo}|${uf}|${cidade}`;
+    if (this.municipal()) this.carregarCidades();
+    if (this.municipal() && this.faltaLocal()) {
+      this.carregando.set(false);
+      return;
+    }
     try {
-      const lista = await todosDoCargo(cargo);
+      const lista = this.municipal() ? await politicosDoLocal(cargo, uf, cidade) : await todosDoCargo(cargo);
       if (cargo === this.cargo()) this.todos.set(lista);
     } catch (e) {
       if (cargo === this.cargo()) this.erro.set(e instanceof Error ? e.message : 'Erro ao carregar.');
@@ -206,6 +245,7 @@ export class BuscaPage implements OnInit {
     this.cargo.set(c);
     this.partido.set('');
     this.letra.set('');
+    if (!CARGOS_MUNICIPAIS.includes(c)) this.cidade.set('');
     this.limite.set(POR_VEZ);
     this.atualizarUrl();
     this.carregar();
@@ -220,11 +260,44 @@ export class BuscaPage implements OnInit {
   protected mudouFiltro() {
     this.limite.set(POR_VEZ);
     this.atualizarUrl();
+    // Prefeito/vereador: mudar estado ou cidade é uma busca nova no banco (não só um filtro na lista).
+    if (this.municipal() && this.localCarregado !== `${this.cargo()}|${this.uf()}|${normalizarCidade(this.cidade())}`) this.carregar();
   }
 
   protected escolherNoMapa(uf: string) {
+    if (uf !== this.uf()) this.cidade.set('');
     this.uf.set(uf);
     this.mudouFiltro();
+  }
+
+  /** Estado escolhido no cartão "Onde?" (prefeitos e vereadores). */
+  protected escolherEstado(uf: string) {
+    this.cidade.set('');
+    this.uf.set(uf);
+    this.mudouFiltro();
+  }
+
+  /** Cidade: só busca quando o nome bate com uma cidade da lista (ou ao apertar Buscar). */
+  protected digitouCidade(texto: string) {
+    this.cidade.set(texto);
+    const t = normalizarCidade(texto);
+    if (!t || this.cidades().some((c) => c.busca === t)) this.mudouFiltro();
+  }
+
+  private async carregarCidades() {
+    const uf = this.uf();
+    if (!uf || uf === this.ufDasCidades) return;
+    this.ufDasCidades = uf;
+    this.cidades.set([]);
+    this.carregandoCidades.set(true);
+    try {
+      const lista = await cidadesDoEstado(uf);
+      if (uf === this.uf()) this.cidades.set(lista);
+    } catch {
+      this.ufDasCidades = '';
+    } finally {
+      this.carregandoCidades.set(false);
+    }
   }
 
   protected verListaDoEstado() {
@@ -241,12 +314,13 @@ export class BuscaPage implements OnInit {
     this.partido.set('');
     this.uf.set('');
     this.letra.set('');
+    this.cidade.set('');
     this.mudouFiltro();
   }
 
-  /** Link do perfil: deputados e itens do Supabase em /politicos/:id; senadores (demo) em /politicos/senado/:id. */
+  /** Link do perfil (Câmara, Senado ou TSE). */
   protected linkPerfil(p: Politico): (string | number)[] {
-    return p.casa === 'senado' && this.demo ? ['/politicos/senado', p.id] : ['/politicos', p.id];
+    return rotaPolitico(p);
   }
 
   private atualizarUrl() {
@@ -254,6 +328,7 @@ export class BuscaPage implements OnInit {
       queryParams: {
         cargo: this.cargo() === CARGOS[0].nome ? null : this.cargo(),
         q: this.termo() || null, partido: this.partido() || null, uf: this.uf() || null, letra: this.letra() || null,
+        cidade: (this.municipal() && this.cidade()) || null,
       },
       replaceUrl: true,
     });

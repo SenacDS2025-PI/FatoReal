@@ -22,8 +22,10 @@ export interface Politico {
   municipio_nascimento?: string | null;
   fonte_url: string;
   data_coleta?: string | null;
-  /** De onde vem o dado: Câmara, Senado ou importação da equipe (TSE etc.). */
-  casa?: 'camara' | 'senado' | 'outro';
+  /** De onde vem o dado: Câmara, Senado ou TSE (eleitos importados pela equipe). */
+  casa?: 'camara' | 'senado' | 'tse';
+  /** Só Prefeito(a), Vice-prefeito(a) e Vereador(a) (dados do TSE). */
+  municipio?: string | null;
 }
 
 export type TipoAlerta =

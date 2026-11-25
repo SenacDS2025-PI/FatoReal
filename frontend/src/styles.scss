@@ -1755,6 +1755,15 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
   button { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border: 0; border-radius: 8px; background: none; color: var(--texto-suave); font: inherit; font-size: 0.8rem; cursor: pointer; text-align: left;
     .icone { font-size: 1.05rem; color: var(--texto-suave); } em { margin-left: auto; font-style: normal; font-size: 0.68rem; background: var(--superficie); border: 1px solid var(--borda); padding: 1px 7px; border-radius: 9px; white-space: nowrap; }
     &:hover { background: var(--superficie); color: var(--texto); } &[aria-selected='true'] { color: var(--link); font-weight: 700; .icone { color: var(--link); } } } }
+.pol-outros { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 4px; > strong { grid-column: 1 / -1; } }
+/* Prefeitos, vices e vereadores: escolher estado e cidade antes de buscar */
+.pol-local { margin-bottom: 18px;
+  .ps-titulo { margin: 0 0 4px; } }
+.pol-local-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 12px; }
+.pol-local-campos { display: grid; gap: 4px;
+  select, input { width: 100%; } .pol-chip { justify-self: start; margin-top: 4px; } }
+.pol-local-linha { display: flex; gap: 8px; input { flex: 1; min-width: 0; } .botao { flex: none; } }
+@media (max-width: 860px) { .pol-local-layout { grid-template-columns: 1fr; } }
 .pol-explore { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
 .pol-explore-card { position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; padding: 0 0 14px; border-radius: 18px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); text-decoration: none; box-shadow: var(--sombra); transition: border-color 0.15s, transform 0.15s;
   img { grid-column: 1 / -1; width: 100%; margin: 0 0 8px; height: 92px; object-fit: cover; display: block; }
