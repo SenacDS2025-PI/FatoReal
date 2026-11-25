@@ -37,8 +37,7 @@
   </form>
 
   <div class="topo-acoes">
-    <a routerLink="/politicos" class="sino so-celular" aria-label="Pesquisar" title="Pesquisar"><app-icone nome="search" /></a>
-    <a routerLink="/fato-ou-fake" class="botao-verificar so-desktop" routerLinkActive="ativo" title="Fato ou Fake: verifique uma informação antes de compartilhar">
+    <a routerLink="/fato-ou-fake" class="botao-verificar" routerLinkActive="ativo" title="Fato ou Fake: verifique uma informação antes de compartilhar">
       <app-icone nome="fact_check" /> <span>Verificar</span>
     </a>
     <div class="menu-conta">
@@ -85,7 +84,8 @@
         }
       </div>
     } @else {
-      <a routerLink="/entrar" class="botao botao-verde">Entrar</a>
+      <!-- Em tela muito estreita (celular de 360 px) fica só o ícone de pessoa -->
+      <a routerLink="/entrar" class="botao botao-verde botao-entrar" aria-label="Entrar"><app-icone nome="person" class="entrar-icone" /><span class="entrar-texto">Entrar</span></a>
     }
   </div>
   <!-- Lâmpada pendurada no fio azul, embaixo da conta -->

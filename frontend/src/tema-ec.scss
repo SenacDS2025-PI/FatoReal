@@ -452,19 +452,35 @@ fieldset { min-width: 0; }
    botões com 44 px de toque e respeito às áreas seguras do iPhone.
    ========================================================= */
 @media (max-width: 900px) {
+  /* Barra de cima em duas linhas ("Opção A", aprovada pelo Luiz em 25 nov. 2026):
+     linha 1 = logo + FATO REAL | VERIFICAR, sino, foto/Entrar; linha 2 = busca em largura total */
+  :root { --topo-cel: calc(120px + env(safe-area-inset-top)); }
   .topo {
-    height: calc(60px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
-    gap: 8px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 48px 44px; row-gap: 8px; align-items: center;
+    height: var(--topo-cel); padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
   }
+  .topo .marca { grid-column: 1; grid-row: 1; min-width: 0; gap: 8px;
+    img { width: 36px; height: 36px; }
+    > span { display: block; min-width: 0; }
+    strong { font-size: 1.125rem; white-space: nowrap; } small { display: none; } }
+  .topo .topo-acoes { grid-column: 2; grid-row: 1; }
+  .topo .busca-topo { display: flex !important; grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: none; height: 44px; border-radius: 999px; padding: 0 4px 0 8px;
+    .busca-atalho { display: none; } input#busca-topo { font-size: 1rem; } }
+  .topo .sugestoes-busca { left: 0; right: 0; }
+  /* Verificar igual ao do computador: amarelo da marca, ícone + texto, sombra embaixo */
+  .topo .botao-verificar { display: inline-flex !important; width: auto; height: 40px; padding: 0 12px; margin-right: 2px; gap: 6px; border-radius: 6px;
+    font-size: 0.8rem; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+    > span { display: inline !important; } .icone { font-size: 1.15rem; }
+    &::before { content: ''; position: absolute; inset: -2px 0; } position: relative; }
   .abas-celular {
-    top: calc(60px + env(safe-area-inset-top)); gap: 8px; padding: 10px 16px 12px; scroll-padding-inline: 16px;
+    top: var(--topo-cel); gap: 8px; padding: 10px 16px 12px; scroll-padding-inline: 16px;
     a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; }
   }
   .topo-acoes { gap: 4px; }
   .topo .sino, .topo .botao-conta { width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; border-radius: 12px; }
   .topo .sino .icone { font-size: 1.5rem; }
   .topo .botao-verde { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; margin-left: 4px; font-size: 0.85rem; }
-  .painel-notif { top: calc(60px + env(safe-area-inset-top)); left: 16px; right: 16px; }
+  .painel-notif { top: var(--topo-cel); left: 16px; right: 16px; }
 
   /* Conteúdo: margem de 16 px dos dois lados e espaço livre embaixo para a navegação */
   main { padding: 16px 16px calc(104px + env(safe-area-inset-bottom)) !important; }
@@ -487,7 +503,26 @@ fieldset { min-width: 0; }
   main img, main video, main iframe { max-width: 100%; }
   main :is(h1, h2, h3, p, li) { overflow-wrap: break-word; }
 }
+.botao-entrar .entrar-icone { display: none; }
 @media (max-width: 480px) {
+  /* a regra antiga escondia o nome da marca no celular: na Opção A ele aparece */
+  .topo .marca > span { display: block; }
   main { padding-left: 16px !important; padding-right: 16px !important; }
   .card { padding: 16px; }
+}
+
+/* Celular comum (até 440 px): tudo um pouco mais justo para o nome "FATO REAL" caber na linha */
+@media (max-width: 440px) {
+  .topo .topo-acoes { gap: 2px; }
+  .topo .marca { gap: 6px; img { width: 32px; height: 32px; } strong { font-size: 0.95rem; } }
+  .topo .botao-verificar { padding: 0 9px; gap: 4px; font-size: 0.72rem; letter-spacing: 0.02em; .icone { font-size: 1rem; } }
+  .topo .botao-entrar { padding: 0 12px; margin-left: 2px; font-size: 0.8rem; }
+}
+/* Sem conta, abaixo de 420 px o botão "Entrar" ocupa o lugar do nome: fica só o logo (o nome volta quando cabe) */
+@media (max-width: 419px) { .topo:has(.botao-entrar) .marca > span { display: none; } }
+/* Celular bem estreito (360 px): só o logo, e "Entrar" vira ícone de pessoa */
+@media (max-width: 374px) {
+  .topo .marca > span { display: none; }
+  .topo .botao-entrar { width: 44px; padding: 0; justify-content: center;
+    .entrar-texto { display: none; } .entrar-icone { display: inline-block; font-size: 1.4rem; } }
 }
