@@ -21,7 +21,8 @@ export function senadoresDaLista(json, agora = new Date().toISOString()) {
       partido: i.SiglaPartidoParlamentar ?? null,
       uf: i.UfParlamentar ?? null,
       cargo: CARGO_SENADOR,
-      foto_url: i.UrlFotoParlamentar ?? null,
+      // O Senado publica a foto com http://; no site (https) isso gera aviso de "Mixed Content".
+      foto_url: i.UrlFotoParlamentar ? String(i.UrlFotoParlamentar).replace(/^http:\/\//i, 'https://') : null,
       email: i.EmailParlamentar ?? null,
       situacao: 'Exercício',
       fonte_url: i.UrlPaginaParlamentar || perfilSenado(i.CodigoParlamentar),

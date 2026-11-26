@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { iniciar, mockCamara, perguntar } from './ajuda.js';
 import { _setClient as setSupabase } from '../src/services/supabase.js';
 import { clienteFalso } from './supabase-falso.js';
-import { cidadeDoTexto, ufDoTexto } from '../src/services/outros-politicos.js';
+import { cidadeDoTexto, ufDoTexto, doEstado, vagaDe, ESTADOS, PREP_ESTADO } from '../src/services/outros-politicos.js';
 
 const TSE24 = 'https://dadosabertos.tse.jus.br/dataset/candidatos-2024';
 const TSE22 = 'https://dadosabertos.tse.jus.br/dataset/candidatos-2022';
@@ -94,4 +94,14 @@ test('só o sobrenome → não responde como fato, sugere "Você quis dizer"', a
   const nomes = r.body.voce_quis_dizer.map((s) => s.nome);
   assert.ok(nomes.includes('Senadora Teste (exemplo)'), JSON.stringify(nomes));
   assert.match(r.body.resposta, /Você quis dizer: .*Senadora Teste \(exemplo\) \(Senador\(a\), ABC-MG\)/);
+});
+
+test('preposição certa dos estados (da Bahia, do Rio de Janeiro, de São Paulo)', () => {
+  assert.equal(doEstado('BA'), 'da Bahia');
+  assert.equal(doEstado('RJ'), 'do Rio de Janeiro');
+  assert.equal(doEstado('SP'), 'de São Paulo');
+  assert.equal(doEstado('MG'), 'de Minas Gerais');
+  assert.equal(vagaDe({ cargo: 'Governador(a)', uf: 'BA' }), 'o governo da Bahia');
+  assert.equal(vagaDe({ cargo: 'Deputado(a) Estadual', uf: 'RJ' }), 'uma vaga na Assembleia Legislativa do Rio de Janeiro');
+  assert.deepEqual(Object.keys(PREP_ESTADO).sort(), Object.keys(ESTADOS).sort(), 'todos os 27 estados');
 });
