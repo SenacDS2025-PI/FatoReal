@@ -1763,6 +1763,7 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 .pol-local-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 12px; }
 .pol-local-campos { display: grid; gap: 4px;
   select, input { width: 100%; } .pol-chip { justify-self: start; margin-top: 4px; } }
+.pol-local-aviso { display: flex; gap: 10px; align-items: flex-start; margin: 8px 0; padding: 10px 12px; border-radius: 12px; background: var(--superficie-2); border: 1px dashed var(--borda); color: var(--texto-suave); font-size: 0.9rem; .icone { color: var(--texto-suave); flex: none; } strong { color: var(--texto); } }
 .pol-local-linha { display: flex; gap: 8px; input { flex: 1; min-width: 0; } .botao { flex: none; } }
 @media (max-width: 860px) { .pol-local-layout { grid-template-columns: 1fr; } }
 .pol-explore { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }

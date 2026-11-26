@@ -9,7 +9,8 @@
 //   "Quem é o prefeito de Campinas?"  "Quem são os vereadores de Recife - PE?"
 //
 // Regra de honestidade: o TSE mostra quem FOI ELEITO, não quem está no cargo hoje
-// (pode ter havido cassação, renúncia ou posse do vice). O texto diz "foi eleito(a) em ...".
+// (pode ter havido cassação, renúncia ou posse do vice). O texto diz "conquistou, na eleição de ...".
+// Sem "(a)" no texto: não guardamos o gênero, então as frases são neutras.
 // Nada aqui lança erro para o FatoBot: se uma fonte falhar, só não entra evidência dela.
 import { cached } from '../utils/cache.js';
 import { comPrazo } from '../utils/prazo.js';
@@ -75,15 +76,29 @@ function fonteDe(p) {
   return { nome: `${FONTE_SENADO_NOME}${copia}`, url: p.fonte_url, consultadoEm: p.data_coleta };
 }
 
-const ondeFoiEleito = (p) => (p.municipio ? `${p.municipio}-${p.uf}` : p.uf === 'BR' ? 'o Brasil' : ESTADOS[p.uf] ?? p.uf);
+const estadoDe = (p) => ESTADOS[p.uf] ?? p.uf;
+const cidadeDe = (p) => `${p.municipio}-${p.uf}`;
+
+// O que a pessoa conquistou na eleição, sem "(a)": "a prefeitura de Campinas-SP".
+const VAGA = {
+  Presidente: () => 'a Presidência da República',
+  'Vice-presidente': () => 'a Vice-Presidência da República',
+  'Governador(a)': (p) => `o governo de ${estadoDe(p)}`,
+  'Vice-governador(a)': (p) => `a vice-governadoria de ${estadoDe(p)}`,
+  'Deputado(a) Estadual': (p) => (p.uf === 'DF' ? 'uma vaga na Câmara Legislativa do Distrito Federal' : `uma vaga na Assembleia Legislativa de ${estadoDe(p)}`),
+  'Prefeito(a)': (p) => `a prefeitura de ${cidadeDe(p)}`,
+  'Vice-prefeito(a)': (p) => `a vice-prefeitura de ${cidadeDe(p)}`,
+  'Vereador(a)': (p) => `uma vaga na Câmara Municipal de ${cidadeDe(p)}`,
+};
+export const vagaDe = (p) => (VAGA[p.cargo] ?? (() => `o cargo de ${p.cargo}`))(p);
 
 // Um político → uma evidência (texto + fonte).
 export function evidenciaDe(p) {
   const f = fonteDe(p);
   const partido = p.partido ? ` (${p.partido})` : '';
   const texto = doTse(p)
-    ? `${p.nome}${partido} foi eleito(a) para ${p.cargo} de ${ondeFoiEleito(p)} na eleição de ${anoDe(p)}, segundo o TSE.`
-    : `${p.nome} é senador(a) pelo ${p.partido}-${p.uf}.`;
+    ? `${p.nome}${partido} conquistou ${vagaDe(p)} na eleição de ${anoDe(p)}, segundo o TSE.`
+    : `${p.nome} tem mandato no Senado Federal pelo ${p.partido}-${p.uf}.`;
   return { texto, fonte: f.nome, url: f.url, consultadoEm: f.consultadoEm };
 }
 

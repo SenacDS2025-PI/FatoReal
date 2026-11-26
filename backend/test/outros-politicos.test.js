@@ -38,11 +38,11 @@ test('entende a cidade e o estado da pergunta', () => {
   assert.equal(ufDoTexto('governador de SP'), 'SP');
 });
 
-test('prefeito pela cidade, com fonte do TSE e "foi eleito" (não "é")', async () => {
+test('prefeito pela cidade, com fonte do TSE e "conquistou na eleição" (não "é")', async () => {
   const r = await perguntar(srv.base, 'Quem é o prefeito de Campinas?');
   assert.equal(r.status, 200);
   assert.equal(r.body.tipo, 'fontes_encontradas');
-  assert.match(r.body.evidencias[0].texto, /Prefeito Teste \(exemplo\) \(GHI\) foi eleito\(a\) para Prefeito\(a\) de Campinas-SP na eleição de 2024/);
+  assert.match(r.body.evidencias[0].texto, /Prefeito Teste \(exemplo\) \(GHI\) conquistou a prefeitura de Campinas-SP na eleição de 2024/);
   assert.equal(r.body.fontes[0].url, TSE24);
 });
 
@@ -54,14 +54,14 @@ test('muitos vereadores → resumo com total e alguns nomes', async () => {
 
 test('senadores e governador pelo estado', async () => {
   const s = await perguntar(srv.base, 'Quem são os senadores de Minas Gerais?');
-  assert.match(s.body.evidencias[0].texto, /Senadora Teste \(exemplo\) é senador\(a\) pelo ABC-MG/);
+  assert.match(s.body.evidencias[0].texto, /Senadora Teste \(exemplo\) tem mandato no Senado Federal pelo ABC-MG/);
   const g = await perguntar(srv.base, 'Quem é o governador de MG?');
-  assert.match(g.body.evidencias[0].texto, /Governador Teste \(exemplo\).*Governador\(a\) de Minas Gerais na eleição de 2022/);
+  assert.match(g.body.evidencias[0].texto, /Governador Teste \(exemplo\) \(DEF\) conquistou o governo de Minas Gerais na eleição de 2022/);
 });
 
 test('acha senador pelo nome completo', async () => {
   const r = await perguntar(srv.base, 'Quem é Senadora Teste (exemplo)?');
-  assert.ok(r.body.evidencias.some((e) => /senador\(a\) pelo ABC-MG/.test(e.texto)));
+  assert.ok(r.body.evidencias.some((e) => /Senado Federal pelo ABC-MG/.test(e.texto)));
 });
 
 test('cidade que não está no banco → sem evidência (não inventa)', async () => {

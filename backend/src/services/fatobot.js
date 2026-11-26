@@ -38,6 +38,13 @@ function formatarData(iso) {
   return `${dia}/${mes}/${ano}`;
 }
 
+// Usa o gênero que a Câmara informa; sem essa informação (cópia de reserva), frase neutra.
+export function mandatoNaCamara(sexo) {
+  if (sexo === 'F') return 'é deputada federal';
+  if (sexo === 'M') return 'é deputado federal';
+  return 'tem mandato na Câmara dos Deputados';
+}
+
 // Etapa 3: transforma o perfil em evidências — cada fato com a sua fonte e data.
 export function evidenciasDoPerfil({ dados: p, fonte }) {
   const ref = { fonte: fonte.nome, url: fonte.url, consultadoEm: fonte.consultadoEm };
@@ -45,7 +52,7 @@ export function evidenciasDoPerfil({ dados: p, fonte }) {
   const add = (texto) => evidencias.push({ texto, ...ref });
 
   if (p.partido && p.uf) {
-    add(`${p.nome} é deputado(a) federal pelo ${p.partido}-${p.uf}.`);
+    add(`${p.nome} ${mandatoNaCamara(p.sexo)} pelo ${p.partido}-${p.uf}.`);
   }
   if (p.situacao) {
     const desde = formatarData(p.dataDoStatus);
@@ -141,8 +148,10 @@ export async function buscarEvidencias(texto) {
     console.warn(`FatoBot: sem dados da Câmara agora (${erroCamara.message}); usando as outras fontes.`);
   }
 
-  evidencias.push(...evidenciasDaBase(itensBase));
-  fontes.push(...fontesDaBase(itensBase));
+  // Já achou um político: da Constituição, só o que bateu com palavra específica (não "deputado").
+  const itensUsados = evidencias.length ? itensBase.filter((i) => i.forte) : itensBase;
+  evidencias.push(...evidenciasDaBase(itensUsados));
+  fontes.push(...fontesDaBase(itensUsados));
   // Nada pelo nome completo: procura pelo sobrenome só para sugerir ("Você quis dizer...?").
   const sugestoes = evidencias.length
     ? []

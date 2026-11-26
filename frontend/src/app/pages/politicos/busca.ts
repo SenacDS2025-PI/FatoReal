@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
 import {
@@ -27,6 +28,7 @@ const POR_VEZ = 48;
 export class BuscaPage implements OnInit {
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
   private auth = inject(AuthService);
 
   // ---------- Cargos: 4 cartões grandes + "outros cargos" ----------
@@ -147,6 +149,8 @@ export class BuscaPage implements OnInit {
   protected readonly carregandoCidades = signal(false);
   /** Ainda falta escolher o estado (ou a cidade, para vereador): a lista não é buscada. */
   protected readonly faltaLocal = computed(() => this.municipal() && (!this.uf() || (this.precisaCidade() && !normalizarCidade(this.cidade()))));
+  /** O cargo não tem nenhum nome no banco (dados do TSE ainda não importados). */
+  protected readonly semDadosCargo = computed(() => this.totais()[this.cargo()] === 0);
   private localCarregado = '';
   private ufDasCidades = '';
 
@@ -323,15 +327,20 @@ export class BuscaPage implements OnInit {
     return rotaPolitico(p);
   }
 
+  /**
+   * Guarda os filtros no endereço sem navegar: router.navigate faria a página voltar ao topo
+   * (scrollPositionRestoration 'top') e rodar a animação de troca de tela a cada clique.
+   */
   private atualizarUrl() {
-    this.router.navigate([], {
+    const arvore = this.router.createUrlTree([], {
+      relativeTo: this.rota,
       queryParams: {
         cargo: this.cargo() === CARGOS[0].nome ? null : this.cargo(),
         q: this.termo() || null, partido: this.partido() || null, uf: this.uf() || null, letra: this.letra() || null,
         cidade: (this.municipal() && this.cidade()) || null,
       },
-      replaceUrl: true,
     });
+    this.location.replaceState(this.router.serializeUrl(arvore));
   }
 }
 
