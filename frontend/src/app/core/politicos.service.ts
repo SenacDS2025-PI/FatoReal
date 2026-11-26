@@ -12,11 +12,34 @@ export const CARGOS: { nome: string; fonte: 'camara' | 'senado' | null }[] = [
   { nome: 'Deputado(a) Federal', fonte: 'camara' },
   { nome: 'Senador(a)', fonte: 'senado' },
   { nome: 'Governador(a)', fonte: null },
+  { nome: 'Vice-governador(a)', fonte: null },
   { nome: 'Presidente', fonte: null },
+  { nome: 'Vice-presidente', fonte: null },
   { nome: 'Deputado(a) Estadual', fonte: null },
   { nome: 'Prefeito(a)', fonte: null },
+  { nome: 'Vice-prefeito(a)', fonte: null },
   { nome: 'Vereador(a)', fonte: null },
 ];
+
+/**
+ * Cargos por cidade (dados do TSE). São milhares de nomes (só vereadores são ~58 mil) e o Supabase
+ * devolve no máximo 1000 linhas por pedido: a lista só é buscada depois que a pessoa escolhe o estado
+ * (e, para vereador, a cidade).
+ */
+export const CARGOS_MUNICIPAIS = ['Prefeito(a)', 'Vice-prefeito(a)', 'Vereador(a)'];
+/** Vereador: só com a cidade escolhida (um estado pode ter milhares). */
+export const PRECISA_CIDADE = ['Vereador(a)'];
+
+/** De onde vem o político de um cargo: Câmara, Senado ou TSE (todos os outros). */
+export function casaDoCargo(cargo: string | null | undefined): 'camara' | 'senado' | 'tse' {
+  if (!cargo || cargo === 'Deputado(a) Federal') return 'camara';
+  return cargo === 'Senador(a)' ? 'senado' : 'tse';
+}
+
+/** "são josé dos campos" → "sao jose dos campos" (igual à coluna municipio_busca do banco). */
+export function normalizarCidade(t: string): string {
+  return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
 
 export interface FiltroPoliticos {
   termo?: string;
@@ -248,15 +271,95 @@ export function todosDoCargo(cargo: string): Promise<Politico[]> {
 }
 
 async function carregarCargo(cargo: string): Promise<Politico[]> {
-  if (supabase) {
-    const { data, error } = await supabase.from('politicos').select('*').eq('cargo', cargo).order('nome').limit(2000);
-    if (error) throw new Error('Não foi possível carregar os políticos.');
-    return (data as Politico[]).map((p) => ({ ...p, casa: p.casa ?? (cargo === 'Senador(a)' ? 'senado' : cargo === 'Deputado(a) Federal' ? 'camara' : 'outro') }));
-  }
+  // Cargos por cidade nunca vêm inteiros: use politicosDoLocal() depois de escolher estado/cidade.
+  if (CARGOS_MUNICIPAIS.includes(cargo)) return [];
+  if (supabase) return comCasa(await todasAsPaginas((de, ate) => supabase!.from('politicos').select('*').eq('cargo', cargo).order('nome').order('id').range(de, ate)));
   const fonte = CARGOS.find((c) => c.nome === cargo)?.fonte;
   if (fonte === 'camara') return deputadosCamara();
   if (fonte === 'senado') return senadoresSenado();
   return [];
+}
+
+/** Preenche "casa" pelo cargo (registros antigos sem a coluna, ou com 'outro', viram TSE). */
+function comCasa(lista: Politico[]): Politico[] {
+  return lista.map((p) => ({ ...p, casa: p.casa && (p.casa as string) !== 'outro' ? p.casa : casaDoCargo(p.cargo) }));
+}
+
+/** O Supabase devolve no máximo 1000 linhas por pedido: busca de 1000 em 1000 (até 10 mil). */
+async function todasAsPaginas(
+  pedir: (de: number, ate: number) => PromiseLike<{ data: unknown[] | null; error: unknown }>,
+): Promise<Politico[]> {
+  const TAM = 1000;
+  const todos: Politico[] = [];
+  for (let de = 0; de < 10 * TAM; de += TAM) {
+    const { data, error } = await pedir(de, de + TAM - 1);
+    if (error) throw new Error('Não foi possível carregar os políticos.');
+    todos.push(...((data ?? []) as Politico[]));
+    if (!data || data.length < TAM) break;
+  }
+  return todos;
+}
+
+/**
+ * Prefeitos, vices e vereadores de um estado (e cidade). Sem Supabase: lista vazia (sem dados por enquanto).
+ * Vereador exige a cidade. municipioBusca é o nome sem acento e minúsculo (ver normalizarCidade).
+ */
+const cacheLocal = new Map<string, Promise<Politico[]>>();
+export function politicosDoLocal(cargo: string, uf: string, municipioBusca = ''): Promise<Politico[]> {
+  const cidade = normalizarCidade(municipioBusca);
+  if (!supabase || !uf || (PRECISA_CIDADE.includes(cargo) && !cidade)) return Promise.resolve([]);
+  const chave = `${cargo}|${uf}|${cidade}`;
+  if (!cacheLocal.has(chave)) {
+    const p = todasAsPaginas((de, ate) => {
+      let q = supabase!.from('politicos').select('*').eq('cargo', cargo).eq('uf', uf);
+      if (cidade) q = q.eq('municipio_busca', cidade);
+      return q.order('nome').order('id').range(de, ate);
+    }).then(comCasa);
+    p.catch(() => cacheLocal.delete(chave));
+    cacheLocal.set(chave, p);
+  }
+  return cacheLocal.get(chave)!;
+}
+
+/** Cidades de um estado com prefeito(a) eleito(a) no TSE, em ordem alfabética (para escolher a cidade). */
+const cacheCidades = new Map<string, Promise<{ nome: string; busca: string }[]>>();
+export function cidadesDoEstado(uf: string): Promise<{ nome: string; busca: string }[]> {
+  if (!supabase || !uf) return Promise.resolve([]);
+  if (!cacheCidades.has(uf)) {
+    const p = todasAsPaginas((de, ate) =>
+      supabase!.from('politicos').select('municipio, municipio_busca').eq('cargo', 'Prefeito(a)').eq('uf', uf).order('municipio_busca').range(de, ate),
+    ).then((linhas) => {
+      const mapa = new Map<string, string>();
+      for (const l of linhas as unknown as { municipio: string | null; municipio_busca: string | null }[]) {
+        if (l.municipio && l.municipio_busca) mapa.set(l.municipio_busca, l.municipio);
+      }
+      return [...mapa].map(([busca, nome]) => ({ nome, busca })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    });
+    p.catch(() => cacheCidades.delete(uf));
+    cacheCidades.set(uf, p);
+  }
+  return cacheCidades.get(uf)!;
+}
+
+/** Quantos nomes o cargo tem no banco (sem baixar a lista). Sem Supabase: só deputados e senadores. */
+export async function totalDoCargo(cargo: string): Promise<number> {
+  if (!supabase) {
+    if (!CARGOS.find((c) => c.nome === cargo)?.fonte) return 0;
+    return (await todosDoCargo(cargo)).length;
+  }
+  const { count, error } = await supabase.from('politicos').select('id', { count: 'exact', head: true }).eq('cargo', cargo);
+  if (error) throw new Error('Não foi possível contar os políticos.');
+  return count ?? 0;
+}
+
+/** Perfil de um eleito do TSE (presidente, governador, prefeito, vereador...). Sem Supabase: null. */
+export async function obterTse(id: number): Promise<Politico | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('politicos').select('*').eq('id', id).maybeSingle();
+  if (error) throw new Error('Não foi possível carregar o perfil.');
+  if (!data) return null;
+  const p = comCasa([data as Politico])[0];
+  return p.casa === 'tse' ? p : null;
 }
 
 async function deputadosCamara(): Promise<Politico[]> {
@@ -352,9 +455,11 @@ export function ehSenador(p: { casa?: string | null; cargo?: string | null }): b
 
 /**
  * Rota do perfil de um político. Use SEMPRE esta função para montar o link:
- * senador vai para /politicos/senado/:id (dados do Senado); o resto para /politicos/:id (Câmara).
+ * TSE (prefeitos, vereadores...) em /politicos/tse/:id; senador em /politicos/senado/:id (dados do Senado);
+ * o resto em /politicos/:id (Câmara).
  */
 export function rotaPolitico(p: { id: number | string; casa?: string | null; cargo?: string | null }): (string | number)[] {
+  if (p.casa === 'tse') return ['/politicos/tse', p.id];
   return ehSenador(p) ? ['/politicos/senado', p.id] : ['/politicos', p.id];
 }
 

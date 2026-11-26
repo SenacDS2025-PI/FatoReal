@@ -218,3 +218,15 @@ export async function obterDeputado(id) {
     throw new CamaraError(MSG_CAMARA_FORA);
   }
 }
+
+// J12 — para o /api/health/fontes.
+export async function pingCamara() {
+  const inicio = Date.now();
+  await buscarJson('/deputados?itens=1');
+  return Date.now() - inicio;
+}
+
+export function infoCopia() {
+  const c = lerCopia();
+  return c ? { total: c.dados.length, coletadoEm: c.coletadoEm } : null;
+}

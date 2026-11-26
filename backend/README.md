@@ -5,8 +5,11 @@ Responsáveis: João Vítor e Gustavo.
 API do FATO REAL e do FatoBot. É aqui que ficam as chaves secretas (Supabase `service_role`, IA),
 sempre em variáveis de ambiente — **nunca** no código nem no Angular.
 
-> **Divisão do backend entre João e Matheus** (quem mexe em qual arquivo, sem conflito): [`DIVISAO.md`](DIVISAO.md).
+> **Divisão do backend** (João: FatoBot e fontes · Gustavo: autenticação · Matheus e Kelly: revisão e testes),
+> com quem mexe em qual arquivo, sem conflito: [`DIVISAO.md`](DIVISAO.md).
 > Autenticação, conta e admin ficam em [`src/auth/`](src/auth/README.md).
+
+> **Roteiro da apresentação** (véspera, teste com a turma e entrega) e o comando `npm run conferir`: [`APRESENTACAO.md`](APRESENTACAO.md).
 
 ## Como rodar
 
@@ -34,7 +37,8 @@ backend/
 ├── api/index.js          → entrada da Vercel (serverless)
 ├── scripts/
 │   ├── atualizar-deputados.js → npm run atualizar-deputados (cópia de reserva)
-│   └── importar-deputados.js  → npm run importar (Câmara → Supabase)
+│   ├── importar-deputados.js  → npm run importar (Câmara e Senado → Supabase)
+│   └── importar-tse.js        → npm run importar-tse (eleitos do TSE → Supabase)
 ├── src/
 │   ├── app.js            → configura o Express (CORS, JSON, rotas, erros)
 │   ├── server.js         → sobe o servidor localmente
@@ -63,6 +67,26 @@ backend/
 ## Rotas
 
 Toda resposta com dados de político traz o bloco `fonte` (nome, URL oficial e data/hora da consulta).
+
+### `GET /api/health` e `GET /api/health/fontes`
+
+- `/api/health`: rápido, só diz que a API está no ar.
+- `/api/health/fontes` (J12): **check-up para abrir antes da apresentação**. Mostra se cada fonte
+  está funcionando, **sem nunca mostrar chaves**:
+
+| Campo | O que diz |
+|---|---|
+| `status` | `ok` (tudo certo), `parcial` (algo fora, mas o FatoBot ainda responde) ou `fora` (nenhuma fonte de deputados → HTTP `503`) |
+| `fontes.camara` | `ok` / `fora`, com o tempo de resposta |
+| `fontes.supabase` | `ok` / `vazio` / `fora` / `nao_configurado`, o total de deputados no banco e o **começo do endereço do projeto** (ex.: `mamsbc…`), para saber se é o banco de dev ou de produção |
+| `fontes.copiaReserva` | `ok` / `antiga` (mais de 7 dias) / `ausente`, com a data da coleta |
+| `fontes.gemini` | `configurado` / `sem_chave`, o modelo, o reserva e quanto da cota local já foi usado |
+
+Com `?ia=1`, também faz uma chamada mínima ao Gemini (gasta 1 da cota) e mostra `ok` ou o motivo da falha.
+O resultado fica em cache por 30s.
+
+**Checklist do dia:** abra `https://fato-real.vercel.app/api/health/fontes?ia=1` e confira se o
+`status` é `ok`, se o projeto do Supabase é o de **produção** e se a cópia de reserva não está `antiga`.
 
 ### `GET /api/deputados`
 
@@ -135,11 +159,39 @@ Sem essas variáveis, tudo continua funcionando direto pela Câmara.
 3. Rode:
 
 ```bash
-npm run importar -- 20   # teste rápido com 20 deputados
-npm run importar         # todos os deputados em exercício (~513, alguns minutos)
+npm run importar -- 20   # teste rápido com 20 deputados (+ senadores)
+npm run importar         # deputados (~513) e senadores (~81) em exercício
 ```
 
 Pode rodar de novo quando quiser: atualiza os dados e a data da coleta. O CPF não é salvo (LGPD).
+
+#### Importar os outros cargos (TSE): presidente, governadores, deputados estaduais, prefeitos e vereadores
+
+Fonte: arquivos oficiais "Candidatos" do Portal de Dados Abertos do TSE. Entram só os **eleitos**
+(eleição de 2022 para presidente, governador e deputado estadual; 2024 para prefeito e vereador).
+O FatoBot diz "foi eleito(a) em ...", porque o TSE não mostra quem está no cargo hoje.
+
+1. Uma vez por banco (dev e prod): rode `supabase/politicos-todos-os-cargos.sql` no SQL Editor.
+2. Baixe no navegador e extraia (botão direito → *Extrair tudo*):
+   - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2022.zip
+   - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2024.zip
+3. Rode, com o caminho das pastas extraídas:
+
+```bash
+npm run importar-tse -- C:\Users\voce\Downloads\consulta_cand_2022 C:\Users\voce\Downloads\consulta_cand_2024
+```
+
+São ~65 mil eleitos (só vereadores são ~58 mil). Não salva CPF, título, e-mail nem data de nascimento.
+
+### `GET /api/fontes` (catálogo de fontes oficiais)
+
+Lista as fontes oficiais do Fato Real (`src/data/fontes-oficiais.js`):
+
+- `tipo: "integrada"`: o FatoBot e o Fato ou Fake leem os dados e citam como evidência
+  (Câmara, Senado, TSE e Constituição).
+- `tipo: "consulta"`: só indicamos o link quando não há evidência (Portal da Transparência, TCU,
+  STF, CNJ, Diário Oficial, IBGE, Banco Central, Fato ou Boato do TSE, agências públicas...).
+  Aparecem no campo `onde_conferir` das respostas sem evidência. **Nunca** viram evidência.
 
 > ⚠️ A `service_role` ignora as regras de segurança do banco. Use **só** no seu computador,
 > para importar. **Nunca** na Vercel, no Angular ou no GitHub.
@@ -150,8 +202,18 @@ Corpo: `{ "pergunta": "Quem é Tabata Amaral?" }` (3 a 500 caracteres).
 
 Responde **somente com base em fontes oficiais** (RN02 e RN04), em duas etapas:
 
-1. **Busca de evidências:** identifica deputados citados pelo nome parlamentar completo e
-   transforma o perfil em fatos numerados, cada um com fonte e data.
+1. **Busca de evidências** (a mesma do `/api/verificar`), em três fontes:
+   - **deputados** citados pelo nome parlamentar completo → fatos do perfil, com fonte e data;
+   - **total de deputados** em exercício, quando a pergunta é "quantos deputados...";
+   - **Constituição Federal de 1988** (`src/data/base-conhecimento.js`, 24 fatos com o artigo):
+     busca por palavras-chave, até 3 fatos por pergunta. Ex.: "O que são os Três Poderes?",
+     "Como funciona uma PEC?", "Qual a idade mínima para ser senador?".
+
+   Se a Câmara estiver fora e sem cópia, uma pergunta sobre a Constituição ainda é respondida;
+   o `503` só acontece quando não há nenhuma evidência.
+
+   **Para ensinar algo novo ao FatoBot**, acrescente um item em `src/data/base-conhecimento.js`
+   (id, título, artigo, texto fiel à fonte e palavras-chave) e confira o texto no site do Planalto.
 2. **Síntese com o Gemini (IA):** o Gemini recebe **só** essas evidências e escreve uma resposta
    curta e neutra, citando cada fato como `[1]`, `[2]`... O número aponta para `evidencias[n-1]`.
 
@@ -196,8 +258,11 @@ Se a pergunta não cita nenhum deputado, o Gemini **nem é chamado**: a resposta
 Verifica uma afirmação e devolve um dos **5 estados** do Quadro 3 da documentação.
 É a rota usada pela tela **Verificar informação** do front.
 
-Aceita JSON `{ "afirmacao": "...", "link": "https://..." }` ou formulário (multipart)
-com `afirmacao`, `link` e até 5 `anexos` de no máximo 4 MB cada.
+Aceita JSON `{ "afirmacao": "...", "link": "https://...", "anexos": [{ "nome", "tipo", "tamanho" }] }`.
+**Recomendado (J13):** mandar só as *informações* dos anexos, e não os arquivos. Os anexos não são
+analisados nem guardados, e a Vercel recusa pedidos acima de ~4,5 MB (uma foto de celular ou um vídeo já passa disso).
+O formato antigo (formulário multipart com os arquivos) continua aceito; se os arquivos passarem
+do limite, o texto é verificado mesmo assim e a resposta avisa.
 
 ```json
 {
@@ -226,8 +291,38 @@ com `afirmacao`, `link` e até 5 `anexos` de no máximo 4 MB cada.
 Regras que **não dependem da IA**:
 - Sem citação válida, o sistema **nunca** confirma nem nega: vira "Evidência insuficiente".
 - O **link** enviado não é acessado nem usado como fonte.
-- Os **anexos** não são analisados nem guardados (mídia precisa de revisão humana). Na Vercel,
-  o pedido inteiro tem limite de ~4,5 MB.
+- Os **anexos** não são analisados nem guardados, e o aviso diz isso com clareza (sem prometer revisão
+  humana, que não existe no MVP). Anexo grande ou em excesso **nunca** impede a verificação do texto.
+
+### `GET /api/camara/<caminho>` (repasse para a Câmara)
+
+Às vezes a API da Câmara responde **sem o cabeçalho de CORS** em `/deputados/{id}` e
+`/deputados/{id}/historico`, e o navegador bloqueia a resposta. Quando o acesso direto falha,
+o front busca pela nossa API, que repassa o pedido:
+
+`GET /api/camara/deputados/221328?itens=5` → `https://dadosabertos.camara.leg.br/api/v2/deputados/221328?itens=5`,
+devolvendo **o mesmo corpo JSON e o mesmo status** da Câmara.
+
+- Só `GET`, só caminhos que começam com `deputados`, `proposicoes`, `votacoes` ou `eventos`, com
+  pedaços de letras, números e hífen (os ids de votação têm hífen). Outro caminho → `400`.
+- A query string vai como veio. Respostas 200 ficam 10 min no cache (`Cache-Control: public, max-age=600`).
+- Câmara fora do ar, lenta (mais de 8 s) ou respondendo HTML → `502`.
+- Limite por IP **próprio** (120/min, `LIMITE_CAMARA_POR_IP_MIN`), separado do FatoBot.
+
+### `POST /api/traduzir`
+
+"Tradutor de juridiquês": explica a ementa de um projeto de lei em linguagem simples. É chamado pelo
+botão **Explicar** dos projetos no front (`frontend/src/app/core/tradutor.ts`).
+
+Corpo: `{ "texto": "<ementa>" }` (10 a 2000 caracteres) → `{ "explicacao", "fonte", "aviso" }`.
+
+A única fonte é o próprio texto. Travas que **não dependem da IA** (se alguma falhar, responde `503`
+e o front usa as regras locais dele, que trocam palavras difíceis por simples):
+- todo número da explicação precisa existir no texto original (ex.: `8.069/1990` passa se a ementa
+  cita "Lei nº 8.069, de ... de 1990"; uma multa de "500 reais" que não está no texto, não);
+- nada de opinião ou recomendação que não esteja no texto ("deveria", "ótimo", "vote"...);
+- curta (até 600 caracteres) e nunca muito maior que o original;
+- `<` e `>` são tirados do texto, e a mesma ementa fica em cache por 24h (não gasta cota de novo).
 
 ### `GET /api/cep/:cep`
 
@@ -256,6 +351,19 @@ Devolve `{ "url": "https://wa.me/55...?text=..." }`: o front só abre essa URL (
 - O número fica em `WHATSAPP_NUMERO` (no `.env` e na Vercel), com código do país e DDD.
   Sem ele, a rota responde `503`.
 - **Nada é guardado** (LGPD): os dados só vão na mensagem que a própria pessoa envia.
+
+### Limites de uso (J10)
+
+Duas camadas, para proteger a cota grátis do Gemini **sem bloquear uma sala de aula**
+(numa rede como a do Senac, todos os alunos saem pelo mesmo IP):
+
+| Camada | Padrão | Ao passar do limite | Variável |
+|---|---|---|---|
+| Por IP, contra abuso (`/api/fatobot` e `/api/verificar`) | 60 pedidos/min | `429` *"Muitas perguntas em pouco tempo..."* com `Retry-After` | `LIMITE_POR_IP_MIN` |
+| Cota da IA, para o servidor todo | 14 chamadas/min e 450/dia (abaixo dos 15/min e 500/dia do plano grátis) | **Não recusa**: responde só com as fontes, `motivo_sem_ia: "limite_local"` | `LIMITE_IA_POR_MIN`, `LIMITE_IA_POR_DIA` |
+
+Os contadores ficam em memória (na Vercel, cada instância conta separado). Baseado no limitador por IP
+do Matheus (`backup/matheus-2026-11-17`).
 
 ### Para outras rotas usarem o Gemini: `gerarJson`
 

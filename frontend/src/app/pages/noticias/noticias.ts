@@ -132,7 +132,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
           @if (item.tipo === 'checagem') {
             <article class="nt-post nt-post-checagem">
               <header class="nt-post-topo">
-                <img src="img/fatobot-rosto.svg" alt="" class="nt-post-av" />
+                <img src="img/fatobot-rosto.webp" alt="" class="nt-post-av" />
                 <span><strong>Fato Real <app-icone nome="verified" class="nt-post-selo" /></strong><small>Checagem · fato ou fake?</small></span>
               </header>
               <p class="nt-checagem-frase">“{{ item.a.texto }}”</p>

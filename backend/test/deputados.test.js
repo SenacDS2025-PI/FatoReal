@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
 import { _resetPausa } from '../src/services/camara.js';
+import { _zerarLimites } from '../src/utils/limite.js';
 
 // Respostas falsas da Câmara, para os testes não dependerem da internet.
 const LISTA = {
@@ -30,6 +31,7 @@ let base;
 beforeEach(() => {
   clearCache();
   _resetPausa();
+  _zerarLimites();
   originalFetch = globalThis.fetch;
   server = app.listen(0);
   base = `http://localhost:${server.address().port}`;

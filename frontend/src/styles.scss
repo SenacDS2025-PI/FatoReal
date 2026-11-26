@@ -1756,6 +1756,15 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
   button { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border: 0; border-radius: 8px; background: none; color: var(--texto-suave); font: inherit; font-size: 0.8rem; cursor: pointer; text-align: left;
     .icone { font-size: 1.05rem; color: var(--texto-suave); } em { margin-left: auto; font-style: normal; font-size: 0.68rem; background: var(--superficie); border: 1px solid var(--borda); padding: 1px 7px; border-radius: 9px; white-space: nowrap; }
     &:hover { background: var(--superficie); color: var(--texto); } &[aria-selected='true'] { color: var(--link); font-weight: 700; .icone { color: var(--link); } } } }
+.pol-outros { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 4px; > strong { grid-column: 1 / -1; } }
+/* Prefeitos, vices e vereadores: escolher estado e cidade antes de buscar */
+.pol-local { margin-bottom: 18px;
+  .ps-titulo { margin: 0 0 4px; } }
+.pol-local-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 12px; }
+.pol-local-campos { display: grid; gap: 4px;
+  select, input { width: 100%; } .pol-chip { justify-self: start; margin-top: 4px; } }
+.pol-local-linha { display: flex; gap: 8px; input { flex: 1; min-width: 0; } .botao { flex: none; } }
+@media (max-width: 860px) { .pol-local-layout { grid-template-columns: 1fr; } }
 .pol-explore { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
 .pol-explore-card { position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; padding: 0 0 14px; border-radius: 18px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); text-decoration: none; box-shadow: var(--sombra); transition: border-color 0.15s, transform 0.15s;
   img { grid-column: 1 / -1; width: 100%; margin: 0 0 8px; height: 92px; object-fit: cover; display: block; }
@@ -2259,3 +2268,38 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 .marca:hover img { transform: rotate(-4deg) scale(1.05); }
 
 /* O visual E + C (src/tema-ec.scss) entra depois deste arquivo: veja "styles" no angular.json. */
+
+/* FatoBot novo (arte 3D em webp): nunca distorcer, seja qual for a caixa */
+img[src*="img/fatobot"] { object-fit: contain; }
+
+/* ===== FatoBot vivo (app-fatobot-vivo): corpo inteiro animado ===== */
+.bot-vivo { position: relative; display: inline-grid; place-items: end center; height: var(--bot-alt, 170px); aspect-ratio: 496 / 720; }
+.bot-corpo { position: relative; display: block; height: 100%; transform-origin: 50% 100%; animation: bot-respira 4.2s ease-in-out infinite;
+  img { display: block; height: 100%; width: auto; filter: drop-shadow(0 10px 14px rgba(0,0,0,.28)); } }
+/* olho esquerdo: uma "pálpebra" escura que fecha rapidinho de tempos em tempos */
+.bot-olho { position: absolute; left: 42%; top: 17.9%; width: 9.4%; height: 9.6%; border-radius: 50%; background: #020604;
+  transform: scaleY(0); transform-origin: 50% 50%; animation: bot-pisca 5.5s ease-in-out infinite; }
+/* lente da lupa: um reflexo de luz atravessa o vidro */
+.bot-lente { position: absolute; left: 16.4%; top: 16%; width: 22.6%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; }
+.bot-brilho { position: absolute; inset: -20% auto -20% -60%; width: 35%; transform: rotate(25deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); animation: bot-brilho 3.6s ease-in-out infinite; }
+.bot-sombra { position: absolute; bottom: -4px; left: 50%; width: 62%; height: 9%; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.35), transparent 70%);
+  transform: translateX(-50%); animation: bot-sombra 4.2s ease-in-out infinite; }
+@keyframes bot-respira {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg) scale(1); }
+  25% { transform: translateY(-6px) rotate(0deg) scale(1.01, .995); }
+  50% { transform: translateY(-10px) rotate(1.8deg) scale(1); }
+  75% { transform: translateY(-5px) rotate(.4deg) scale(.995, 1.01); } }
+@keyframes bot-sombra { 0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; } 50% { transform: translateX(-50%) scale(.82); opacity: .6; } }
+@keyframes bot-pisca { 0%, 90%, 100% { transform: scaleY(0); } 93%, 95% { transform: scaleY(1); } }
+@keyframes bot-brilho { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+@media (prefers-reduced-motion: reduce) { .bot-corpo, .bot-olho, .bot-brilho, .bot-sombra { animation: none !important; } }
+
+/* FatoBot sentado na poltrona (Fato ou Fake): gira de leve na poltrona, como quem pensa */
+.bot-poltrona { transform-origin: 46% 96%; animation: bot-poltrona 5s ease-in-out infinite; filter: drop-shadow(0 10px 14px rgba(0,0,0,.3)); }
+@keyframes bot-poltrona {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  30% { transform: rotate(1.5deg) translateY(-2px); }
+  55% { transform: rotate(2.5deg) translateY(0); }
+  80% { transform: rotate(-.5deg) translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .bot-poltrona { animation: none; } }

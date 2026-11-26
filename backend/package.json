@@ -10,7 +10,9 @@
     "start": "node --env-file-if-exists=.env src/server.js",
     "test": "node --test",
     "importar": "node --env-file-if-exists=.env scripts/importar-deputados.js",
-    "atualizar-deputados": "node scripts/atualizar-deputados.js"
+    "importar-tse": "node --env-file-if-exists=.env scripts/importar-tse.js",
+    "atualizar-deputados": "node scripts/atualizar-deputados.js",
+    "conferir": "node scripts/conferir.js"
   },
   "engines": {
     "node": ">=20"

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { responder } from '../services/fatobot.js';
+import { limitarPorIp } from '../utils/limite.js';
 
 const router = Router();
 
@@ -7,7 +8,7 @@ const MIN = 3;
 const MAX = 500;
 
 // POST /api/fatobot   body: { "pergunta": "Quem é Tabata Amaral?" }
-router.post('/', async (req, res, next) => {
+router.post('/', limitarPorIp, async (req, res, next) => {
   try {
     const pergunta = typeof req.body?.pergunta === 'string' ? req.body.pergunta.trim() : '';
     if (pergunta.length < MIN || pergunta.length > MAX) {

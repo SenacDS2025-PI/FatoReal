@@ -3,11 +3,11 @@
 
 <!-- ===== Cabeçalho com busca em destaque ===== -->
 <section class="pol-topo">
-  <img class="pol-fatobot" src="img/fatobot.svg" alt="" />
+  <img class="pol-fatobot" src="img/fatobot.webp" alt="" />
   <div class="pol-titulo">
     <p class="sobretitulo">Políticos</p>
     <h1>Conheça quem representa você</h1>
-    <p class="pol-confianca"><app-icone nome="verified_user" /> Dados oficiais da Câmara dos Deputados e do Senado Federal · cada informação com a fonte e a data da consulta</p>
+    <p class="pol-confianca"><app-icone nome="verified_user" /> Dados oficiais da Câmara, do Senado e do TSE · cada informação com a fonte e a data da consulta</p>
   </div>
 
   <form class="pol-busca" role="search" (submit)="$event.preventDefault(); focoBusca.set(false)">
@@ -24,7 +24,7 @@
         @for (p of sugestoes(); track p.id) {
           <li role="option"><a [routerLink]="linkPerfil(p)" (mousedown)="$event.preventDefault()" (click)="focoBusca.set(false)">
             <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="36" />
-            <span><strong>{{ p.nome }}</strong><small>{{ p.partido }} · {{ p.uf }} · {{ p.cargo || cargo() }}</small></span>
+            <span><strong>{{ p.nome }}</strong><small>{{ p.partido }} · {{ local(p) }} · {{ p.cargo || cargo() }}</small></span>
             <app-icone nome="north_east" />
           </a></li>
         }
@@ -38,11 +38,11 @@
       <div class="pol-painel-grupo">
         <span class="pol-painel-rotulo"><app-icone nome="location_on" /> Estado</span>
         <div class="pol-painel-linha">
-          <select [ngModel]="uf()" (ngModelChange)="uf.set($event); mudouFiltro()" aria-label="Estado">
+          <select [ngModel]="uf()" (ngModelChange)="escolherEstado($event)" aria-label="Estado">
             <option value="">Todos os estados</option>
             @for (u of ufs; track u) { <option [value]="u">{{ u }} · {{ nomeEstado(u) }}</option> }
           </select>
-          @if (meuEstado() && uf() !== meuEstado()) { <button type="button" class="pol-chip" (click)="uf.set(meuEstado()); mudouFiltro()"><app-icone nome="my_location" /> Meu estado ({{ meuEstado() }})</button> }
+          @if (meuEstado() && uf() !== meuEstado()) { <button type="button" class="pol-chip" (click)="escolherEstado(meuEstado())"><app-icone nome="my_location" /> Meu estado ({{ meuEstado() }})</button> }
         </div>
       </div>
       <div class="pol-painel-grupo">
@@ -70,7 +70,7 @@
         <span class="pol-painel-rotulo"><app-icone nome="visibility" /> Ver como</span>
         <div class="pol-painel-linha pol-chips">
           <button type="button" class="pol-chip" [attr.aria-pressed]="visao() === 'lista'" (click)="visao.set('lista')"><app-icone nome="grid_view" /> Lista</button>
-          <button type="button" class="pol-chip" [attr.aria-pressed]="visao() === 'mapa'" (click)="visao.set('mapa')" [disabled]="semFonte()"><app-icone nome="map" /> Mapa do Brasil</button>
+          <button type="button" class="pol-chip" [attr.aria-pressed]="visao() === 'mapa'" (click)="visao.set('mapa')" [disabled]="semFonte() || municipal()"><app-icone nome="map" /> Mapa do Brasil</button>
         </div>
       </div>
       <footer class="pol-painel-rodape">
@@ -115,8 +115,45 @@
   }
 </section>
 
+<!-- ===== Prefeitos, vices e vereadores: escolher estado e cidade antes de buscar ===== -->
+@if (municipal() && !semFonte()) {
+  <section class="card pol-local" aria-labelledby="pol-local-titulo">
+    <h2 id="pol-local-titulo" class="ps-titulo"><span class="ps-icone"><app-icone nome="location_on" /></span> Onde? Escolha o estado{{ precisaCidade() ? ' e a cidade' : '' }}</h2>
+    <p class="texto-p">São milhares de {{ rotuloCargo().toLowerCase() }} no Brasil. Escolha o estado no mapa ou na lista{{ precisaCidade() ? ' e depois digite a cidade' : ' e, se quiser, a cidade' }}.</p>
+    <div class="pol-local-layout">
+      <div class="pol-local-mapa">
+        <app-mapa-estados [selecionado]="uf()" [destaque]="meuEstado()" (escolher)="escolherEstado($event)" />
+        <small class="gst-credito">Mapa: SVG Maps (CC BY 4.0)</small>
+      </div>
+      <div class="pol-local-campos">
+        <div class="campo-form">
+          <label for="pol-local-uf">1. Estado</label>
+          <select id="pol-local-uf" [ngModel]="uf()" (ngModelChange)="escolherEstado($event)">
+            <option value="">Escolha o estado</option>
+            @for (u of ufs; track u) { <option [value]="u">{{ u }} · {{ nomeEstado(u) }}</option> }
+          </select>
+          @if (meuEstado() && uf() !== meuEstado()) { <button type="button" class="pol-chip" (click)="escolherEstado(meuEstado())"><app-icone nome="my_location" /> Meu estado ({{ meuEstado() }})</button> }
+        </div>
+        <form class="campo-form" (submit)="$event.preventDefault(); mudouFiltro()">
+          <label for="pol-local-cidade">2. Cidade{{ precisaCidade() ? '' : ' (opcional)' }}</label>
+          <div class="pol-local-linha">
+            <input id="pol-local-cidade" name="cidade" type="search" list="pol-local-cidades" autocomplete="off" [disabled]="!uf()"
+              [placeholder]="uf() ? (carregandoCidades() ? 'Carregando as cidades...' : 'Digite o nome da cidade') : 'Escolha o estado primeiro'"
+              [ngModel]="cidade()" (ngModelChange)="digitouCidade($event)" />
+            <button type="submit" class="botao botao-p" [disabled]="!uf()"><app-icone nome="search" /> Buscar</button>
+          </div>
+          <datalist id="pol-local-cidades">
+            @for (c of cidades(); track c.busca) { <option [value]="c.nome"></option> }
+          </datalist>
+        </form>
+        <p class="texto-p"><app-icone nome="info" /> Dados do TSE: mostram quem <strong>foi eleito</strong> na última eleição, não quem está no cargo hoje (pode ter havido renúncia, cassação ou posse do vice).</p>
+      </div>
+    </div>
+  </section>
+}
+
 <!-- ===== Filtros ativos + contagem ===== -->
-@if (!semFonte()) {
+@if (!semFonte() && !faltaLocal()) {
   <div class="pol-resultados-topo">
     <p class="pol-contagem" aria-live="polite">
       @if (carregando()) { Carregando a lista... }
@@ -124,7 +161,8 @@
     </p>
     <div class="pol-ativos">
       @if (termo()) { <button type="button" class="pol-ativo" (click)="termo.set(''); mudouFiltro()">“{{ termo() }}” <app-icone nome="close" /></button> }
-      @if (uf()) { <button type="button" class="pol-ativo" (click)="uf.set(''); mudouFiltro()">{{ nomeEstado(uf()) }} <app-icone nome="close" /></button> }
+      @if (uf()) { <button type="button" class="pol-ativo" (click)="escolherEstado('')">{{ nomeEstado(uf()) }} <app-icone nome="close" /></button> }
+      @if (municipal() && cidade()) { <button type="button" class="pol-ativo" (click)="digitouCidade('')">{{ cidade() }} <app-icone nome="close" /></button> }
       @if (partido()) { <button type="button" class="pol-ativo" (click)="partido.set(''); mudouFiltro()">{{ partido() }} <app-icone nome="close" /></button> }
       @if (letra()) { <button type="button" class="pol-ativo" (click)="letra.set(''); mudouFiltro()">Letra {{ letra() }} <app-icone nome="close" /></button> }
       @if (ordem() !== 'az') { <button type="button" class="pol-ativo" (click)="ordenar('az')">Ordem: {{ ordem() === 'za' ? 'Z–A' : ordem() === 'partido' ? 'partido' : 'estado' }} <app-icone nome="close" /></button> }
@@ -133,12 +171,12 @@
   </div>
 }
 
-@if (!semFonte() && visao() === 'mapa') {
+@if (!semFonte() && !municipal() && visao() === 'mapa') {
   <section class="card mapa-card">
     <div class="mapa-layout">
       <div>
         <h2 class="titulo-secao">{{ rotuloCargo() }} por estado</h2>
-        <p class="texto-p">Toque em um estado. Cada cor é uma região; passe o mouse para ver quantos {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados' }} ele tem.</p>
+        <p class="texto-p">Toque em um estado. Cada cor é uma região; passe o mouse para ver quantos {{ rotuloCargo().toLowerCase() }} ele tem.</p>
         <app-mapa-estados [selecionado]="uf()" [destaque]="meuEstado()" [textos]="textosMapa()" (escolher)="escolherNoMapa($event)" />
         <small class="gst-credito">Mapa: SVG Maps (CC BY 4.0)</small>
       </div>
@@ -146,7 +184,7 @@
         @if (uf()) {
           <p class="sobretitulo">{{ uf() }}</p>
           <h3>{{ nomeEstado(uf()) }}</h3>
-          <p class="mapa-numero"><strong>{{ porEstado()[uf()] || 0 }}</strong> {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados federais' }}</p>
+          <p class="mapa-numero"><strong>{{ porEstado()[uf()] || 0 }}</strong> {{ rotuloCargo().toLowerCase() }}</p>
           @if (partidosDoEstado().length) {
             <ul class="mapa-partidos">
               @for (pp of partidosDoEstado().slice(0, 6); track pp[0]) {
@@ -170,11 +208,13 @@
 @if (semFonte()) {
   <div class="card vazio aviso-cargo">
     <app-icone nome="database" />
-    <strong>{{ rotuloCargo() }}: dados ainda não importados</strong>
-    <span>Não existe uma API pública que o site consiga consultar direto para este cargo. A lista entra quando a equipe importar os dados oficiais do TSE para o banco (tabela <code>politicos</code>, coluna <code>cargo</code>).</span>
+    <strong>{{ rotuloCargo() }}: sem dados por enquanto</strong>
+    <span>Este cargo vem dos dados oficiais do TSE, que ficam no banco do site. Nesta versão de demonstração (sem banco) não há nomes para mostrar, e o Fato Real não inventa dados.</span>
     <a class="botao botao-fantasma" href="https://divulgacandcontas.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Consultar no TSE (DivulgaCandContas)</a>
   </div>
-} @else if (visao() === 'lista') {
+} @else if (faltaLocal()) {
+  <!-- Prefeitos/vereadores: a lista aparece depois de escolher estado/cidade no cartão "Onde?" -->
+} @else if (visao() === 'lista' || municipal()) {
   @if (carregando()) {
     <ul class="grade-politicos pol-grade">
       @for (e of esqueletos; track $index) {
@@ -196,8 +236,8 @@
               <app-avatar class="avatar-oficial pol-foto" [nome]="p.nome" [url]="p.foto_url" [tamanho]="62" />
               <span class="card-politico-texto">
                 <strong>{{ p.nome }}</strong>
-                <span class="pol-card-meta"><span class="pol-sigla">{{ p.partido || 'S/P' }}</span> {{ p.uf ? nomeEstado(p.uf) : 'UF n/d' }}</span>
-                <small>{{ p.cargo || cargo() }}</small>
+                <span class="pol-card-meta"><span class="pol-sigla">{{ p.partido || 'S/P' }}</span> {{ local(p) }}</span>
+                <small>{{ p.cargo || cargo() }}@if (p.casa === 'tse') { · {{ eleicao(p) }} }</small>
                 @if (totalRegistros(p); as n) {
                   <span class="etiqueta-polemica"><app-icone nome="report" /> {{ n }} {{ n === 1 ? 'registro' : 'registros' }} de polêmica</span>
                 }
@@ -209,11 +249,18 @@
       </ul>
     </section>
   } @empty {
-    @if (!carregando() && !erro()) {
+    @if (!carregando() && !erro() && !temFiltro() && !todos().length && !municipal()) {
+      <div class="card vazio">
+        <app-icone nome="database" />
+        <strong>{{ rotuloCargo() }}: sem dados por enquanto</strong>
+        <span>Os nomes deste cargo ainda não foram importados do TSE para o banco. O Fato Real não inventa dados.</span>
+        <a class="botao botao-fantasma" href="https://divulgacandcontas.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Consultar no TSE (DivulgaCandContas)</a>
+      </div>
+    } @else if (!carregando() && !erro()) {
       <div class="card vazio">
         <app-icone nome="person_search" />
         <strong>Ninguém encontrado</strong>
-        <span>Confira a grafia do nome ou remova algum filtro.</span>
+        <span>@if (municipal() && cidade()) { Confira o nome da cidade (escolha uma da lista) ou o estado. } @else { Confira a grafia do nome ou remova algum filtro. }</span>
         @if (temFiltro()) { <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar filtros</button> }
       </div>
     }
@@ -226,5 +273,5 @@
   }
 }
 
-<p class="nota-fontes"><app-icone nome="verified" /> Fotos oficiais da Câmara dos Deputados e do Senado Federal. Deputados federais: API de Dados Abertos da Câmara. Senadores: Dados Abertos do Senado Federal. Os demais cargos entram com os dados oficiais do TSE.</p>
+<p class="nota-fontes"><app-icone nome="verified" /> Fotos oficiais da Câmara, do Senado e do TSE. Deputados federais: API de Dados Abertos da Câmara. Senadores: Dados Abertos do Senado Federal. Demais cargos: <a href="https://dadosabertos.tse.jus.br/" target="_blank" rel="noopener noreferrer">dados abertos do TSE</a> (quem foi eleito, não necessariamente quem está no cargo hoje).</p>
 </div>

@@ -50,8 +50,11 @@ export class PerfilPage {
   protected readonly nomeSalvo: Record<TipoFavorito, string> = { politico: 'Político', projeto: 'Projeto', noticia: 'Notícia', publicacao: 'Publicação', comunidade: 'Comunidade' };
   /** Rota interna do item salvo (político e comunidade abrem dentro do site). */
   protected rotaSalvo(f: Favorito): (string | number)[] | null {
-    // Favorito de senador é salvo como "senado-<id>" (formato antigo, mantido)
-    if (f.tipo === 'politico') return f.ref_id.startsWith('senado-') ? rotaPolitico({ id: f.ref_id.slice(7), casa: 'senado' }) : rotaPolitico({ id: f.ref_id });
+    if (f.tipo === 'politico') {
+      // Favoritos salvos como "tse-<id>" e "senado-<id>" (formato antigo, mantido); o resto é deputado
+      if (f.ref_id.startsWith('tse-')) return rotaPolitico({ id: f.ref_id.slice(4), casa: 'tse' });
+      return f.ref_id.startsWith('senado-') ? rotaPolitico({ id: f.ref_id.slice(7), casa: 'senado' }) : rotaPolitico({ id: f.ref_id });
+    }
     if (f.tipo === 'comunidade') return ['/comunidades', f.ref_id];
     return null;
   }

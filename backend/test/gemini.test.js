@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
 import { _resetPausa } from '../src/services/camara.js';
+import { _zerarLimites } from '../src/utils/limite.js';
 import { _setClient, citacoesValidas } from '../src/services/gemini.js';
 
 const LISTA = {
@@ -41,6 +42,7 @@ const texto = (t) => ({ text: t });
 beforeEach(() => {
   clearCache();
   _resetPausa();
+  _zerarLimites();
   originalFetch = globalThis.fetch;
   globalThis.fetch = mock.fn(async (url, opts) => {
     const u = String(url);

@@ -10,7 +10,11 @@
 // o FatoBot responde no modo "somente_fontes": só a lista de fatos, sem IA.
 import { listarDeputados, obterDeputado } from './camara.js';
 import { sintetizarComIA } from './gemini.js';
+import { buscarNaBase, evidenciasDaBase, fontesDaBase } from './base.js';
 import { normalizar } from '../utils/texto.js';
+import { citadosNaPergunta, sugestoesDeNome } from '../utils/nomes.js';
+import { evidenciasDeOutrosPoliticos } from './outros-politicos.js';
+import { sugerirFontes } from '../data/fontes-oficiais.js';
 
 export const AVISO =
   'O FatoBot pode errar. Confira sempre as fontes oficiais. ' +
@@ -20,15 +24,12 @@ const MAX_DEPUTADOS_POR_PERGUNTA = 3;
 
 // Etapa 2a: descobre quais deputados a pergunta cita (pelo nome parlamentar completo).
 export async function identificarDeputados(pergunta) {
-  const texto = ` ${normalizar(pergunta).replace(/[^a-z0-9]+/g, ' ')} `;
   const { dados } = await listarDeputados();
+  return deputadosCitados(pergunta, dados);
+}
 
-  return dados
-    .filter((d) => {
-      const nome = normalizar(d.nome).replace(/[^a-z0-9]+/g, ' ').trim();
-      return nome.includes(' ') && texto.includes(` ${nome} `);
-    })
-    .slice(0, MAX_DEPUTADOS_POR_PERGUNTA);
+function deputadosCitados(pergunta, dados) {
+  return citadosNaPergunta(pergunta, dados, MAX_DEPUTADOS_POR_PERGUNTA);
 }
 
 function formatarData(iso) {
@@ -87,34 +88,113 @@ export const SEM_EVIDENCIA_TEXTO = 'Não encontrei evidência para isso.';
 // J7 — por que a resposta veio sem IA, em linguagem simples.
 const EXPLICACAO_SEM_IA = {
   cota_esgotada: 'A IA atingiu o limite de uso gratuito por agora, então mostro só os fatos das fontes oficiais:',
+  limite_local: 'A IA atingiu o limite de uso por agora, então mostro só os fatos das fontes oficiais:',
   sobrecarregado: 'A IA está sobrecarregada agora, então mostro só os fatos das fontes oficiais:',
   tempo_esgotado: 'A IA demorou demais para responder, então mostro só os fatos das fontes oficiais:',
 };
 const EXPLICACAO_PADRAO = 'Encontrei estas informações nas fontes oficiais:';
 
+// J11 — "Quantos deputados existem?": o número vem da lista oficial, não de memória.
+const PERGUNTA_TOTAL = /\b(quantos|numero de|total de|quantidade de) deputad/;
+
+// Etapas 2 e 3 completas: deputados citados + total de deputados + outros políticos
+// (senadores, presidente, governadores, prefeitos e vereadores) + Constituição.
+// Se a Câmara estiver fora e sem cópia, a pergunta ainda pode ser respondida pelas outras
+// fontes; só falha (503) se não houver NENHUMA evidência.
+export async function buscarEvidencias(texto) {
+  const itensBase = buscarNaBase(texto);
+  const outros = evidenciasDeOutrosPoliticos(texto); // roda junto com a Câmara
+  const evidencias = [];
+  const fontes = [];
+  let erroCamara = null;
+  let deputadosDaLista = [];
+
+  try {
+    const lista = await listarDeputados();
+    deputadosDaLista = lista.dados;
+    const deputados = deputadosCitados(texto, lista.dados);
+    if (deputados.length) {
+      const dep = await evidenciasDosDeputados(deputados);
+      evidencias.push(...dep.evidencias);
+      fontes.push(...dep.fontes);
+    }
+    if (PERGUNTA_TOTAL.test(normalizar(texto))) {
+      const { fonte } = lista;
+      evidencias.push({
+        texto: `Há ${lista.dados.length} deputados federais em exercício.`,
+        fonte: fonte.nome,
+        url: fonte.url,
+        consultadoEm: fonte.consultadoEm,
+      });
+      fontes.push({ titulo: `${fonte.nome}: deputados em exercício`, url: fonte.url, data: fonte.consultadoEm });
+    }
+  } catch (err) {
+    erroCamara = err;
+  }
+
+  const op = await outros;
+  evidencias.push(...op.evidencias);
+  fontes.push(...op.fontes);
+
+  if (erroCamara) {
+    if (itensBase.length === 0 && op.evidencias.length === 0) throw erroCamara;
+    console.warn(`FatoBot: sem dados da Câmara agora (${erroCamara.message}); usando as outras fontes.`);
+  }
+
+  evidencias.push(...evidenciasDaBase(itensBase));
+  fontes.push(...fontesDaBase(itensBase));
+  // Nada pelo nome completo: procura pelo sobrenome só para sugerir ("Você quis dizer...?").
+  const sugestoes = evidencias.length
+    ? []
+    : sugestoesDeNome(texto, [...deputadosDaLista.map((d) => ({ ...d, cargo: 'Deputado(a) Federal' })), ...op.candidatos]).map(
+        (p) => ({ nome: p.nome, descricao: [p.cargo, p.partido && p.uf ? `${p.partido}-${p.uf}` : p.partido].filter(Boolean).join(', ') })
+      );
+  return { evidencias, fontes, sugestoes };
+}
+
+// "Você quis dizer: Fulano (Senador(a), PL-RJ) ou Beltrano (...)? Pergunte com o nome completo..."
+export function textoVoceQuisDizer(sugestoes) {
+  if (!sugestoes?.length) return '';
+  const lista = sugestoes.map((s) => (s.descricao ? `${s.nome} (${s.descricao})` : s.nome)).join('; ');
+  return ` Não encontrei esse nome completo. Você quis dizer: ${lista}? Pergunte com o nome completo, ex.: "Quem é ${sugestoes[0].nome}?".`;
+}
+
+export const TEXTO_SEM_EVIDENCIA =
+  'Não encontrei evidência nas fontes oficiais que consulto para responder a essa pergunta. ' +
+  'Consigo responder sobre deputados federais e senadores em exercício, presidente, governadores, ' +
+  'prefeitos e vereadores eleitos (ex.: "Quem é Tabata Amaral?", "Quem é o prefeito de Campinas?", ' +
+  '"Quem são os senadores de Minas Gerais?") e sobre regras básicas da Constituição ' +
+  '(ex.: "O que são os Três Poderes?").';
+
+// "Você pode conferir em: Portal da Transparência (https://...), TCU (https://...)."
+export function textoOndeConferir(sugestoes) {
+  if (!sugestoes.length) return '';
+  return ` Você pode conferir em: ${sugestoes.map((f) => `${f.nome} (${f.url})`).join('; ')}.`;
+}
+
 export async function responder(pergunta) {
   const prazo = Date.now() + LIMITES_FATOBOT.totalMs;
-  const deputados = await identificarDeputados(pergunta);
+  const { evidencias, fontes, sugestoes: quisDizer } = await buscarEvidencias(pergunta);
 
-  // Sem documento relacionado → declara incerteza em vez de especular (RN04).
-  if (deputados.length === 0) {
+  // Sem documento relacionado → declara incerteza em vez de especular (RN04)
+  // e indica onde a pessoa pode conferir (links oficiais, NÃO usados como evidência).
+  if (evidencias.length === 0) {
+    const sugestoes = sugerirFontes(pergunta);
     return {
       pergunta,
       tipo: 'sem_evidencia',
       modo: 'somente_fontes',
-      resposta:
-        'Não encontrei evidência nas fontes oficiais que consulto para responder a essa pergunta. ' +
-        'Por enquanto consigo responder sobre deputados federais em exercício: ' +
-        'tente incluir o nome parlamentar completo (ex.: "Quem é Tabata Amaral?").',
+      resposta: TEXTO_SEM_EVIDENCIA + textoVoceQuisDizer(quisDizer) + textoOndeConferir(sugestoes),
+      voce_quis_dizer: quisDizer,
       evidencias: [],
       fontes: [],
+      onde_conferir: sugestoes,
       consultado_em: new Date().toISOString(),
       sem_evidencia: true,
       aviso: AVISO,
     };
   }
 
-  const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
   const ia = await sintetizarComIA(pergunta, evidencias, { prazo });
   const base = { pergunta, evidencias, consultado_em: new Date().toISOString(), aviso: AVISO };
 

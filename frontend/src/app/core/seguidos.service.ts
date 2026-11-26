@@ -4,7 +4,7 @@ import { Politico } from './modelos';
 /** Político que a pessoa segue (fica salvo neste navegador). */
 export interface Seguido {
   id: number;
-  casa: 'camara' | 'senado' | 'outro';
+  casa: 'camara' | 'senado' | 'tse';
   nome: string;
   foto_url?: string | null;
   partido?: string | null;

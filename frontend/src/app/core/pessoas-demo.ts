@@ -104,7 +104,7 @@ export const MEMES_EXEMPLO: {
   checagem?: { afirmacao: string; estado: string; resumo: string; fonte: { titulo: string; url: string } };
 }[] = [
   {
-    autor: 'ex-fernanda', comunidade: 'checagem-de-fatos', horas: 0.6, imagem: 'img/fatobot.svg',
+    autor: 'ex-fernanda', comunidade: 'checagem-de-fatos', horas: 0.6, imagem: 'img/fatobot.webp',
     meme: { topo: 'Quando chega corrente no zap', base: 'Eu: qual é a fonte?' },
     texto: 'Todo grupo da família tem um 😂 #ConfereAntesDeCompartilhar',
   },

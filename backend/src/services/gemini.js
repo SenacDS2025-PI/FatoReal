@@ -4,6 +4,7 @@
 // Sem chave ou com o Gemini fora, o FatoBot responde no modo "somente_fontes".
 import { GoogleGenAI, ApiError } from '@google/genai';
 import { comPrazo } from '../utils/prazo.js';
+import { usarCotaIa } from '../utils/limite.js';
 
 // J7 — modelo padrão. Segundo a tabela do plano gratuito usada pelo grupo, o 3.5 Flash-Lite
 // permite 15 pedidos/min e 500/dia, e o 3.8 Flash só 20/dia (confira os limites atuais no
@@ -45,6 +46,7 @@ export function iaConfigurada() {
 }
 
 class TempoEsgotadoError extends Error {}
+class LimiteLocalError extends Error {} // J10: cota local da IA acabou
 
 // Modelo principal e, se configurado, um reserva para quando o principal estiver
 // sobrecarregado (503), sem cota (429) ou lento demais.
@@ -66,6 +68,11 @@ async function gerar(params, prazo) {
       throw ultimoErro ?? new TempoEsgotadoError('sem tempo para chamar o Gemini');
     }
     const timeout = Math.min(LIMITES_IA.porModeloMs, restante);
+    if (!usarCotaIa()) {
+      const err = new LimiteLocalError('cota local da IA esgotada (LIMITE_IA_POR_MIN / LIMITE_IA_POR_DIA)');
+      logarErro(err, lista[i]);
+      throw err;
+    }
     try {
       const chamada = getClient().models.generateContent({
         ...params,
@@ -96,6 +103,7 @@ async function gerar(params, prazo) {
 // J7 — motivo legível de por que a IA não respondeu.
 function motivoDoErro(err) {
   if (err instanceof TempoEsgotadoError) return 'tempo_esgotado';
+  if (err instanceof LimiteLocalError) return 'limite_local';
   if (err instanceof ApiError) {
     if (err.status === 429) return 'cota_esgotada';
     if (err.status === 500 || err.status === 503) return 'sobrecarregado';
@@ -107,7 +115,9 @@ function motivoDoErro(err) {
 function logarErro(err, modelo = '') {
   const m = modelo ? ` (${modelo})` : '';
   const motivo = motivoDoErro(err);
-  if (motivo === 'cota_esgotada') {
+  if (motivo === 'limite_local') {
+    console.warn('Gemini: limite de uso do Fato Real atingido; respondendo só com as fontes até a cota renovar.');
+  } else if (motivo === 'cota_esgotada') {
     console.error(
       `Gemini${m}: cota do plano gratuito esgotada (erro 429). ` +
         'O FatoBot responde só com as fontes até a cota renovar. Dica: configure GEMINI_MODEL_RESERVA.'
@@ -136,7 +146,8 @@ function montarMensagem(texto, evidencias, rotulo = 'PERGUNTA DO USUÁRIO', tag 
   const lista = evidencias
     .map(
       (e, i) =>
-        `[${i + 1}] ${limparTextoUsuario(e.texto)} (Fonte: ${limparTextoUsuario(e.fonte)}, consultado em ${e.consultadoEm})`
+        `[${i + 1}] ${limparTextoUsuario(e.texto)} (Fonte: ${limparTextoUsuario(e.fonte)}` +
+        (e.consultadoEm ? `, consultado em ${e.consultadoEm})` : ')')
     )
     .join('\n');
   return `EVIDÊNCIAS:\n${lista}\n\n${rotulo}:\n<${tag}>${limparTextoUsuario(texto)}</${tag}>`;
@@ -327,4 +338,28 @@ export async function classificarComIA(afirmacao, evidencias, { prazo } = {}) {
     return { estado: 'insuficiente', explicacao: null };
   }
   return { estado: r.estado, explicacao };
+}
+
+// ---------------------------------------------------------------------------
+// J12 — para o /api/health/fontes. Nunca devolve a chave, só se ela existe.
+// ---------------------------------------------------------------------------
+
+export function infoIa() {
+  const [modelo, reserva = null] = modelos();
+  return { configurado: iaConfigurada(), modelo, reserva };
+}
+
+// Faz uma chamada mínima ao Gemini (gasta 1 da cota). Só roda quando pedido (?ia=1).
+export async function testarIa() {
+  if (!iaConfigurada()) return { ok: false, motivo: 'sem_chave' };
+  const inicio = Date.now();
+  try {
+    const { response, modelo } = await gerar(
+      { contents: 'Responda apenas com a palavra OK.', config: {} },
+      Date.now() + LIMITES_IA.porModeloMs
+    );
+    return { ok: Boolean(response.text), modelo, ms: Date.now() - inicio };
+  } catch (err) {
+    return { ok: false, motivo: motivoDoErro(err), ms: Date.now() - inicio };
+  }
 }

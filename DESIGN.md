@@ -121,7 +121,7 @@ Os principais (classes globais em `styles.scss`):
   - pílula de 50px de altura, centralizada;
   - borda em degradê verde, amarelo e azul;
   - lupa num círculo colorido, dica que vai trocando e atalho `/`.
-- **Assistente:** o **FatoBot**, robozinho branco com visor escuro e olhos azul-ciano (`img/fatobot.svg`; rosto em `img/fatobot-rosto.svg`). Aparece como **bolinha flutuante** (`shared/fatobot-bolha.ts`) e não volta para o menu lateral.
+- **Assistente:** o **FatoBot**, robozinho 3D branco com detalhes dourados e verdes, visor preto com olhos verdes (piscando) e lupa na mão (`img/fatobot.webp`; rosto em `img/fatobot-rosto.webp`). Aparece como **bolinha flutuante** (`shared/fatobot-bolha.ts`) e não volta para o menu lateral.
 - **Estado vazio `.vazio`:** centralizado, ícone de 2.2rem em `--verde-vivo` e texto suave. Prefira ilustração e um botão de ação.
 
 ---

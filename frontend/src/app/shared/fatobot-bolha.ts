@@ -40,7 +40,7 @@ interface Reconhecedor {
       @if (conversa.aberto()) {
         <section class="bolha-painel" role="dialog" aria-label="Conversa com o FatoBot">
           <header class="bolha-topo">
-            <img src="img/fatobot-rosto.svg" alt="" width="40" height="40" />
+            <img src="img/fatobot-rosto.webp" alt="" width="40" height="40" />
             <div><strong>FatoBot</strong><small><span class="bolha-online"></span> Online · responde com fontes oficiais</small></div>
             @if (conversa.mensagens().length) { <button type="button" class="botao-icone" (click)="conversa.limpar()" aria-label="Nova conversa" title="Nova conversa"><app-icone nome="refresh" /></button> }
             <a routerLink="/fatobot" class="botao-icone" aria-label="Abrir em tela cheia" title="Tela cheia" (click)="conversa.aberto.set(false)"><app-icone nome="open_in_full" /></a>
@@ -56,7 +56,7 @@ interface Reconhecedor {
             }
             @for (m of conversa.mensagens(); track $index) {
               <div class="bolha-msg" [class.bolha-voce]="m.autor === 'voce'">
-                @if (m.autor === 'bot') { <img src="img/fatobot-rosto.svg" alt="" width="28" height="28" /> }
+                @if (m.autor === 'bot') { <img src="img/fatobot-rosto.webp" alt="" width="28" height="28" /> }
                 <div class="bolha-balao">
                   <p>{{ m.texto }}</p>
                   @if (m.resposta; as r) {
@@ -67,7 +67,7 @@ interface Reconhecedor {
                 </div>
               </div>
             }
-            @if (conversa.pensando()) { <div class="bolha-msg"><img src="img/fatobot-rosto.svg" alt="" width="28" height="28" /><div class="bolha-balao bolha-digitando"><span></span><span></span><span></span></div></div> }
+            @if (conversa.pensando()) { <div class="bolha-msg"><img src="img/fatobot-rosto.webp" alt="" width="28" height="28" /><div class="bolha-balao bolha-digitando"><span></span><span></span><span></span></div></div> }
           </div>
           @if (ouvindo()) { <p class="bolha-ouvindo" role="status"><span class="bolha-onda"><i></i><i></i><i></i><i></i></span> Ouvindo... fale sua pergunta</p> }
           @if (erroVoz()) { <p class="bolha-ouvindo bolha-erro-voz" role="alert">{{ erroVoz() }}</p> }
@@ -99,7 +99,7 @@ interface Reconhecedor {
         }
       }
       <button type="button" class="bolha-botao" [class.aberta]="conversa.aberto()" (click)="alternar()" [attr.aria-expanded]="conversa.aberto()" [attr.aria-label]="conversa.aberto() ? 'Fechar o FatoBot' : 'Abrir o FatoBot'">
-        @if (conversa.aberto()) { <app-icone nome="keyboard_arrow_down" /> } @else { <img src="img/fatobot-rosto.svg" alt="" width="58" height="58" /> }
+        @if (conversa.aberto()) { <app-icone nome="keyboard_arrow_down" /> } @else { <img src="img/fatobot-rosto.webp" alt="" width="58" height="58" /> }
         @if (naoLidas() && !conversa.aberto()) { <span class="bolha-contador">{{ naoLidas() }}</span> }
       </button>
     }

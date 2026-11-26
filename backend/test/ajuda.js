@@ -4,6 +4,8 @@ import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
 import { _setClient } from '../src/services/gemini.js';
 import { _setCopia, _resetPausa } from '../src/services/camara.js';
+import { _resetOutros } from '../src/services/outros-politicos.js';
+import { _zerarLimites } from '../src/utils/limite.js';
 
 export const PERFIL_TABATA = {
   dados: {
@@ -25,6 +27,8 @@ export function mockCamara(estado = 'ok') {
   const original = globalThis.fetch;
   globalThis.fetch = mock.fn(async (url, opts) => {
     const u = String(url);
+    // Senado: nos testes fica "fora" (sem internet), a não ser que o teste troque o fetch.
+    if (u.startsWith('https://legis.senado.leg.br')) return new Response('{}', { status: 503 });
     if (!u.startsWith('https://dadosabertos.camara.leg.br')) return original(url, opts);
     chamadas.push(u);
     if (estado === 'fora') return new Response('{}', { status: 504 });
@@ -58,6 +62,8 @@ export function mockGemini(responder) {
 export async function iniciar() {
   clearCache();
   _resetPausa();
+  _resetOutros();
+  _zerarLimites();
   const server = app.listen(0);
   await new Promise((r) => server.once('listening', r));
   const base = `http://localhost:${server.address().port}`;

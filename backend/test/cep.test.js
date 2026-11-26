@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
 import { _resetPausa } from '../src/services/camara.js';
+import { _zerarLimites } from '../src/utils/limite.js';
 import { normalizarCep } from '../src/services/cep.js';
 import { _setCopia } from '../src/services/camara.js';
 
@@ -27,6 +28,7 @@ let camaraFora;
 beforeEach(() => {
   clearCache();
   _resetPausa();
+  _zerarLimites();
   viacep = () => new Response(JSON.stringify(VIACEP_OK));
   camaraFora = false;
   originalFetch = globalThis.fetch;

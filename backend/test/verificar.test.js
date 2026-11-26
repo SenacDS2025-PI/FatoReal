@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
 import { _resetPausa } from '../src/services/camara.js';
+import { _zerarLimites } from '../src/utils/limite.js';
 import { _setClient } from '../src/services/gemini.js';
 
 const LISTA = {
@@ -41,6 +42,7 @@ const json = (o) => JSON.stringify(o);
 beforeEach(() => {
   clearCache();
   _resetPausa();
+  _zerarLimites();
   chamadas = [];
   originalFetch = globalThis.fetch;
   globalThis.fetch = mock.fn(async (url, opts) => {
@@ -143,15 +145,10 @@ test('formulário com anexos: aceita, avisa que não foram analisados', async ()
   const res = await fetch(`${base}/api/verificar`, { method: 'POST', body: form });
   const body = await res.json();
   assert.equal(res.status, 200);
-  assert.match(body.explicacao, /Os 2 anexos enviados não foram analisados/);
+  assert.match(body.explicacao, /Os 2 anexos não foram analisados nem guardados/);
 });
 
-test('anexo grande demais ou afirmação inválida → 400', async () => {
-  const form = new FormData();
-  form.append('afirmacao', 'Tabata Amaral é do PSB');
-  form.append('anexos', new Blob([new Uint8Array(4 * 1024 * 1024 + 1)]), 'grande.bin');
-  assert.equal((await fetch(`${base}/api/verificar`, { method: 'POST', body: form })).status, 400);
-
+test('afirmação inválida → 400 (anexo grande: ver j13-anexos.test.js)', async () => {
   assert.equal((await verificar({ afirmacao: 'oi' })).status, 400);
   assert.equal((await verificar({})).status, 400);
 });
