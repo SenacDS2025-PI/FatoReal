@@ -518,11 +518,16 @@ fieldset { min-width: 0; }
   .topo .botao-verificar { padding: 0 9px; gap: 4px; font-size: 0.72rem; letter-spacing: 0.02em; .icone { font-size: 1rem; } }
   .topo .botao-entrar { padding: 0 12px; margin-left: 2px; font-size: 0.8rem; }
 }
-/* Sem conta, abaixo de 420 px o botão "Entrar" ocupa o lugar do nome: fica só o logo (o nome volta quando cabe) */
-@media (max-width: 419px) { .topo:has(.botao-entrar) .marca > span { display: none; } }
+/* Abaixo de 420 px: mais justo ainda, para o nome "FATO REAL" continuar à mostra ao lado de VERIFICAR, sino e ENTRAR
+   (escolha do Luiz em 26 nov. 2026: a versão de 430 px em todos os celulares) */
+@media (max-width: 419px) {
+  .topo { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+  .topo .marca { gap: 5px; img { width: 30px; height: 30px; } strong { font-size: 0.86rem; letter-spacing: -0.01em; } }
+  .topo .botao-verificar { padding: 0 7px; gap: 3px; font-size: 0.68rem; letter-spacing: 0.01em; .icone { font-size: 0.95rem; } }
+  .topo .botao-entrar { padding: 0 10px; font-size: 0.74rem; }
+}
 /* Celular bem estreito (360 px): só o logo, e "Entrar" vira ícone de pessoa */
 @media (max-width: 374px) {
-  .topo .marca > span { display: none; }
   .topo .botao-entrar { width: 44px; padding: 0; justify-content: center;
     .entrar-texto { display: none; } .entrar-icone { display: inline-block; font-size: 1.4rem; } }
 }
