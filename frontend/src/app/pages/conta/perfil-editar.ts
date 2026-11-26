@@ -2,6 +2,7 @@ import { DeputadosCep, buscarCep, deputadosDoCep, soNumerosCep } from '../../cor
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { rotaPolitico } from '../../core/politicos.service';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { CAPAS } from '../../core/perfis.service';
@@ -78,7 +79,7 @@ import { Redes } from '../../core/modelos';
             <details class="campo-form">
               <summary class="texto-p">Prefere colar um link de imagem?</summary>
               <label for="e-foto">Link da foto</label>
-              <input id="e-foto" name="foto" type="url" [ngModel]="foto().startsWith('data:') ? '' : foto()" (ngModelChange)="foto.set($event)" placeholder="https://..." />
+              <input id="e-foto" name="foto" type="url" [ngModel]="foto().startsWith('data:') || avatarDoSite(foto()) ? '' : foto()" (ngModelChange)="foto.set($event)" placeholder="https://..." />
             </details>
           </section>
 
@@ -141,7 +142,7 @@ import { Redes } from '../../core/modelos';
                   <strong>Deputados do seu estado ({{ d.uf }}): {{ d.total }}</strong>
                   <ul>
                     @for (dep of d.dados.slice(0, 8); track dep.id) {
-                      <li><a [routerLink]="['/politicos', dep.id]" [title]="dep.nome + ' (' + dep.partido + ')'">
+                      <li><a [routerLink]="rotaPolitico(dep)" [title]="dep.nome + ' (' + dep.partido + ')'">
                         <app-avatar [nome]="dep.nome" [url]="dep.foto" [tamanho]="40" /><span>{{ dep.nome }}</span></a></li>
                     }
                   </ul>
@@ -203,6 +204,7 @@ export class PerfilEditarPage {
   protected auth = inject(AuthService);
   private avisos = inject(AvisosService);
   private router = inject(Router);
+  protected readonly rotaPolitico = rotaPolitico;
 
   protected readonly capas = CAPAS;
   protected readonly chavesCapa = Object.keys(CAPAS);
@@ -287,8 +289,14 @@ export class PerfilEditarPage {
   protected readonly salvando = signal(false);
   protected readonly confirmando = signal(false);
 
+  /** Avatar padrão do próprio site (ex.: img/avatares/a5.svg, dado na criação da conta): não é um link digitado. */
+  protected avatarDoSite(f: string): boolean {
+    return /^img\/avatares\/a\d{1,2}\.svg$/.test(f.trim());
+  }
+
   protected async salvar() {
-    const foto = this.foto().trim() ? (this.foto().startsWith('data:') ? imagemSegura(this.foto()) : linkSeguro(this.foto())) : null;
+    const f = this.foto().trim();
+    const foto = f ? (this.avatarDoSite(f) ? f : f.startsWith('data:') ? imagemSegura(f) : linkSeguro(f)) : null;
     if (this.foto().trim() && !foto) {
       this.avisos.mostrar('O link da foto precisa começar com https://', 'erro');
       return;

@@ -67,7 +67,7 @@
             <li>
               <a [routerLink]="['/comunidades', c.slug]" class="destaque-com" [style.--cor-tema]="corTema[c.tema]">
                 @if (avatarComunidade(c.slug); as img) { <img [src]="img" alt="" /> } @else { <span class="capa-icone"><app-icone [nome]="iconeTema[c.tema] || 'groups'" /></span> }
-                <span><strong>{{ c.nome }}</strong><small>{{ c.total_membros }} membro(s)</small></span>
+                <span><strong>{{ c.nome }}</strong><small>{{ c.total_membros | plural: 'membro' : 'membros' }}</small></span>
               </a>
               <button type="button" class="botao-participar" (click)="participar(c)"><app-icone nome="add" /> Entrar</button>
             </li>

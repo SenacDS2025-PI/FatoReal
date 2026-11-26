@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { DetalhesPolitico, alertasDe, detalhesCamara, todosDoCargo } from '../../core/politicos.service';
+import { DetalhesPolitico, alertasDe, detalhesCamara, rotaPolitico, todosDoCargo } from '../../core/politicos.service';
 import { Avatar, Icone } from '../../shared/componentes';
 import { Faixa } from '../../shared/faixa';
 
@@ -35,7 +35,7 @@ const VAZIO: Lado = { politico: null, detalhes: null, registros: null, carregand
         @let l = lados()[i];
         <section class="card cmp-lado" [attr.data-lado]="i" [class.vazio-lado]="!l.politico">
           @if (l.politico; as p) {
-            <a [routerLink]="['/politicos', p.id]" class="cmp-foto"><app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="104" /></a>
+            <a [routerLink]="rotaPolitico(p)" class="cmp-foto"><app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="104" /></a>
             <strong class="cmp-nome">{{ p.nome }}</strong>
             <span class="cmp-chips"><span>{{ p.partido }}</span><span>{{ p.uf }}</span><span>Deputado(a) federal</span></span>
           } @else {
@@ -77,6 +77,7 @@ const VAZIO: Lado = { politico: null, detalhes: null, registros: null, carregand
 export class CompararPage implements OnInit {
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
+  protected readonly rotaPolitico = rotaPolitico;
   protected readonly todos = signal<Politico[]>([]);
   protected readonly carregandoLista = signal(true);
   protected readonly lados = signal<Lado[]>([{ ...VAZIO }, { ...VAZIO }]);

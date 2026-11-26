@@ -102,9 +102,6 @@ interface Reconhecedor {
         @if (conversa.aberto()) { <app-icone nome="keyboard_arrow_down" /> } @else { <img src="img/fatobot-rosto.webp" alt="" width="58" height="58" /> }
         @if (naoLidas() && !conversa.aberto()) { <span class="bolha-contador">{{ naoLidas() }}</span> }
       </button>
-      @if (temVoz && !conversa.aberto()) {
-        <button type="button" class="bolha-mic-rapido" (click)="ouvir()" aria-label="Falar com o FatoBot" title="Falar com o FatoBot"><app-icone nome="mic" /></button>
-      }
     }
   `,
 })

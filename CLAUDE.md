@@ -5,7 +5,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 ## Como trabalhar aqui
 - **Repositório oficial:** `SenacDS2025-PI/FatoReal`. O antigo (`matheussss237/FatoReal`) não recebe mais trabalho. Resumo do que já foi feito e das pendências: `docs/contexto-claude.md`.
 - **Não fazer sem pedido do Luiz:** force-push, mexer na `main` ou nas branches dos outros (`joao/backend` etc.), abrir Pull Request.
-- **Prazos e Trello:** o quadro oficial é o "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi). Código congelado em **28/11/2026**; entrega final em 1º/12/2026.
+- **Prazos e Trello:** o quadro oficial é o "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi). **Apresentação e entrega final: terça-feira, 1º/12/2026** (o ensaio de 27/11 deixou de ser prazo). Código congelado em 28/11/2026, salvo o que o Luiz pedir.
 - **Idioma:** tudo em português do Brasil, simples e direto (o público vai de jovens a idosos). Código, comentários, commits e textos da interface.
 - **Branch do front-end:** `luiz/frontend`. Não fazer push em outras branches nem abrir PR sem pedido explícito.
 - **Commits:** mensagem em português, título curto + lista do que mudou.
@@ -26,7 +26,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 
 ## Visual (decisões do Luiz)
 - **Mudança de visual = só aparência:** manter todo o conteúdo e todas as funções que já existem (perfil, stories, publicar, feed, memes, enquetes, lateral etc.). Nada some sem o Luiz pedir. O Fato Real é uma **rede social**: o visual tem que lembrar isso.
-- **Foco atual: computador.** Protótipo de celular não é prioridade agora (o layout só não pode quebrar).
+- **Computador e celular** (pedido do Luiz em 25 nov. 2026): o site no navegador do celular também precisa ficar bonito e alinhado. Sem rolagem para o lado em 360, 390 e 430 px; margem lateral de 16 px; botões com 44 px de toque; no celular a barra de cima segue a "Opção A" (aprovada em 25 nov. 2026): linha 1 com logo + "FATO REAL", botão amarelo VERIFICAR, sino e foto/Entrar; linha 2 com a busca em largura total. O nome "FATO REAL" fica à mostra em todos os celulares (escolha do Luiz em 26 nov. 2026: a versão de 430 px); em 360 px só "Entrar" vira ícone de pessoa. A engrenagem fica no menu da conta e nas abas. Conferir prints nos dois tamanhos.
 - **Modo claro:** verde do Fato Real. **Modo escuro:** preto e grafite (`#09090b`, `#121316`, bordas `#33363b`, texto suave `#a3a8ae`; nada de preto puro `#000`), contraste definido e destaques discretos em **verde-limão** (`--lima: #c6f432`). Aprovado pelo Luiz em 18 nov. 2026 (antes era azul-marinho).
 - **Página Políticos:** segue o tema (claro no modo claro, preto/grafite no escuro). **Nada de bloco escuro dentro do modo claro** (pedido do Luiz). Cargos em cartões grandes coloridos, cartões "Explore" com imagem, cartões de políticos com foto oficial (Câmara/Senado). Sem índice A–Z.
 - **Notícias:** formato de portal (abas por assunto, faixa de últimas, carrossel, "Brasil e mundo", feed). Lista em `core/noticias.ts`: só título original + link; resumo só se alguém leu a matéria. Feed automático futuro: `GET {API_URL}/noticias`.

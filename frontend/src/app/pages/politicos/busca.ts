@@ -322,7 +322,7 @@ export class BuscaPage implements OnInit {
     this.mudouFiltro();
   }
 
-  /** Link do perfil (Câmara, Senado ou TSE). */
+  /** Link do perfil: Câmara, Senado (demo ou Supabase) ou TSE, sempre pela função única rotaPolitico(). */
   protected linkPerfil(p: Politico): (string | number)[] {
     return rotaPolitico(p);
   }

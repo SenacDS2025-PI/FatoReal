@@ -3,13 +3,14 @@ import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AlertaJuridico, Politico, TipoAlerta } from '../../core/modelos';
 import { AuthService } from '../../core/auth.service';
 import { SeguidosService } from '../../core/seguidos.service';
 import { AvisosService } from '../../core/avisos.service';
-import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta } from '../../core/politicos.service';
-import { linkSeguro } from '../../core/util';
+import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta, rotaPolitico } from '../../core/politicos.service';
+import { supabase } from '../../core/supabase';
+import { linkSeguro, plural } from '../../core/util';
 import { inicioLegislatura } from '../../core/politicos.service';
 import {
   Carreira, Discurso, FichaSenador, GastosAno, Proposicao, ResumoVotacoes, TIPOS_PROPOSICAO,
@@ -20,16 +21,18 @@ import { nomeEstado } from '../../shared/mapa-brasil';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
 import { ProjetoAcoes } from '../../shared/projeto-acoes';
 import { Favoritar } from '../../shared/favoritar';
+import { PluralPipe } from '../../shared/plural';
 
 type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'agenda' | 'patrimonio' | 'discursos' | 'carreira';
 
 @Component({
   selector: 'app-perfil-politico',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes, PerguntarFatobot, Favoritar],
+  imports: [PluralPipe, RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes, PerguntarFatobot, Favoritar],
   templateUrl: './perfil-politico.html',
 })
 export class PerfilPoliticoPage implements OnInit {
   private service = inject(PoliticosService);
+  private router = inject(Router);
   /** Vem da URL /politicos/:id */
   readonly id = input.required<string>();
   /** Vem dos dados da rota: 'senado' em /politicos/senado/:id. */
@@ -67,7 +70,7 @@ export class PerfilPoliticoPage implements OnInit {
         rotulo: p.cargo ?? (this.casa() === 'senado' ? 'Senador(a)' : 'Deputado(a) Federal'),
         titulo: p.nome,
         subtitulo: [p.partido, p.uf].filter(Boolean).join(' · '),
-        linhas: [reg ? `!${reg} registro(s) de polêmica ou na Justiça` : 'Nenhum registro na Justiça cadastrado', 'Veja o perfil completo no Fato Real'],
+        linhas: [reg ? `!${plural(reg, 'registro', 'registros')} de polêmica ou na Justiça` : 'Nenhum registro na Justiça cadastrado', 'Veja o perfil completo no Fato Real'],
         foto: p.foto_url,
         fonte: this.casa() === 'senado' ? 'Senado Federal (dados abertos)' : 'Câmara dos Deputados (dados abertos)',
         nomeArquivo: `fatoreal-${p.nome.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`,
@@ -495,7 +498,7 @@ export class PerfilPoliticoPage implements OnInit {
     const sen = this.casa() === 'senado';
     const lista: { tipo: 'alerta' | 'atencao' | 'ok'; icone: string; texto: string; detalhe: string }[] = [];
     const reg = this.alertas().filter((a) => a.tipo !== 'Absolvição ou arquivamento');
-    if (reg.length) lista.push({ tipo: 'alerta', icone: 'gavel', texto: `${reg.length} registro(s) de polêmica ou processo na Justiça`, detalhe: 'Veja cada um, com fonte, no quadro vermelho acima.' });
+    if (reg.length) lista.push({ tipo: 'alerta', icone: 'gavel', texto: `${plural(reg.length, 'registro', 'registros')} de polêmica ou processo na Justiça`, detalhe: 'Veja cada um, com fonte, no quadro vermelho acima.' });
     const pres = this.presenca();
     if (pres !== null) {
       if (pres < 70) lista.push({ tipo: 'alerta', icone: 'event_busy', texto: `Faltou em ${100 - pres}% das votações recentes`, detalhe: 'Presença bem abaixo do comum no plenário. Faltas podem ter motivo justo, como licença médica ou missão oficial.' });
@@ -506,10 +509,10 @@ export class PerfilPoliticoPage implements OnInit {
     if (partidos >= 3) lista.push({ tipo: 'atencao', icone: 'swap_horiz', texto: `Já passou por ${partidos} partidos`, detalhe: sen ? 'Segundo as filiações registradas no Senado.' : 'Desde que chegou à Câmara.' });
     if (!sen) {
       const contra = (this.votacoes()?.votos ?? []).filter((v) => v.comPartido === false).length;
-      if (contra) lista.push({ tipo: 'atencao', icone: 'call_split', texto: `Votou contra o próprio partido ${contra} vez(es)`, detalhe: 'Nas votações recentes do plenário. Pode mostrar independência ou divergência.' });
+      if (contra) lista.push({ tipo: 'atencao', icone: 'call_split', texto: `Votou contra o próprio partido ${plural(contra, 'vez', 'vezes')}`, detalhe: 'Nas votações recentes do plenário. Pode mostrar independência ou divergência.' });
       const tot = this.detalhes()?.totalProposicoes;
       const leis = this.leis();
-      if (leis !== null && leis > 0) lista.push({ tipo: 'ok', icone: 'verified', texto: `${leis} projeto(s) de autoria viraram lei`, detalhe: 'Somando todos os mandatos na Câmara.' });
+      if (leis !== null && leis > 0) lista.push({ tipo: 'ok', icone: 'verified', texto: `${leis === 1 ? '1 projeto de autoria virou lei' : plural(leis, 'projeto', 'projetos') + ' de autoria viraram lei'}`, detalhe: 'Somando todos os mandatos na Câmara.' });
       else if (leis === 0 && tot != null) lista.push({ tipo: 'atencao', icone: 'block', texto: 'Nenhum projeto de autoria virou lei', detalhe: `Apresentou ${tot} proposições nesta legislatura, mas nenhuma das suas virou lei até agora.` });
       const g = this.comparacaoGastos();
       if (g) {
@@ -628,6 +631,15 @@ export class PerfilPoliticoPage implements OnInit {
   async ngOnInit() {
     const id = Number(this.id());
     const senado = this.casa() === 'senado';
+    // Proteção: com o Supabase, um link antigo /politicos/<código do Senado> mandaria o código para a API da Câmara
+    // (404/429 e perfil vazio). Se esse id é de um senador no banco, troca para a rota do Senado sem chamar a Câmara.
+    if (!senado && supabase) {
+      const sen = await obterSenador(id).catch(() => null);
+      if (sen) {
+        this.router.navigate(rotaPolitico(sen), { replaceUrl: true });
+        return;
+      }
+    }
     if (senado) {
       this.carregandoDetalhes.set(false);
       fichaSenador(id).then((f) => this.senador.set(f)).catch(() => this.senador.set(null)).finally(() => this.carregandoFicha.set(false));

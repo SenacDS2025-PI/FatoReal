@@ -36,12 +36,6 @@ export function casaDoCargo(cargo: string | null | undefined): 'camara' | 'senad
   return cargo === 'Senador(a)' ? 'senado' : 'tse';
 }
 
-/** Link do perfil: TSE em /politicos/tse/:id, senadores do modo demonstração em /politicos/senado/:id. */
-export function rotaPolitico(p: Pick<Politico, 'id' | 'casa'>): (string | number)[] {
-  if (p.casa === 'tse') return ['/politicos/tse', p.id];
-  return p.casa === 'senado' && !supabase ? ['/politicos/senado', p.id] : ['/politicos', p.id];
-}
-
 /** "são josé dos campos" → "sao jose dos campos" (igual à coluna municipio_busca do banco). */
 export function normalizarCidade(t: string): string {
   return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -452,6 +446,21 @@ async function senadoresSenado(): Promise<Politico[]> {
 /** Perfil de um senador (a partir da lista oficial do Senado). */
 export async function obterSenador(id: number): Promise<Politico | null> {
   return (await todosDoCargo('Senador(a)')).find((p) => p.id === id) ?? null;
+}
+
+/** Senador(a)? Vale para a API do Senado e para linhas do Supabase (casa 'senado' ou cargo começando com "Senador"). */
+export function ehSenador(p: { casa?: string | null; cargo?: string | null }): boolean {
+  return p.casa === 'senado' || /^senador/i.test((p.cargo ?? '').trim());
+}
+
+/**
+ * Rota do perfil de um político. Use SEMPRE esta função para montar o link:
+ * TSE (prefeitos, vereadores...) em /politicos/tse/:id; senador em /politicos/senado/:id (dados do Senado);
+ * o resto em /politicos/:id (Câmara).
+ */
+export function rotaPolitico(p: { id: number | string; casa?: string | null; cargo?: string | null }): (string | number)[] {
+  if (p.casa === 'tse') return ['/politicos/tse', p.id];
+  return ehSenador(p) ? ['/politicos/senado', p.id] : ['/politicos', p.id];
 }
 
 /** Chave de um político nos registros (o mesmo id pode existir na Câmara e no Senado). */

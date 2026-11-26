@@ -39,18 +39,23 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
       }
     </nav>
 
-    <div class="nt-faixa" aria-label="Últimas notícias">
+    <div class="nt-faixa" [class.pausada]="faixaPausada()" role="region" aria-label="Últimas notícias">
       <b>ÚLTIMAS</b>
       <div class="nt-faixa-trilho">
         <div class="nt-faixa-itens">
           @for (rodada of [0, 1]; track rodada) {
             @for (n of ultimas(); track n.url) {
               <a [href]="n.url" target="_blank" rel="noopener noreferrer" [attr.aria-hidden]="rodada === 1" [attr.tabindex]="rodada === 1 ? -1 : 0">
-                <span [style.color]="cat(n).cor">{{ n.categoria }}</span> {{ n.titulo }}</a>
+                <span class="nt-faixa-cat" [style.--c]="cat(n).cor">{{ n.categoria }}</span> {{ n.titulo }}</a>
             }
           }
         </div>
       </div>
+      <!-- WCAG 2.2.2: quem quiser pode parar a faixa (ela também para com o mouse em cima e com "reduzir movimento") -->
+      <button type="button" class="nt-faixa-pausa" (click)="faixaPausada.set(!faixaPausada())" [attr.aria-pressed]="faixaPausada()"
+        [attr.aria-label]="faixaPausada() ? 'Continuar a faixa de últimas notícias' : 'Pausar a faixa de últimas notícias'">
+        <app-icone [nome]="faixaPausada() ? 'play_circle' : 'stop'" />
+      </button>
     </div>
 
     <section class="nt-topo">
@@ -60,7 +65,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
           (keydown.arrowRight)="$event.preventDefault(); ir(atual() + 1)" (keydown.arrowLeft)="$event.preventDefault(); ir(atual() - 1)">
           @for (n of destaques(); track n.url; let i = $index) {
             <li class="nt-slide" [attr.aria-label]="(i + 1) + ' de ' + destaques().length" [attr.aria-hidden]="i !== atual()" [style.--c]="cat(n).cor">
-              @if (imagem(n); as img) { <img [src]="img" alt="" [attr.loading]="i === 0 ? 'eager' : 'lazy'" /> }
+              @if (imagem(n); as img) { <img [src]="img" alt="" /> }
               @else { <span class="nt-sem-imagem"><app-icone [nome]="cat(n).icone" /></span> }
               <div class="nt-slide-texto">
                 <span class="nt-categoria"><app-icone [nome]="cat(n).icone" /> {{ n.categoria }}</span>
@@ -106,7 +111,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
         @for (n of secundarias(); track n.url; let i = $index) {
           <article class="nt-cartao" [class.grande]="i === 0" [style.--c]="cat(n).cor">
             <div class="nt-cartao-img">
-              @if (imagem(n); as img) { <img [src]="img" alt="" loading="lazy" /> }
+              @if (imagem(n); as img) { <img [src]="img" alt="" /> }
               @else { <span class="nt-sem-imagem"><app-icone [nome]="cat(n).icone" /></span> }
             </div>
             <div class="nt-cartao-texto">
@@ -148,7 +153,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
               </header>
               <h3><a [href]="item.n.url" target="_blank" rel="noopener noreferrer">{{ item.n.titulo }}</a></h3>
               @if (item.n.resumo) { <p>{{ item.n.resumo }}</p> }
-              @if (imagem(item.n); as img) { <a [href]="item.n.url" target="_blank" rel="noopener noreferrer" class="nt-post-img" tabindex="-1"><img [src]="img" alt="" loading="lazy" /></a> }
+              @if (imagem(item.n); as img) { <a [href]="item.n.url" target="_blank" rel="noopener noreferrer" class="nt-post-img" tabindex="-1" aria-hidden="true"><img [src]="img" alt="" /></a> }
               <footer class="nt-post-acoes">
                 <a [href]="item.n.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Ler na fonte</a>
                 @if (item.n.pergunta) { <button type="button" [perguntarFatobot]="item.n.pergunta"><app-icone nome="smart_toy" /> Entender</button> }
@@ -201,6 +206,7 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
   private readonly servico = inject(NoticiasService);
   protected readonly atualizadaEm = signal(LISTA_ATUALIZADA_EM);
   protected readonly todas = signal<Noticia[]>(NOTICIAS);
+  protected readonly faixaPausada = signal(false);
   protected readonly aoVivo = signal(false);
   protected readonly filtro = signal<Categoria | null>(null);
   protected readonly limite = signal(8);

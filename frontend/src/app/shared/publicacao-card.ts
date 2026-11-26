@@ -10,11 +10,12 @@ import { linkSeguro, tempoAtras } from '../core/util';
 import { EnquetesService } from '../core/enquetes.service';
 import { Avatar, Icone } from './componentes';
 import { SeloStatus, seloDoEstado } from './selo-status';
+import { PluralPipe } from './plural';
 
 /** Card de publicação no estilo da apresentação: autor, comunidade, texto, link, curtir/comentar/compartilhar/denunciar. */
 @Component({
   selector: 'app-publicacao',
-  imports: [FormsModule, RouterLink, Avatar, Icone, SeloStatus],
+  imports: [PluralPipe, FormsModule, RouterLink, Avatar, Icone, SeloStatus],
   template: `
     @let p = pub();
     <article class="post" [class.post-verificado]="p.verificada">
@@ -45,7 +46,7 @@ import { SeloStatus, seloDoEstado } from './selo-status';
 
       @if (p.imagem_url) {
         <figure class="post-midia" [class.post-meme]="!!p.meme">
-          <img [src]="p.imagem_url" [alt]="p.meme ? 'Meme: ' + p.meme.topo + ' / ' + p.meme.base : 'Imagem da publicação'" loading="lazy" />
+          <img [src]="p.imagem_url" [alt]="p.meme ? 'Meme: ' + p.meme.topo + ' / ' + p.meme.base : 'Imagem da publicação'" />
           @if (p.meme; as m) {
             @if (m.topo) { <figcaption class="meme-topo">{{ m.topo }}</figcaption> }
             @if (m.base) { <figcaption class="meme-base">{{ m.base }}</figcaption> }
@@ -73,7 +74,7 @@ import { SeloStatus, seloDoEstado } from './selo-status';
 
       @if (enquetes.de(p.id); as e) {
         @let total = soma(e.votos);
-        <div class="enquete" role="group" [attr.aria-label]="'Enquete: ' + total + ' voto(s)'">
+        <div class="enquete" role="group" [attr.aria-label]="'Enquete: ' + (total | plural: 'voto' : 'votos')">
           @for (o of e.opcoes; track $index; let i = $index) {
             <button type="button" class="enquete-opcao" [class.votada]="e.meuVoto === i" [attr.aria-pressed]="e.meuVoto === i" (click)="enquetes.votar(p.id, i)">
               @if (e.meuVoto !== undefined) { <span class="enquete-barra" [style.width.%]="pct(e.votos[i], total)"></span> }
@@ -81,13 +82,13 @@ import { SeloStatus, seloDoEstado } from './selo-status';
               @if (e.meuVoto !== undefined) { <strong>{{ pct(e.votos[i], total) }}%</strong> }
             </button>
           }
-          <small class="texto-suave">{{ total }} voto(s) · {{ e.meuVoto === undefined ? 'toque numa opção para votar' : 'toque de novo para desfazer' }}</small>
+          <small class="texto-suave">{{ total | plural: 'voto' : 'votos' }} · {{ e.meuVoto === undefined ? 'toque numa opção para votar' : 'toque de novo para desfazer' }}</small>
         </div>
       }
 
       <div class="post-contagem">
         <span>@if (p.total_curtidas) { <span class="bolinha-curtida"><app-icone nome="thumb_up" /></span> {{ p.total_curtidas }} }</span>
-        <button type="button" class="link-discreto" (click)="alternarComentarios()">{{ p.total_comentarios }} comentário(s)</button>
+        <button type="button" class="link-discreto" (click)="alternarComentarios()">{{ p.total_comentarios | plural: 'comentário' : 'comentários' }}</button>
       </div>
 
       <footer class="post-acoes">

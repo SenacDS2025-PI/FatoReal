@@ -444,3 +444,128 @@ fieldset { min-width: 0; }
 .ini-stories, .abas-celular, .ficha-abas, .visoes, .nt-trilho, .nt-abas, .nt-faixa-trilho, .glossario-trilho, .pp-abas {
   &::-webkit-scrollbar { display: none; }
 }
+
+/* =========================================================
+   Celular bem alinhado (25 nov. 2026) — só aparência
+   Barra de cima: logo, lupa, sino e foto/Entrar (Verificar está na aba "Fato ou Fake";
+   Configurações virou aba e item do menu da conta). Margem lateral fixa de 16 px,
+   botões com 44 px de toque e respeito às áreas seguras do iPhone.
+   ========================================================= */
+@media (max-width: 900px) {
+  /* Barra de cima em duas linhas ("Opção A", aprovada pelo Luiz em 25 nov. 2026):
+     linha 1 = logo + FATO REAL | VERIFICAR, sino, foto/Entrar; linha 2 = busca em largura total */
+  :root { --topo-cel: calc(120px + env(safe-area-inset-top)); }
+  .topo {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 48px 44px; row-gap: 8px; align-items: center;
+    height: var(--topo-cel); padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+  }
+  .topo .marca { grid-column: 1; grid-row: 1; min-width: 0; gap: 8px;
+    img { width: 36px; height: 36px; }
+    > span { display: block; min-width: 0; }
+    strong { font-size: 1.125rem; white-space: nowrap; } small { display: none; } }
+  .topo .topo-acoes { grid-column: 2; grid-row: 1; }
+  .topo .busca-topo { display: flex !important; grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: none; height: 44px; border-radius: 999px; padding: 0 4px 0 8px;
+    .busca-atalho { display: none; } input#busca-topo { font-size: 1rem; } }
+  .topo .sugestoes-busca { left: 0; right: 0; }
+  /* Verificar igual ao do computador: amarelo da marca, ícone + texto, sombra embaixo */
+  .topo .botao-verificar { display: inline-flex !important; width: auto; height: 40px; padding: 0 12px; margin-right: 2px; gap: 6px; border-radius: 6px;
+    font-size: 0.8rem; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+    > span { display: inline !important; } .icone { font-size: 1.15rem; }
+    &::before { content: ''; position: absolute; inset: -2px 0; } position: relative; }
+  .abas-celular {
+    top: var(--topo-cel); gap: 8px; padding: 10px 16px 12px; scroll-padding-inline: 16px;
+    a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; }
+  }
+  .topo-acoes { gap: 4px; }
+  .topo .sino, .topo .botao-conta { width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; border-radius: 12px; }
+  .topo .sino .icone { font-size: 1.5rem; }
+  .topo .botao-verde { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; margin-left: 4px; font-size: 0.85rem; }
+  .painel-notif { top: var(--topo-cel); left: 16px; right: 16px; }
+
+  /* Conteúdo: margem de 16 px dos dois lados e espaço livre embaixo para a navegação */
+  main { padding: 16px 16px calc(104px + env(safe-area-inset-bottom)) !important; }
+  .aviso-demo { margin: 12px 16px 0; }
+  .card { padding: 16px; }
+
+  /* Navegação de baixo: alvos de toque de 44 px e área segura do iPhone */
+  .nav-inferior {
+    padding: 6px max(8px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    a { min-height: 48px; justify-content: center; }
+  }
+  /* Botões flutuantes acima da navegação de baixo, alinhados na margem de 16 px */
+  .fab { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  /* WhatsApp logo acima da navegação; se a página tiver o botão "+", sobe para ficar em cima dele */
+  .wa-botao { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  body:has(.fab) .wa-botao { bottom: calc(152px + env(safe-area-inset-bottom)); }
+  .bolha-painel { bottom: calc(80px + env(safe-area-inset-bottom)); }
+
+  /* Imagens e textos nunca mais largos que o próprio bloco */
+  main img, main video, main iframe { max-width: 100%; }
+  main :is(h1, h2, h3, p, li) { overflow-wrap: break-word; }
+}
+.botao-entrar .entrar-icone { display: none; }
+@media (max-width: 480px) {
+  /* a regra antiga escondia o nome da marca no celular: na Opção A ele aparece */
+  .topo .marca > span { display: block; }
+  main { padding-left: 16px !important; padding-right: 16px !important; }
+  .card { padding: 16px; }
+}
+
+/* Celular comum (até 440 px): tudo um pouco mais justo para o nome "FATO REAL" caber na linha */
+@media (max-width: 440px) {
+  .topo .topo-acoes { gap: 2px; }
+  .topo .marca { gap: 6px; img { width: 32px; height: 32px; } strong { font-size: 0.95rem; } }
+  .topo .botao-verificar { padding: 0 9px; gap: 4px; font-size: 0.72rem; letter-spacing: 0.02em; .icone { font-size: 1rem; } }
+  .topo .botao-entrar { padding: 0 12px; margin-left: 2px; font-size: 0.8rem; }
+}
+/* Abaixo de 420 px: mais justo ainda, para o nome "FATO REAL" continuar à mostra ao lado de VERIFICAR, sino e ENTRAR
+   (escolha do Luiz em 26 nov. 2026: a versão de 430 px em todos os celulares) */
+@media (max-width: 419px) {
+  .topo { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+  .topo .marca { gap: 5px; img { width: 30px; height: 30px; } strong { font-size: 0.86rem; letter-spacing: -0.01em; } }
+  .topo .botao-verificar { padding: 0 7px; gap: 3px; font-size: 0.68rem; letter-spacing: 0.01em; .icone { font-size: 0.95rem; } }
+  .topo .botao-entrar { padding: 0 10px; font-size: 0.74rem; }
+}
+/* Celular bem estreito (360 px): só o logo, e "Entrar" vira ícone de pessoa */
+@media (max-width: 374px) {
+  .topo .botao-entrar { width: 44px; padding: 0; justify-content: center;
+    .entrar-texto { display: none; } .entrar-icone { display: inline-block; font-size: 1.4rem; } }
+}
+
+/* ===== Notícias: faixa "Últimas" com botão de pausar (26 nov. 2026) ===== */
+.nt-faixa.pausada .nt-faixa-itens { animation-play-state: paused; }
+.nt-faixa-pausa { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(255, 255, 255, 0.12); color: #fff; .icone { font-size: 1.15rem; }
+  &:hover, &:focus-visible { background: rgba(255, 255, 255, 0.24); } }
+/* Categoria clareada sobre a faixa escura: contraste de pelo menos 4,5:1 */
+.nt-faixa-cat { color: color-mix(in srgb, var(--c, #fff) 40%, #fff); font-weight: 700; }
+
+/* =========================================================
+   Contraste de pelo menos 4,5:1 nos dois temas (relatório de testes, 26 nov. 2026)
+   Mesmas cores de cada selo/categoria, só mais escuras no claro e mais claras no escuro.
+   ========================================================= */
+:root:not([data-tema='escuro']) {
+  .post-tipo { color: color-mix(in srgb, var(--c) 62%, #000); }
+  .nt-post-cat { color: color-mix(in srgb, var(--c) 55%, #000); }
+  .selo-status { color: color-mix(in srgb, var(--c) 64%, #000); }
+  .nt-k, small.nt-k { color: color-mix(in srgb, var(--c, var(--link)) 58%, #000); }
+  .ele-data { color: color-mix(in srgb, var(--cor) 52%, #000); }
+  .cg-hora time { color: color-mix(in srgb, var(--c) 58%, #000); }
+  .cg-legenda li { color: color-mix(in srgb, var(--c) 60%, #000); }
+  .nav-inferior a.ativo { color: #0b6b42; }
+}
+:root[data-tema='escuro'] {
+  .post-tipo { color: color-mix(in srgb, var(--c) 52%, #fff); }
+  .cmp-quem { filter: none; color: color-mix(in srgb, var(--lado) 42%, #fff); }
+  .cg-hora time, .cg-legenda li { color: color-mix(in srgb, var(--c) 48%, #fff); }
+  /* aba ou tema escolhido em verde-limão: texto escuro em cima */
+  .com-temas button[aria-pressed='true'], .bsc-abas button[aria-selected='true'] { color: #101a00; .icone { color: #101a00; } }
+}
+/* Conquistas ainda não ganhas: texto legível (antes ficava tudo a 55% de opacidade); só o ícone fica apagado */
+.pp-conquistas li:not(.ok) { opacity: 1; span { color: var(--texto); } small { color: var(--texto-suave); } .icone { opacity: 0.5; } }
+/* Pódio do ranking: 2º lugar em cinza mais escuro para o número branco aparecer */
+.gst-degrau[data-pos='2'] .gst-coluna { background: #5b6779; }
+/* Link amarelo da checagem sobre o azul */
+.post-checagem a { color: #ffe14d; }
+/* Contato: o botão do e-mail (endereço comprido) quebra a linha no celular pequeno em vez de alargar a página */
+.inst .botao { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }

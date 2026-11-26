@@ -16,11 +16,17 @@ export interface ResultadoVerificacao {
   consultado_em: string;
   /** Contexto do registro (slide 20): fonte primária, data e categoria, quando conhecidos. */
   contexto?: { fonte?: string; data?: string; categoria?: string };
+  /** true quando a resposta é do modo demonstração (sem API): nenhuma busca nem IA aconteceu. */
+  demonstracao?: boolean;
 }
 import { apiUrl, modoDemo } from './supabase';
+
+/** Erro de validação devolvido pela API (HTTP 400): a mensagem dela vai direto para a pessoa. */
+export class ErroDoPedido extends Error {}
 import { PoliticosService } from './politicos.service';
 import { AFIRMACOES } from './fato-ou-fake';
 import { EXEMPLOS } from './checagens.service';
+import { plural } from './util';
 
 /**
  * FatoBot: o front só manda a pergunta para a API em Node.
@@ -72,13 +78,19 @@ export class FatoBotService {
         }),
       });
       if (resp.ok && resp.headers.get('content-type')?.includes('json')) return (await resp.json()) as ResultadoVerificacao;
+      // Pedido recusado pela API (ex.: texto curto demais): mostra a mensagem dela, sem cair na resposta de demonstração
+      if (resp.status === 400) {
+        const corpo = (await resp.json().catch(() => ({}))) as { erro?: string };
+        throw new ErroDoPedido(corpo.erro || 'Confira o texto e tente de novo.');
+      }
       if (!modoDemo) throw new Error();
-    } catch {
+    } catch (e) {
+      if (e instanceof ErroDoPedido) throw e;
       if (!modoDemo) throw new Error('A verificação não respondeu agora. Tente de novo em instantes.');
     }
     const conhecido = this.checagemConhecida(pedido.afirmacao, pedido.link ?? null);
-    if (conhecido) return conhecido;
-    const extras = [pedido.link ? 'o link' : '', anexos.length ? `${anexos.length} anexo(s)` : ''].filter(Boolean).join(' e ');
+    if (conhecido) return { ...conhecido, demonstracao: true };
+    const extras = [pedido.link ? 'o link' : '', anexos.length ? plural(anexos.length, 'anexo', 'anexos') : ''].filter(Boolean).join(' e ');
     return {
       estado: 'Em análise',
       explicacao:
@@ -87,6 +99,7 @@ export class FatoBotService {
         'então ele fica em análise. Enquanto isso, confira nas agências de checagem e nas fontes oficiais listadas ao lado.',
       fontes: [],
       consultado_em: new Date().toISOString(),
+      demonstracao: true,
     };
   }
 

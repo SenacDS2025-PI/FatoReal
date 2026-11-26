@@ -37,7 +37,6 @@
   </form>
 
   <div class="topo-acoes">
-    <a routerLink="/politicos" class="sino so-celular" aria-label="Pesquisar" title="Pesquisar"><app-icone nome="search" /></a>
     <a routerLink="/fato-ou-fake" class="botao-verificar" routerLinkActive="ativo" title="Fato ou Fake: verifique uma informação antes de compartilhar">
       <app-icone nome="fact_check" /> <span>Verificar</span>
     </a>
@@ -65,7 +64,7 @@
         </section>
       }
     </div>
-    <a routerLink="/configuracoes" class="sino" aria-label="Configurações" title="Configurações" routerLinkActive="sino-ativo">
+    <a routerLink="/configuracoes" class="sino so-desktop" aria-label="Configurações" title="Configurações" routerLinkActive="sino-ativo">
       <app-icone nome="settings" />
     </a>
     @if (auth.usuario(); as u) {
@@ -79,12 +78,14 @@
           <div class="menu-conta-lista" role="menu">
             <div class="menu-conta-quem"><strong>{{ u.nome }}</strong><small>{{ u.email }}</small></div>
             <a role="menuitem" routerLink="/perfil"><app-icone nome="account_circle" /> Meu perfil</a>
+            <a role="menuitem" routerLink="/configuracoes"><app-icone nome="settings" /> Configurações</a>
             <button role="menuitem" type="button" (click)="sair()"><app-icone nome="logout" /> Sair</button>
           </div>
         }
       </div>
     } @else {
-      <a routerLink="/entrar" class="botao botao-verde">Entrar</a>
+      <!-- Em tela muito estreita (celular de 360 px) fica só o ícone de pessoa -->
+      <a routerLink="/entrar" class="botao botao-verde botao-entrar" aria-label="Entrar"><app-icone nome="person" class="entrar-icone" /><span class="entrar-texto">Entrar</span></a>
     }
   </div>
   <!-- Lâmpada pendurada no fio azul, embaixo da conta -->
@@ -161,7 +162,6 @@
 <!-- ===== Pop-ups de aviso ===== -->
 <app-boas-vindas />
 <app-fatobot-bolha />
-<app-whatsapp-botao />
 <app-tawk-chat />
 
 <div class="avisos" aria-live="polite">

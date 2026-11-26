@@ -9,13 +9,14 @@ import { avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Icone } from '../../shared/componentes';
 import { CaixaPublicar } from '../../shared/caixa-publicar';
 import { PublicacaoCard } from '../../shared/publicacao-card';
+import { PluralPipe } from '../../shared/plural';
 
 type Aba = 'para-voce' | 'alta' | 'minhas' | 'memes';
 
 /** Início com cara de rede social: stories, caixa de publicar (foto/meme, enquete, link), abas e feed. */
 @Component({
   selector: 'app-inicio',
-  imports: [RouterLink, Icone, PublicacaoCard, CaixaPublicar],
+  imports: [PluralPipe, RouterLink, Icone, PublicacaoCard, CaixaPublicar],
   templateUrl: './inicio.html',
 })
 export class InicioPage implements OnInit {

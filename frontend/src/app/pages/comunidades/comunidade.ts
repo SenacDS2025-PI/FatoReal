@@ -10,10 +10,11 @@ import { linkSeguro } from '../../core/util';
 import { avatarComunidade, capaComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
+import { PluralPipe } from '../../shared/plural';
 
 @Component({
   selector: 'app-comunidade',
-  imports: [CaixaPublicar, FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
+  imports: [PluralPipe, CaixaPublicar, FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
   templateUrl: './comunidade.html',
 })
 export class ComunidadePage implements OnInit {
