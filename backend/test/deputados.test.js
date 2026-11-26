@@ -2,7 +2,7 @@ import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
-import { _resetPausa } from '../src/services/camara.js';
+import { _resetPausa, _setCopia } from '../src/services/camara.js';
 import { _zerarLimites } from '../src/utils/limite.js';
 
 // Respostas falsas da Câmara, para os testes não dependerem da internet.
@@ -92,9 +92,21 @@ test('deputado inexistente responde 404', async () => {
   assert.equal(res.status, 404);
 });
 
-test('Câmara fora do ar e deputado fora da cópia → 503 (J3)', async () => {
+test('Câmara fora do ar e id fora da cópia completa → 404 (o deputado não existe)', async () => {
   mockCamara(() => json({}, 503));
   const res = await fetch(`${base}/api/deputados/1`);
-  assert.equal(res.status, 503);
-  assert.deepEqual(await res.json(), { erro: 'A fonte oficial (Câmara) está fora do ar agora.' });
+  assert.equal(res.status, 404);
+  assert.deepEqual(await res.json(), { erro: 'Deputado não encontrado' });
+});
+
+test('Câmara fora do ar e SEM cópia de reserva → 503 (J3)', async () => {
+  mockCamara(() => json({}, 503));
+  _setCopia(null);
+  try {
+    const res = await fetch(`${base}/api/deputados/1`);
+    assert.equal(res.status, 503);
+    assert.deepEqual(await res.json(), { erro: 'A fonte oficial (Câmara) está fora do ar agora.' });
+  } finally {
+    _setCopia(undefined);
+  }
 });

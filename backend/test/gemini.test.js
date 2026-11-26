@@ -80,7 +80,7 @@ test('usa a resposta do Gemini quando ela cita evidências válidas', async () =
   const { contents, config } = chamadas[0];
   assert.match(config.systemInstruction, /SOMENTE com base nas EVIDÊNCIAS/);
   assert.ok(config.abortSignal instanceof AbortSignal, 'prazo controlado do nosso lado');
-  assert.match(contents, /\[1\] Tabata Amaral é deputado\(a\) federal pelo PSB-SP/);
+  assert.match(contents, /\[1\] Tabata Amaral tem mandato na Câmara dos Deputados pelo PSB-SP/);
   assert.match(contents, /<pergunta>Qual o partido de Tabata Amaral\?<\/pergunta>/);
 });
 
