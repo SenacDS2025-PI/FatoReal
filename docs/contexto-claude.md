@@ -7,7 +7,7 @@
 ## O projeto
 - **Fato Real**: rede social de informação cívica (PI do Senac, turma DS 2025): informação política verificada, perfis de políticos, comunidades e o assistente FatoBot. O que vale é o **Trello** "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi), que é o que o professor pediu. O quadro antigo "PI Senac - FATO REAL" não é mais editado.
 - **Tecnologias:** Angular 22 (pasta `frontend/`), Supabase (banco e login), API em Node/Express (pasta `backend/`, branch `joao/backend`), hospedagem na Vercel.
-- **Entrega final:** 1º/12/2026. Código congelado em 28/11.
+- **Apresentação e entrega final:** terça-feira, 1º/12/2026 (o ensaio de 27/11 deixou de ser prazo). Código congelado em 28/11.
 - **Equipe:** Luiz Gustavo (GitHub `Liipez`) cuida do **front-end**. João cuida do **back-end**. Coordenador: Guilherme. Vice: Pablo.
 
 ## GitHub

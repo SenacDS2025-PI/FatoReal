@@ -5,7 +5,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 ## Como trabalhar aqui
 - **Repositório oficial:** `SenacDS2025-PI/FatoReal`. O antigo (`matheussss237/FatoReal`) não recebe mais trabalho. Resumo do que já foi feito e das pendências: `docs/contexto-claude.md`.
 - **Não fazer sem pedido do Luiz:** force-push, mexer na `main` ou nas branches dos outros (`joao/backend` etc.), abrir Pull Request.
-- **Prazos e Trello:** o quadro oficial é o "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi). Código congelado em **28/11/2026**; entrega final em 1º/12/2026.
+- **Prazos e Trello:** o quadro oficial é o "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi). **Apresentação e entrega final: terça-feira, 1º/12/2026** (o ensaio de 27/11 deixou de ser prazo). Código congelado em 28/11/2026, salvo o que o Luiz pedir.
 - **Idioma:** tudo em português do Brasil, simples e direto (o público vai de jovens a idosos). Código, comentários, commits e textos da interface.
 - **Branch do front-end:** `luiz/frontend`. Não fazer push em outras branches nem abrir PR sem pedido explícito.
 - **Commits:** mensagem em português, título curto + lista do que mudou.
