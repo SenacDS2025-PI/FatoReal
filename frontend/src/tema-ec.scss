@@ -567,3 +567,5 @@ fieldset { min-width: 0; }
 .gst-degrau[data-pos='2'] .gst-coluna { background: #5b6779; }
 /* Link amarelo da checagem sobre o azul */
 .post-checagem a { color: #ffe14d; }
+/* Contato: o botão do e-mail (endereço comprido) quebra a linha no celular pequeno em vez de alargar a página */
+.inst .botao { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
