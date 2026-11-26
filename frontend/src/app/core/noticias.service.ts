@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 import { LISTA_ATUALIZADA_EM, Noticia, NOTICIAS } from './noticias';
 import { apiUrl } from './supabase';
 
+/**
+ * O back-end ainda não tem a rota GET /api/noticias (26 nov. 2026): chamar dava 404 vermelho no console.
+ * Quando o João criar a rota, troque para true.
+ */
+const FEED_NOTICIAS_ATIVO = false;
+
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 /** "12 nov. 2026" ou "nov. 2026" → número para ordenar (mais nova primeiro). */
@@ -23,7 +29,7 @@ function ordem(n: Noticia & { quando?: string }): number {
 @Injectable({ providedIn: 'root' })
 export class NoticiasService {
   async carregar(): Promise<{ lista: Noticia[]; aoVivo: boolean; atualizadaEm: string }> {
-    try {
+    if (FEED_NOTICIAS_ATIVO) try {
       const resp = await fetch(`${apiUrl}/noticias`, { signal: AbortSignal.timeout(4000) });
       if (resp.ok && resp.headers.get('content-type')?.includes('json')) {
         const dados = (await resp.json()) as Noticia[];

@@ -108,7 +108,7 @@
 <section class="pol-explore">
   @for (x of explorar; track x.rota) {
     <a class="pol-explore-card" [routerLink]="x.rota">
-      <img [src]="x.imagem" alt="" loading="lazy" />
+      <img [src]="x.imagem" alt="" />
       <app-icone [nome]="x.icone" />
       <span><strong>{{ x.titulo }}</strong><small>{{ x.texto }}</small></span>
     </a>

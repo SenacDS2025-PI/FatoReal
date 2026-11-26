@@ -8,10 +8,11 @@ import { Icone } from '../../shared/componentes';
 import { VistosService } from '../../core/vistos.service';
 import { NotificacoesService } from '../../core/notificacoes.service';
 import { capaComunidade, avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
+import { PluralPipe } from '../../shared/plural';
 
 @Component({
   selector: 'app-comunidades',
-  imports: [FormsModule, RouterLink, Icone],
+  imports: [PluralPipe, FormsModule, RouterLink, Icone],
   templateUrl: './lista.html',
 })
 export class ComunidadesPage implements OnInit {

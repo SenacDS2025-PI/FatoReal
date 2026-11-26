@@ -274,7 +274,7 @@
               } @else if (erroAgenda()) {
                 <p class="texto-suave">A agenda da Câmara não respondeu agora. Tente de novo em instantes.</p>
               } @else if (agenda().length) {
-                <p class="ag-resumo"><strong>{{ agenda().length }}</strong> compromisso(s) de {{ semana() | date: "d 'de' MMM" : undefined : 'pt-BR' }} a {{ fimSemana() | date: "d 'de' MMM" : undefined : 'pt-BR' }}
+                <p class="ag-resumo"><strong>{{ agenda().length }}</strong> {{ agenda().length === 1 ? 'compromisso' : 'compromissos' }} de {{ semana() | date: "d 'de' MMM" : undefined : 'pt-BR' }} a {{ fimSemana() | date: "d 'de' MMM" : undefined : 'pt-BR' }}
                   · {{ reunioesSemana() }} em comissões e audiências</p>
                 <ul class="ag-mini">
                   @for (e of agenda().slice(0, 3); track e.id) {
@@ -294,7 +294,7 @@
             } @else if (patrimonio(); as pt) {
               @if (pt.quantidade) {
                 <p class="pt-total">{{ pt.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</p>
-                <p class="texto-suave">{{ pt.quantidade }} bem(ns) declarado(s) ao TSE na eleição de {{ pt.ano }}</p>
+                <p class="texto-suave">{{ pt.quantidade | plural: 'bem declarado' : 'bens declarados' }} ao TSE na eleição de {{ pt.ano }}</p>
               } @else {
                 <p class="texto-suave">Não declarou bens ao TSE na eleição de {{ pt.ano }}.</p>
               }
@@ -362,7 +362,8 @@
         @if (linhaDoTempo().length > 1) {
           <section class="card ps-linha">
             <h2 class="ps-titulo">Linha do tempo do mandato</h2>
-            <ol>
+            <!-- tabindex: no celular a linha do tempo rola de lado e precisa dar para rolar pelo teclado -->
+            <ol tabindex="0" aria-label="Linha do tempo do mandato">
               @for (e of linhaDoTempo(); track $index) {
                 <li><span class="ps-ponto"></span><time>{{ e.data | date: 'MMM yyyy' : '' : 'pt-BR' }}</time><span>{{ e.texto }}</span></li>
               }
@@ -389,14 +390,14 @@
             <section class="card">
               <h2 class="titulo-secao">Quem é</h2>
               <dl class="lista-campos">
-                <app-campo rotulo="Nome civil" [valor]="p.nome_civil" />
-                <app-campo rotulo="Idade" [valor]="idade(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) ? idade(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) + ' anos' : null" />
-                <app-campo rotulo="Nascimento" [valor]="(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) ? ((sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) | date: 'dd/MM/yyyy') : null" />
-                <app-campo rotulo="Naturalidade" [valor]="sen ? s?.naturalidade : car?.naturalidade ?? p.municipio_nascimento" />
-                <app-campo rotulo="Escolaridade" [valor]="sen ? (s?.formacao?.[0]?.grau || null) : car?.escolaridade ?? p.escolaridade" />
-                <app-campo rotulo="Profissão" [valor]="(sen ? s?.profissoes : car?.profissoes)?.join(', ') || null" />
-                <app-campo rotulo="Partido" [valor]="p.partido" />
-                <app-campo rotulo="Estado" [valor]="p.uf" />
+                <div appCampo rotulo="Nome civil" [valor]="p.nome_civil"></div>
+                <div appCampo rotulo="Idade" [valor]="idade(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) ? idade(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) + ' anos' : null"></div>
+                <div appCampo rotulo="Nascimento" [valor]="(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) ? ((sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) | date: 'dd/MM/yyyy') : null"></div>
+                <div appCampo rotulo="Naturalidade" [valor]="sen ? s?.naturalidade : car?.naturalidade ?? p.municipio_nascimento"></div>
+                <div appCampo rotulo="Escolaridade" [valor]="sen ? (s?.formacao?.[0]?.grau || null) : car?.escolaridade ?? p.escolaridade"></div>
+                <div appCampo rotulo="Profissão" [valor]="(sen ? s?.profissoes : car?.profissoes)?.join(', ') || null"></div>
+                <div appCampo rotulo="Partido" [valor]="p.partido"></div>
+                <div appCampo rotulo="Estado" [valor]="p.uf"></div>
               </dl>
             </section>
             @if (!sen) {
@@ -426,9 +427,9 @@
             <section class="card">
               <h2 class="titulo-secao">Contato e gabinete</h2>
               <dl class="lista-campos">
-                <app-campo rotulo="E-mail" [valor]="detalhes()?.gabinete?.email || p.email" />
-                <app-campo rotulo="Telefone" [valor]="sen ? s?.telefone : (detalhes()?.gabinete?.telefone ? '(61) ' + detalhes()!.gabinete!.telefone : null)" />
-                <app-campo rotulo="Gabinete" [valor]="sen ? s?.endereco : local()" />
+                <div appCampo rotulo="E-mail" [valor]="detalhes()?.gabinete?.email || p.email"></div>
+                <div appCampo rotulo="Telefone" [valor]="sen ? s?.telefone : (detalhes()?.gabinete?.telefone ? '(61) ' + detalhes()!.gabinete!.telefone : null)"></div>
+                <div appCampo rotulo="Gabinete" [valor]="sen ? s?.endereco : local()"></div>
               </dl>
               @if (detalhes()?.redesSociais?.length || car?.site) {
                 <ul class="redes">
@@ -646,7 +647,7 @@
                 <h3 class="sub-secao">Quem mais recebeu</h3>
                 <ol class="lista-fornecedores">
                   @for (f of g.fornecedores; track f.nome) {
-                    <li><span>{{ f.nome }}<small>{{ f.vezes }} nota(s)</small></span><strong>{{ f.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></li>
+                    <li><span>{{ f.nome }}<small>{{ f.vezes | plural: 'nota' : 'notas' }}</small></span><strong>{{ f.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></li>
                   }
                 </ol>
               </div>
@@ -850,8 +851,8 @@
               <section class="card">
                 <h2 class="titulo-secao">Formação e profissão</h2>
                 <dl class="lista-campos">
-                  <app-campo rotulo="Escolaridade" [valor]="sen ? (s?.formacao?.[0]?.grau || null) : car?.escolaridade" />
-                  <app-campo rotulo="Profissões" [valor]="(sen ? s?.profissoes : car?.profissoes)?.join(', ') || null" />
+                  <div appCampo rotulo="Escolaridade" [valor]="sen ? (s?.formacao?.[0]?.grau || null) : car?.escolaridade"></div>
+                  <div appCampo rotulo="Profissões" [valor]="(sen ? s?.profissoes : car?.profissoes)?.join(', ') || null"></div>
                 </dl>
                 @if (sen && s?.formacao?.length) {
                   <ul class="lista-simples">@for (f of s!.formacao; track $index) { <li><strong>{{ f.curso }}</strong> @if (f.local) { <small>{{ f.local }}</small> }</li> }</ul>

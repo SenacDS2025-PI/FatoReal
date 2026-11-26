@@ -79,7 +79,7 @@ import { Redes } from '../../core/modelos';
             <details class="campo-form">
               <summary class="texto-p">Prefere colar um link de imagem?</summary>
               <label for="e-foto">Link da foto</label>
-              <input id="e-foto" name="foto" type="url" [ngModel]="foto().startsWith('data:') ? '' : foto()" (ngModelChange)="foto.set($event)" placeholder="https://..." />
+              <input id="e-foto" name="foto" type="url" [ngModel]="foto().startsWith('data:') || avatarDoSite(foto()) ? '' : foto()" (ngModelChange)="foto.set($event)" placeholder="https://..." />
             </details>
           </section>
 
@@ -289,8 +289,14 @@ export class PerfilEditarPage {
   protected readonly salvando = signal(false);
   protected readonly confirmando = signal(false);
 
+  /** Avatar padrão do próprio site (ex.: img/avatares/a5.svg, dado na criação da conta): não é um link digitado. */
+  protected avatarDoSite(f: string): boolean {
+    return /^img\/avatares\/a\d{1,2}\.svg$/.test(f.trim());
+  }
+
   protected async salvar() {
-    const foto = this.foto().trim() ? (this.foto().startsWith('data:') ? imagemSegura(this.foto()) : linkSeguro(this.foto())) : null;
+    const f = this.foto().trim();
+    const foto = f ? (this.avatarDoSite(f) ? f : f.startsWith('data:') ? imagemSegura(f) : linkSeguro(f)) : null;
     if (this.foto().trim() && !foto) {
       this.avisos.mostrar('O link da foto precisa começar com https://', 'erro');
       return;

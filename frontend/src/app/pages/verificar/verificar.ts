@@ -50,8 +50,10 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
         <form class="card form-verificar" (submit)="$event.preventDefault(); verificar()">
           <div class="campo-form">
             <label for="afirmacao">O que você quer verificar?</label>
-            <textarea id="afirmacao" name="afirmacao" [(ngModel)]="afirmacao" rows="4" maxlength="1000"
+            <textarea id="afirmacao" name="afirmacao" [(ngModel)]="afirmacao" rows="4" maxlength="1000" [attr.aria-invalid]="textoCurto()" aria-describedby="afirmacao-ajuda"
               placeholder="Ex.: A Câmara dos Deputados tem 513 deputados."></textarea>
+            @if (textoCurto()) { <small id="afirmacao-ajuda" class="erro-campo">Escreva pelo menos {{ minimo }} letras para dar para verificar.</small> }
+            @else { <small id="afirmacao-ajuda" class="texto-suave">De {{ minimo }} a 1000 letras.</small> }
           </div>
 
           <div class="campo-form">
@@ -119,7 +121,8 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
                   <strong>{{ e.titulo }}</strong>
                   <small>{{ e.texto }}</small>
                   <span class="jornada-status">
-                    @if (etapa() > i) { <app-icone nome="check_circle" /> {{ e.feito }} } @else if (etapa() === i && verificando()) { <span class="jornada-giro"></span> Em andamento } @else { Aguardando }
+                    @if (etapa() > i && puladas()[i]) { <app-icone nome="do_not_disturb_on" /> {{ puladas()[i] }} }
+                    @else if (etapa() > i) { <app-icone nome="check_circle" /> {{ e.feito }} } @else if (etapa() === i && verificando()) { <span class="jornada-giro"></span> Em andamento } @else { Aguardando }
                   </span>
                 </li>
               }
@@ -353,11 +356,21 @@ export class VerificarPage implements OnDestroy {
     return !!linkSeguro(this.link.trim());
   }
 
+  /** A API exige de 5 a 1000 letras na afirmação. */
+  protected readonly minimo = 5;
+  protected textoCurto(): boolean {
+    const t = this.afirmacao.trim();
+    return t.length > 0 && t.length < this.minimo;
+  }
+
   protected podeEnviar(): boolean {
     const link = this.link.trim();
     if (link && !this.linkValido()) return false;
-    return !!(this.afirmacao.trim() || link || this.anexos().length);
+    return this.afirmacao.trim().length >= this.minimo;
   }
+
+  /** Etapas que NÃO aconteceram (texto do motivo), para nunca mostrar "Análise com IA concluída" sem IA. */
+  protected readonly puladas = signal<(string | null)[]>([]);
 
   protected adicionar(lista: FileList | null) {
     if (!lista) return;
@@ -413,15 +426,25 @@ export class VerificarPage implements OnDestroy {
     const anexos = this.anexos();
     this.verificando.set(true);
     this.etapa.set(0);
+    this.puladas.set([]);
     const passo = 1100;
-    const relogio = setInterval(() => this.etapa.update((e) => Math.min(e + 1, this.etapas.length - 1)), passo);
+    // Enquanto espera a resposta, só "Recebida" pode ficar pronta: o resto depende do que a API fizer de verdade
+    const relogio = setInterval(() => this.etapa.update((e) => Math.min(e + 1, 1)), passo);
     this.mostrarFatos();
     try {
       const [resultado] = await Promise.all([
         this.bot.verificar({ afirmacao, link, anexos: anexos.map((a) => a.arquivo) }),
-        new Promise((ok) => setTimeout(ok, passo * this.etapas.length)),
+        new Promise((ok) => setTimeout(ok, passo * 2)),
       ]);
       clearInterval(relogio);
+      if (resultado.demonstracao) {
+        const motivo = 'Não feita (modo demonstração)';
+        this.puladas.set([null, motivo, motivo, motivo, motivo]);
+      } else {
+        // Sem IA a API devolve "Em análise"; sem fonte relacionada, "Evidência insuficiente": nos dois casos a IA não classificou
+        const semIa = resultado.estado === 'Em análise' || resultado.estado === 'Evidência insuficiente';
+        this.puladas.set([null, null, semIa ? 'Sem análise de IA nesta checagem' : null, semIa ? 'Sem conferência automática' : null, null]);
+      }
       this.etapa.set(this.etapas.length);
       this.checagens.registrar({
         afirmacao: afirmacao || link || anexos.map((a) => a.arquivo.name).join(', '), estado: resultado.estado,
@@ -437,6 +460,7 @@ export class VerificarPage implements OnDestroy {
       for (const a of anexos) if (a.previa) URL.revokeObjectURL(a.previa);
       this.anexos.set([]);
     } catch (e) {
+      this.etapa.set(0);
       this.avisos.erro(e);
     } finally {
       clearInterval(relogio);

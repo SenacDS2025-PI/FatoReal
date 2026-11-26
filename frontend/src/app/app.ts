@@ -14,7 +14,6 @@ import { Avatar, AvisoDemo, Icone } from './shared/componentes';
 import { BoasVindas } from './shared/boas-vindas';
 import { DestaqueLateral } from './shared/destaque-lateral';
 import { FatoBotBolha, PerguntarFatobot } from './shared/fatobot-bolha';
-import { WhatsappBotao } from './shared/whatsapp-botao';
 import { TawkChat } from './shared/tawk-chat';
 
 type Contador = 'comunidades' | 'mensagens';
@@ -22,7 +21,7 @@ type Contador = 'comunidades' | 'mensagens';
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [CordinhaTema, RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral, WhatsappBotao, TawkChat],
+  imports: [CordinhaTema, RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral, TawkChat],
   templateUrl: './app.html',
 })
 export class App {

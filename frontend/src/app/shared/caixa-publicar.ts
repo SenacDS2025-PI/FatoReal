@@ -76,7 +76,8 @@ import { reduzirImagem } from './imagem-reduzida';
               <span class="acao-composer"><app-icone nome="groups" /> Em {{ f.nome }}</span>
             } @else if (comunidades().length) {
               <label for="nova-comunidade" class="sr-only">Publicar em</label>
-              <select id="nova-comunidade" name="comunidade" [(ngModel)]="comunidadeId" class="select-discreto">
+              <!-- Já vem com a primeira comunidade da pessoa escolhida (antes ficava em branco) -->
+              <select id="nova-comunidade" name="comunidade" [ngModel]="comunidadeId ?? comunidades()[0]?.id" (ngModelChange)="comunidadeId = $event" class="select-discreto">
                 @for (c of comunidades(); track c.id) { <option [ngValue]="c.id">Em {{ c.nome }}</option> }
               </select>
             } @else {

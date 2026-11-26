@@ -39,7 +39,7 @@ export function tempoAtras(iso: string): string {
   if (s < 60) return 'agora';
   if (s < 3600) return `${Math.floor(s / 60)} min atrás`;
   if (s < 86400) return `${Math.floor(s / 3600)}h atrás`;
-  if (s < 7 * 86400) return `${Math.floor(s / 86400)} dia(s) atrás`;
+  if (s < 7 * 86400) return `${plural(Math.floor(s / 86400), 'dia', 'dias')} atrás`;
   return new Date(iso).toLocaleDateString('pt-BR');
 }
 
@@ -66,4 +66,10 @@ export function novoId(): string {
   }
   const hex = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
   return `${hex(8)}-${hex(4)}-4${hex(3)}-${'89ab'[Math.floor(Math.random() * 4)]}${hex(3)}-${hex(12)}`;
+}
+
+/** "1 membro" / "5 membros": singular e plural certos, sem o "(s)". */
+export function plural(n: number | null | undefined, um: string, varios: string): string {
+  const v = Number(n ?? 0);
+  return `${v.toLocaleString('pt-BR')} ${v === 1 ? um : varios}`;
 }

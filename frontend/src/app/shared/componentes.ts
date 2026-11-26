@@ -19,7 +19,8 @@ export class Icone {
   selector: 'app-avatar',
   template: `
     @if (foto() && !falhou()) {
-      <img [src]="foto()" alt="" loading="lazy" (error)="falhou.set(true)" />
+      <!-- Foto grande (cabeçalho de perfil) carrega na hora: é a imagem principal da página -->
+      <img [src]="foto()" alt="" [attr.loading]="tamanho() >= 80 ? 'eager' : 'lazy'" (error)="falhou.set(true)" />
     } @else {
       <span aria-hidden="true">{{ iniciais() }}</span>
     }
@@ -78,7 +79,8 @@ export class FonteDado {
 
 /** Linha "rótulo: valor" que mostra "não disponível" quando o dado não existe. */
 @Component({
-  selector: 'app-campo',
+  // Atributo num <div> (e não elemento próprio): dentro de <dl> só podem ficar <dt>, <dd> ou <div> (acessibilidade)
+  selector: 'div[appCampo]',
   template: `
     <dt>{{ rotulo() }}</dt>
     <dd [class.indisponivel]="!valor()">{{ valor() || 'não disponível' }}</dd>

@@ -531,3 +531,39 @@ fieldset { min-width: 0; }
   .topo .botao-entrar { width: 44px; padding: 0; justify-content: center;
     .entrar-texto { display: none; } .entrar-icone { display: inline-block; font-size: 1.4rem; } }
 }
+
+/* ===== Notícias: faixa "Últimas" com botão de pausar (26 nov. 2026) ===== */
+.nt-faixa.pausada .nt-faixa-itens { animation-play-state: paused; }
+.nt-faixa-pausa { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(255, 255, 255, 0.12); color: #fff; .icone { font-size: 1.15rem; }
+  &:hover, &:focus-visible { background: rgba(255, 255, 255, 0.24); } }
+/* Categoria clareada sobre a faixa escura: contraste de pelo menos 4,5:1 */
+.nt-faixa-cat { color: color-mix(in srgb, var(--c, #fff) 40%, #fff); font-weight: 700; }
+
+/* =========================================================
+   Contraste de pelo menos 4,5:1 nos dois temas (relatório de testes, 26 nov. 2026)
+   Mesmas cores de cada selo/categoria, só mais escuras no claro e mais claras no escuro.
+   ========================================================= */
+:root:not([data-tema='escuro']) {
+  .post-tipo { color: color-mix(in srgb, var(--c) 62%, #000); }
+  .nt-post-cat { color: color-mix(in srgb, var(--c) 55%, #000); }
+  .selo-status { color: color-mix(in srgb, var(--c) 64%, #000); }
+  .nt-k, small.nt-k { color: color-mix(in srgb, var(--c, var(--link)) 58%, #000); }
+  .ele-data { color: color-mix(in srgb, var(--cor) 52%, #000); }
+  .cg-hora time { color: color-mix(in srgb, var(--c) 58%, #000); }
+  .cg-legenda li { color: color-mix(in srgb, var(--c) 60%, #000); }
+  .nav-inferior a.ativo { color: #0b6b42; }
+}
+:root[data-tema='escuro'] {
+  .post-tipo { color: color-mix(in srgb, var(--c) 52%, #fff); }
+  .cmp-quem { filter: none; color: color-mix(in srgb, var(--lado) 42%, #fff); }
+  .cg-hora time, .cg-legenda li { color: color-mix(in srgb, var(--c) 48%, #fff); }
+  /* aba ou tema escolhido em verde-limão: texto escuro em cima */
+  .com-temas button[aria-pressed='true'], .bsc-abas button[aria-selected='true'] { color: #101a00; .icone { color: #101a00; } }
+}
+/* Conquistas ainda não ganhas: texto legível (antes ficava tudo a 55% de opacidade); só o ícone fica apagado */
+.pp-conquistas li:not(.ok) { opacity: 1; span { color: var(--texto); } small { color: var(--texto-suave); } .icone { opacity: 0.5; } }
+/* Pódio do ranking: 2º lugar em cinza mais escuro para o número branco aparecer */
+.gst-degrau[data-pos='2'] .gst-coluna { background: #5b6779; }
+/* Link amarelo da checagem sobre o azul */
+.post-checagem a { color: #ffe14d; }

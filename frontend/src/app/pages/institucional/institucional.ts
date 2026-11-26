@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icone } from '../../shared/componentes';
 import { Faixa } from '../../shared/faixa';
+import { WhatsappBotao } from '../../shared/whatsapp-botao';
 
 /** E-mail do canal de contato. TROCAR pelo e-mail oficial da equipe. */
 const EMAIL_CONTATO = 'contato.fatoreal@exemplo.com';
@@ -12,7 +13,7 @@ const EMAIL_CONTATO = 'contato.fatoreal@exemplo.com';
  */
 @Component({
   selector: 'app-institucional',
-  imports: [RouterLink, Icone, Faixa],
+  imports: [RouterLink, Icone, Faixa, WhatsappBotao],
   templateUrl: './institucional.html',
 })
 export class InstitucionalPage {

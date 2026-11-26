@@ -5,6 +5,7 @@ import { FatoBotConversa } from '../core/fatobot-conversa.service';
 import { Avatar, Icone } from '../shared/componentes';
 import { Faixa } from '../shared/faixa';
 import { SeloStatus } from '../shared/selo-status';
+import { plural } from '../core/util';
 
 type Aba = 'tudo' | TipoResultado;
 
@@ -22,7 +23,7 @@ const GRUPOS: { tipo: TipoResultado; titulo: string; icone: string; cor: string 
   imports: [RouterLink, Avatar, Icone, SeloStatus, Faixa],
   template: `
     <app-faixa sobretitulo="Busca" icone="search" [titulo]="'Resultados para “' + q() + '”'"
-      [texto]="carregando() ? 'Procurando em políticos, comunidades, notícias e no glossário...' : resultados().length + ' resultado(s) encontrados no Fato Real.'"
+      [texto]="carregando() ? 'Procurando em políticos, comunidades, notícias e no glossário...' : plural(resultados().length, 'resultado encontrado', 'resultados encontrados') + ' no Fato Real.'"
       [cores]="['#0c4a6e', '#0369a1', '#38bdf8']" />
 
     @if (carregando()) {
@@ -62,13 +63,13 @@ const GRUPOS: { tipo: TipoResultado; titulo: string; icone: string; cor: string 
                 }
                 @case ('noticia') {
                   <a [href]="r.externo" target="_blank" rel="noopener noreferrer" class="card bsc-img">
-                    @if (r.imagem) { <img [src]="r.imagem" alt="" loading="lazy" /> }
+                    @if (r.imagem) { <img [src]="r.imagem" alt="" /> }
                     <span class="bsc-img-texto"><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }} <app-icone nome="open_in_new" /></small></span>
                   </a>
                 }
                 @case ('comunidade') {
                   <a [routerLink]="r.rota" class="card bsc-img bsc-com">
-                    @if (r.imagem) { <img [src]="r.imagem" alt="" loading="lazy" /> }
+                    @if (r.imagem) { <img [src]="r.imagem" alt="" /> }
                     <span class="bsc-com-av">@if (r.foto) { <img [src]="r.foto" alt="" /> } @else { <app-icone nome="groups" /> }</span>
                     <span class="bsc-img-texto"><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }}</small></span>
                   </a>
@@ -89,6 +90,7 @@ const GRUPOS: { tipo: TipoResultado; titulo: string; icone: string; cor: string 
   `,
 })
 export class BuscaGeralPage {
+  protected readonly plural = plural;
   private busca = inject(BuscaGeralService);
   private bot = inject(FatoBotConversa);
   readonly q = input('');
