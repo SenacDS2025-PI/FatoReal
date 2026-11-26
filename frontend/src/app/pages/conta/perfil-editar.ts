@@ -2,6 +2,7 @@ import { DeputadosCep, buscarCep, deputadosDoCep, soNumerosCep } from '../../cor
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { rotaPolitico } from '../../core/politicos.service';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { CAPAS } from '../../core/perfis.service';
@@ -141,7 +142,7 @@ import { Redes } from '../../core/modelos';
                   <strong>Deputados do seu estado ({{ d.uf }}): {{ d.total }}</strong>
                   <ul>
                     @for (dep of d.dados.slice(0, 8); track dep.id) {
-                      <li><a [routerLink]="['/politicos', dep.id]" [title]="dep.nome + ' (' + dep.partido + ')'">
+                      <li><a [routerLink]="rotaPolitico(dep)" [title]="dep.nome + ' (' + dep.partido + ')'">
                         <app-avatar [nome]="dep.nome" [url]="dep.foto" [tamanho]="40" /><span>{{ dep.nome }}</span></a></li>
                     }
                   </ul>
@@ -203,6 +204,7 @@ export class PerfilEditarPage {
   protected auth = inject(AuthService);
   private avisos = inject(AvisosService);
   private router = inject(Router);
+  protected readonly rotaPolitico = rotaPolitico;
 
   protected readonly capas = CAPAS;
   protected readonly chavesCapa = Object.keys(CAPAS);

@@ -345,6 +345,19 @@ export async function obterSenador(id: number): Promise<Politico | null> {
   return (await todosDoCargo('Senador(a)')).find((p) => p.id === id) ?? null;
 }
 
+/** Senador(a)? Vale para a API do Senado e para linhas do Supabase (casa 'senado' ou cargo começando com "Senador"). */
+export function ehSenador(p: { casa?: string | null; cargo?: string | null }): boolean {
+  return p.casa === 'senado' || /^senador/i.test((p.cargo ?? '').trim());
+}
+
+/**
+ * Rota do perfil de um político. Use SEMPRE esta função para montar o link:
+ * senador vai para /politicos/senado/:id (dados do Senado); o resto para /politicos/:id (Câmara).
+ */
+export function rotaPolitico(p: { id: number | string; casa?: string | null; cargo?: string | null }): (string | number)[] {
+  return ehSenador(p) ? ['/politicos/senado', p.id] : ['/politicos', p.id];
+}
+
 /** Chave de um político nos registros (o mesmo id pode existir na Câmara e no Senado). */
 export function chaveAlerta(p: Pick<Politico, 'id' | 'casa'>): string {
   return `${p.casa ?? 'camara'}:${p.id}`;

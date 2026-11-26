@@ -3,12 +3,13 @@ import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AlertaJuridico, Politico, TipoAlerta } from '../../core/modelos';
 import { AuthService } from '../../core/auth.service';
 import { SeguidosService } from '../../core/seguidos.service';
 import { AvisosService } from '../../core/avisos.service';
-import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta } from '../../core/politicos.service';
+import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta, rotaPolitico } from '../../core/politicos.service';
+import { supabase } from '../../core/supabase';
 import { linkSeguro } from '../../core/util';
 import { inicioLegislatura } from '../../core/politicos.service';
 import {
@@ -30,6 +31,7 @@ type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'agenda' | 'patrimonio
 })
 export class PerfilPoliticoPage implements OnInit {
   private service = inject(PoliticosService);
+  private router = inject(Router);
   /** Vem da URL /politicos/:id */
   readonly id = input.required<string>();
   /** Vem dos dados da rota: 'senado' em /politicos/senado/:id. */
@@ -628,6 +630,15 @@ export class PerfilPoliticoPage implements OnInit {
   async ngOnInit() {
     const id = Number(this.id());
     const senado = this.casa() === 'senado';
+    // Proteção: com o Supabase, um link antigo /politicos/<código do Senado> mandaria o código para a API da Câmara
+    // (404/429 e perfil vazio). Se esse id é de um senador no banco, troca para a rota do Senado sem chamar a Câmara.
+    if (!senado && supabase) {
+      const sen = await obterSenador(id).catch(() => null);
+      if (sen) {
+        this.router.navigate(rotaPolitico(sen), { replaceUrl: true });
+        return;
+      }
+    }
     if (senado) {
       this.carregandoDetalhes.set(false);
       fichaSenador(id).then((f) => this.senador.set(f)).catch(() => this.senador.set(null)).finally(() => this.carregandoFicha.set(false));

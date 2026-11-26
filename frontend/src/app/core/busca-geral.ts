@@ -3,7 +3,7 @@ import { ComunidadesService } from './comunidades.service';
 import { GLOSSARIO } from './glossario';
 import { infoCategoria, NOTICIAS } from './noticias';
 import { avatarComunidade, capaComunidade } from './visual';
-import { todosDoCargo } from './politicos.service';
+import { rotaPolitico, todosDoCargo } from './politicos.service';
 
 export type TipoResultado = 'politico' | 'comunidade' | 'termo' | 'noticia' | 'pagina';
 
@@ -61,7 +61,7 @@ export class BuscaGeralService {
       .slice(0, porGrupo)
       .map<ResultadoBusca>((p) => ({
         tipo: 'politico', selo: 'confiavel', titulo: p.nome, detalhe: `${p.cargo} · ${p.partido ?? ''} · ${p.uf ?? ''}`, icone: 'person', foto: p.foto_url,
-        rota: p.casa === 'senado' ? ['/politicos/senado', p.id] : ['/politicos', p.id],
+        rota: rotaPolitico(p),
       }));
     // Busca por partido ou estado: atalho para a lista filtrada
     const atalhos: ResultadoBusca[] = [];

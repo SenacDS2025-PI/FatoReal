@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { CARGOS, chaveAlerta, contagemAlertas, letraDe, todosDoCargo } from '../../core/politicos.service';
+import { CARGOS, chaveAlerta, contagemAlertas, letraDe, rotaPolitico, todosDoCargo } from '../../core/politicos.service';
 import { verificadosDe } from '../../core/registros-verificados';
 import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
@@ -244,9 +244,9 @@ export class BuscaPage implements OnInit {
     this.mudouFiltro();
   }
 
-  /** Link do perfil: deputados e itens do Supabase em /politicos/:id; senadores (demo) em /politicos/senado/:id. */
+  /** Link do perfil: senador (demo ou Supabase) em /politicos/senado/:id; os outros em /politicos/:id. */
   protected linkPerfil(p: Politico): (string | number)[] {
-    return p.casa === 'senado' && this.demo ? ['/politicos/senado', p.id] : ['/politicos', p.id];
+    return rotaPolitico(p);
   }
 
   private atualizarUrl() {

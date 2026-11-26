@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, HostListener, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { rotaPolitico } from '../../core/politicos.service';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
@@ -48,8 +49,9 @@ export class PerfilPage {
   protected readonly iconeSalvo: Record<TipoFavorito, string> = { politico: 'account_balance', projeto: 'description', noticia: 'newspaper', publicacao: 'dynamic_feed', comunidade: 'groups' };
   protected readonly nomeSalvo: Record<TipoFavorito, string> = { politico: 'Político', projeto: 'Projeto', noticia: 'Notícia', publicacao: 'Publicação', comunidade: 'Comunidade' };
   /** Rota interna do item salvo (político e comunidade abrem dentro do site). */
-  protected rotaSalvo(f: Favorito): string[] | null {
-    if (f.tipo === 'politico') return f.ref_id.startsWith('senado-') ? ['/politicos/senado', f.ref_id.slice(7)] : ['/politicos', f.ref_id];
+  protected rotaSalvo(f: Favorito): (string | number)[] | null {
+    // Favorito de senador é salvo como "senado-<id>" (formato antigo, mantido)
+    if (f.tipo === 'politico') return f.ref_id.startsWith('senado-') ? rotaPolitico({ id: f.ref_id.slice(7), casa: 'senado' }) : rotaPolitico({ id: f.ref_id });
     if (f.tipo === 'comunidade') return ['/comunidades', f.ref_id];
     return null;
   }
