@@ -91,9 +91,9 @@ test('FatoBot funciona com a Câmara fora do ar, usando o Supabase', async () =>
   assert.match(JSON.stringify(body), /PSB-SP/);
 });
 
-test('sem Supabase, Câmara fora e deputado fora da cópia → 503', async () => {
+test('sem Supabase, Câmara fora e deputado fora da cópia → 404 (não existe)', async () => {
   const res = await fetch(`${base}/api/deputados/1`);
-  assert.equal(res.status, 503);
+  assert.equal(res.status, 404);
 });
 
 test('Kelly: senadores da tabela não aparecem na busca nem no perfil de deputado', async () => {

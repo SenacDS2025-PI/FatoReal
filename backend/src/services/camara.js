@@ -92,6 +92,7 @@ function obterDaCamara(id) {
         id: d.id,
         nome: s.nome,
         nomeCivil: d.nomeCivil,
+        sexo: d.sexo, // "M" ou "F": só para escrever "deputado" ou "deputada"
         partido: s.siglaPartido,
         uf: s.siglaUf,
         foto: s.urlFoto,
@@ -214,6 +215,9 @@ export async function obterDeputado(id) {
     if (err instanceof CamaraError && err.status === 404) throw err;
     const reserva = (await tentarSupabase(obterDoSupabase, id)) ?? obterDaCopia(id);
     if (reserva) return reserva;
+    // A cópia tem a lista completa dos deputados: se o id não está nela (nem no Supabase),
+    // ele não existe. Responde "não encontrado" em vez de "Câmara fora do ar".
+    if (lerCopia()) throw new CamaraError('Deputado não encontrado', 404);
     console.error(err.message);
     throw new CamaraError(MSG_CAMARA_FORA);
   }

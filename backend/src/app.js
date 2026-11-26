@@ -43,6 +43,14 @@ app.use('/api', (req, res) => {
 // Erro inesperado (não expõe detalhes internos ao usuário)
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
+  // Corpo do pedido que não é JSON válido (ex.: `{pergunta`) ou grande demais: erro de quem chamou,
+  // não do servidor. Responde 400/413 sem sujar o log com a pilha do erro.
+  if (err?.type === 'entity.parse.failed') {
+    return res.status(400).json({ erro: 'Pedido inválido: o corpo não é um JSON válido.' });
+  }
+  if (err?.type === 'entity.too.large') {
+    return res.status(413).json({ erro: 'Pedido grande demais.' });
+  }
   if (err instanceof CamaraError) {
     if (err.status === 404) return res.status(404).json({ erro: 'Deputado não encontrado' });
     // J3: Câmara fora do ar e sem cópia de reserva.

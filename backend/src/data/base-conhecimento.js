@@ -96,7 +96,7 @@ export const BASE = [
     texto:
       'O Senado é formado por representantes dos Estados e do Distrito Federal, eleitos pelo princípio majoritário. Cada Estado e o Distrito Federal elegem três senadores, com mandato de oito anos. ' +
       'A representação é renovada de quatro em quatro anos, alternadamente, por um terço e por dois terços.',
-    palavras: ['senado', 'senador', 'senadores'],
+    palavras: ['senado', 'senador', 'senadores', 'mandato de senador', 'oito anos', 'tres senadores', 'senado federal'],
   },
   {
     id: 'B10',
@@ -156,7 +156,7 @@ export const BASE = [
       'A Constituição pode ser emendada por proposta de um terço dos deputados ou dos senadores, do presidente da República ou de mais da metade das Assembleias Legislativas. ' +
       'A proposta é votada em cada Casa em dois turnos e só é aprovada se obtiver três quintos dos votos. ' +
       'Não pode ser votada emenda que tente abolir a forma federativa, o voto direto, secreto, universal e periódico, a separação dos Poderes ou os direitos e garantias individuais (cláusulas pétreas).',
-    palavras: ['pec', 'emenda', 'clausula petrea', 'constituicao'],
+    palavras: ['pec', 'emenda', 'clausula petrea', 'emenda constitucional', 'mudar a constituicao', 'alterar a constituicao'],
   },
   {
     id: 'B17',
