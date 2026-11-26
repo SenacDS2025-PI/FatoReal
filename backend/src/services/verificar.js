@@ -8,6 +8,7 @@
 // - Anexos NÃO são analisados nem guardados (análise de mídia precisa de revisão humana).
 import { buscarEvidencias, AVISO, LIMITES_FATOBOT, textoOndeConferir } from './fatobot.js';
 import { sugerirFontes } from '../data/fontes-oficiais.js';
+import { SEM_LOG } from '../utils/log-verificar.js';
 import { classificarComIA } from './gemini.js';
 
 export const ESTADOS = {
@@ -43,7 +44,7 @@ function observacoes({ link, anexos, anexosAcimaDoLimite }) {
   return obs;
 }
 
-export async function verificar({ afirmacao, link = null, anexos = 0, anexosAcimaDoLimite = false }) {
+export async function verificar({ afirmacao, link = null, anexos = 0, anexosAcimaDoLimite = false, log = SEM_LOG }) {
   const prazo = Date.now() + LIMITES_FATOBOT.totalMs; // J2: mesmo prazo total do FatoBot
   const consultado_em = new Date().toISOString();
   const extra = observacoes({ link, anexos, anexosAcimaDoLimite });
@@ -56,18 +57,30 @@ export async function verificar({ afirmacao, link = null, anexos = 0, anexosAcim
   });
 
   // Deputados citados + Constituição (J11), as mesmas fontes do FatoBot.
+  log.info('3. buscando evidências nas fontes oficiais');
   const { evidencias, fontes } = await buscarEvidencias(afirmacao);
+  log.info('3. evidências encontradas', {
+    total: evidencias.length,
+    fontes: [...new Set(evidencias.map((e) => e.fonte))],
+  });
   if (evidencias.length === 0) {
     const sugestoes = sugerirFontes(afirmacao);
+    log.info('5. sem evidência → "Evidência insuficiente"', { ondeConferir: sugestoes.map((f) => f.nome) });
     return { ...montar('insuficiente', TEXTO_INSUFICIENTE + textoOndeConferir(sugestoes)), onde_conferir: sugestoes };
   }
 
+  log.info('4. pedindo a classificação para a IA (Gemini)', { tempoRestanteMs: prazo - Date.now() });
   const resultado = await classificarComIA(afirmacao, evidencias, { prazo });
   if (!resultado && !process.env.GEMINI_API_KEY) {
     console.warn('Verificar: GEMINI_API_KEY não configurada (confira o arquivo .env)');
   }
+  log.info('4. resposta da IA', resultado ? { estado: resultado.estado, comExplicacao: Boolean(resultado.explicacao) } : {
+    estado: null,
+    motivo: process.env.GEMINI_API_KEY ? 'IA indisponível (erro, cota, tempo ou formato; ver avisos do Gemini acima)' : 'sem GEMINI_API_KEY',
+  });
 
   if (!resultado) {
+    log.aviso('5. sem IA → "Em análise" (só os fatos das fontes)');
     const fatos = evidencias.map((e) => e.texto).join(' ');
     return montar(
       'em_analise',
@@ -77,5 +90,6 @@ export async function verificar({ afirmacao, link = null, anexos = 0, anexosAcim
     );
   }
 
+  log.info('5. resultado', { estado: ESTADOS[resultado.estado] });
   return montar(resultado.estado, resultado.explicacao ?? TEXTO_INSUFICIENTE, fontes);
 }

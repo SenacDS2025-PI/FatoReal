@@ -14,6 +14,7 @@
 import { cached } from '../utils/cache.js';
 import { comPrazo } from '../utils/prazo.js';
 import { normalizar } from '../utils/texto.js';
+import { citadosNaPergunta } from '../utils/nomes.js';
 import { supabaseConfigurado, consultarPoliticos } from './supabase.js';
 import { CARGO_SENADOR, FONTE_SENADO_NOME, buscarSenadoresDaApi } from './senado.js';
 import { FONTE_TSE_NOME } from './tse.js';
@@ -131,13 +132,7 @@ function listarCargosPequenos() {
 }
 
 function citados(pergunta, lista) {
-  const alvo = limpar(pergunta);
-  return lista
-    .filter((p) => {
-      const nome = limpar(p.nome);
-      return nome.trim().includes(' ') && alvo.includes(nome);
-    })
-    .slice(0, MAX_CITADOS);
+  return citadosNaPergunta(pergunta, lista, MAX_CITADOS);
 }
 
 function fontesDe(evidencias) {
@@ -206,5 +201,6 @@ export async function evidenciasDeOutrosPoliticos(pergunta) {
   // 4. Prefeitos e vereadores pela cidade.
   for (const e of deMunicipio) if (!evidencias.some((x) => x.texto === e.texto)) evidencias.push(e);
 
-  return { evidencias, fontes: fontesDe(evidencias) };
+  // `candidatos`: para o "Você quis dizer...?" quando a pergunta só traz o sobrenome.
+  return { evidencias, fontes: fontesDe(evidencias), candidatos: [...senadores, ...pequenos] };
 }
