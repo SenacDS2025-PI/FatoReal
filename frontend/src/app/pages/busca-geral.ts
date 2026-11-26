@@ -31,7 +31,7 @@ const GRUPOS: { tipo: TipoResultado; titulo: string; icone: string; cor: string 
       </div>
     } @else if (!resultados().length) {
       <div class="card vazio bsc-vazio">
-        <img src="img/fatobot.svg" alt="" width="110" />
+        <img src="img/fatobot.webp" alt="" width="110" />
         <strong>Não achei nada com “{{ q() }}”</strong>
         <span>Tente outro nome, a sigla de um partido (ex.: PT, PL) ou de um estado (ex.: SP).</span>
       </div>

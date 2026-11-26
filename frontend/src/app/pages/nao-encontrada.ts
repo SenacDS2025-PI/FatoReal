@@ -7,7 +7,7 @@ import { Icone } from '../shared/componentes';
   imports: [RouterLink, Icone],
   template: `
     <section class="card erro404">
-      <img src="img/fatobot.svg" alt="" class="erro404-robo" />
+      <img src="img/fatobot.webp" alt="" class="erro404-robo" />
       <p class="erro404-num">404</p>
       <h1>Ops! Não achei essa página.</h1>
       <p class="texto-suave">O endereço pode estar errado ou a página foi removida. Que tal ir para um destes lugares?</p>

@@ -14,7 +14,7 @@ interface Pensamento { icone: string; texto: string; cor: string; x: number; id:
   imports: [Icone],
   template: `
     <div class="conf" [class.fim]="terminou()" role="status" aria-live="polite">
-      <span class="conf-bot"><img src="img/fatobot-rosto.svg" alt="" /><span class="conf-lupa"><app-icone nome="search" /></span></span>
+      <span class="conf-bot"><img src="img/fatobot-rosto.webp" alt="" /><span class="conf-lupa"><app-icone nome="search" /></span></span>
       @if (!terminou()) {
         <span class="conf-txt"><b>{{ modo() === 'arquivo' ? 'FatoBot está carregando' : 'FatoBot está conferindo' }}<span class="conf-pontos"></span></b><span class="conf-trilho"><i [style.animation-duration.ms]="duracao"></i></span></span>
         <span class="conf-nuvem" aria-hidden="true">

@@ -42,7 +42,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
         <h1>Fato <span>ou</span> fake?</h1>
         <p>Recebeu uma mensagem, um link, um print ou um vídeo sobre política? Cole aqui antes de compartilhar e veja se é fato ou fake. A resposta é uma avaliação preliminar, baseada só nas fontes consultadas.</p>
       </div>
-      <img src="img/fatobot.svg" alt="" width="150" height="170" />
+      <img class="bot-poltrona" src="img/fatobot-poltrona.webp" alt="" width="160" height="173" />
     </header>
 
     <div class="layout-comunidade">
@@ -69,7 +69,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
               (dragleave)="arrastando.set(false)" (drop)="$event.preventDefault(); arrastando.set(false); adicionar($event.dataTransfer?.files ?? null)">
               <input type="file" multiple [accept]="aceitos" (change)="adicionar(seletor.files); seletor.value = ''" #seletor />
               <app-icone nome="upload_file" />
-              <span class="zona-bot" aria-hidden="true"><img src="img/fatobot-rosto.svg" alt="" /> Pode soltar, eu confiro!</span>
+              <span class="zona-bot" aria-hidden="true"><img src="img/fatobot-rosto.webp" alt="" /> Pode soltar, eu confiro!</span>
               <strong>Arraste aqui ou clique para escolher</strong>
               <span class="zona-anexo-tipos">
                 <span><app-icone nome="image" /> Fotos e prints</span>

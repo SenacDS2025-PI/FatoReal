@@ -12,7 +12,7 @@
   </div>
   <div class="fb-hero-bot" aria-hidden="true">
     <span class="fb-onda"></span><span class="fb-onda fb-onda-2"></span>
-    <img src="img/fatobot.svg" alt="" />
+    <app-fatobot-vivo altura="170px" />
   </div>
 </header>
 
@@ -21,7 +21,7 @@
     <div class="fb-mensagens" #lista aria-live="polite">
       @if (!mensagens().length) {
         <div class="fb-vazio">
-          <img src="img/fatobot-rosto.svg" alt="" width="64" height="64" />
+          <app-fatobot-vivo altura="150px" />
           <strong>Sobre o que vamos conversar hoje?</strong>
           <span>Escolha uma pergunta ou escreva a sua aqui embaixo.</span>
           <div class="fb-sugestoes">
@@ -35,7 +35,7 @@
       }
       @for (m of mensagens(); track $index) {
         <div class="bolha-msg fb-msg" [class.bolha-voce]="m.autor === 'voce'">
-          @if (m.autor === 'bot') { <img src="img/fatobot-rosto.svg" alt="" width="36" height="36" /> }
+          @if (m.autor === 'bot') { <img src="img/fatobot-rosto.webp" alt="" width="36" height="36" /> }
           <div class="bolha-balao">
             <p>{{ m.texto }}</p>
             @if (m.resposta; as r) {
@@ -49,7 +49,7 @@
       }
       @if (pensando()) {
         <div class="bolha-msg fb-msg">
-          <img src="img/fatobot-rosto.svg" alt="" width="36" height="36" class="fb-pensando" />
+          <img src="img/fatobot-rosto.webp" alt="" width="36" height="36" class="fb-pensando" />
           <div class="bolha-balao fb-procurando">
             <span class="bolha-digitando"><span></span><span></span><span></span></span>
             <small>Consultando as fontes oficiais...</small>

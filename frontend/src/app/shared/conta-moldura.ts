@@ -8,7 +8,7 @@ import { Icone } from './componentes';
   template: `
     <div class="conta-tela">
       <aside class="conta-arte" aria-hidden="true">
-        <img src="img/fatobot.svg" alt="" class="conta-robo" />
+        <img src="img/fatobot.webp" alt="" class="conta-robo" />
         <p class="conta-k">Fato Real</p>
         <h2>{{ frase() }}</h2>
         <ul>

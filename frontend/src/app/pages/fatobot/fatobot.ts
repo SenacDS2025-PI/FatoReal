@@ -5,11 +5,12 @@ import { ActivatedRoute } from '@angular/router';
 import { FatoBotConversa } from '../../core/fatobot-conversa.service';
 import { AvisoIa, FonteDado, Icone } from '../../shared/componentes';
 import { SeloStatus } from '../../shared/selo-status';
+import { FatobotVivo } from '../../shared/fatobot-vivo';
 
 /** FatoBot em tela cheia: mesma conversa da bolinha, com mais espaço e o visual novo. */
 @Component({
   selector: 'app-fatobot',
-  imports: [FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus],
+  imports: [FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus, FatobotVivo],
   templateUrl: './fatobot.html',
 })
 export class FatoBotPage implements OnInit {
