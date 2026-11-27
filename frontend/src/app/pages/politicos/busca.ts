@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
 import {
   CARGOS, CARGOS_MUNICIPAIS, PRECISA_CIDADE, chaveAlerta, cidadesDoEstado, contagemAlertas, letraDe, normalizarCidade,
-  politicosDoLocal, rotaPolitico, todosDoCargo, totalDoCargo,
+  politicosDoLocal, rotaPolitico, situacaoCurta, todosDoCargo, totalDoCargo,
 } from '../../core/politicos.service';
 import { verificadosDe } from '../../core/registros-verificados';
 import { modoDemo } from '../../core/supabase';
@@ -162,8 +162,7 @@ export class BuscaPage implements OnInit {
   }
   /** "Eleito(a) em 2024 · TSE": o TSE mostra quem foi eleito, não quem está no cargo hoje. */
   protected eleicao(p: Politico): string {
-    const ano = p.situacao?.match(/\d{4}/)?.[0];
-    return ano ? `Eleito(a) em ${ano} · fonte: TSE` : 'Eleito(a) · fonte: TSE';
+    return `${situacaoCurta(p)} · fonte: TSE`;
   }
 
   /** Lista depois dos filtros de nome, partido e estado (antes da letra). */

@@ -26,6 +26,20 @@ export interface Politico {
   casa?: 'camara' | 'senado' | 'tse';
   /** Só Prefeito(a), Vice-prefeito(a) e Vereador(a) (dados do TSE). */
   municipio?: string | null;
+  // ---- Só eleitos do TSE (supabase/politicos-tse-detalhes.sql). Qualquer um pode vir null = "sem dados". ----
+  numero_urna?: number | null;
+  ocupacao?: string | null;
+  /** true = concorreu à reeleição; false = não; null = sem dados. */
+  reeleicao?: boolean | null;
+  /** Partidos da coligação/federação ("PT / PC do B / PV"); null = partido sozinho ou sem dados. */
+  coligacao?: string | null;
+  /** 'M'/'F': usado SÓ para escrever "eleito"/"eleita"; nunca exibido como dado. */
+  genero?: 'M' | 'F' | null;
+  /** Soma dos bens declarados na candidatura (0 = declarou não ter bens; null = sem dados). */
+  bens_total?: number | null;
+  /** Votos nominais no turno em que foi eleito. */
+  votos?: number | null;
+  turno?: number | null;
 }
 
 export type TipoAlerta =

@@ -101,6 +101,10 @@ import { Redes } from '../../core/modelos';
                 <input id="e-prof" name="profissao" maxlength="60" [ngModel]="profissao()" (ngModelChange)="profissao.set($event)" placeholder="Ex.: Estudante de Direito, Professora, Técnico em TI" />
               </div>
             }
+            @if (!auth.aceita('profissao') || !auth.aceita('interesses')) {
+              <!-- Some quando o banco ganha as colunas (supabase/perfil-campos-extras.sql) -->
+              <p class="texto-suave"><app-icone nome="info" /> Profissão e temas de interesse ainda não estão disponíveis nesta versão do site.</p>
+            }
             @if (auth.aceita('interesses')) {
               <fieldset class="campo-form">
                 <legend>Temas de interesse</legend>

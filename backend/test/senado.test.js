@@ -55,3 +55,8 @@ test('Importação: remove do banco quem saiu da lista oficial', () => {
   assert.deepEqual(idsParaRemover([1, '2', 74383, 74295], [{ id: 1 }, { id: 2 }]), [74383, 74295]);
   assert.deepEqual(idsParaRemover([1, 2], [{ id: 1 }, { id: 2 }, { id: 3 }]), []);
 });
+
+test('Senado: foto sempre com https:// (evita "Mixed Content")', () => {
+  const json = { ListaParlamentarEmExercicio: { Parlamentares: { Parlamentar: [{ IdentificacaoParlamentar: { CodigoParlamentar: '1', NomeParlamentar: 'Teste (exemplo)', UrlFotoParlamentar: 'http://www.senado.leg.br/senadores/img/fotos-oficiais/senador1.jpg' } }] } } };
+  assert.equal(senadoresDaLista(json)[0].foto_url, 'https://www.senado.leg.br/senadores/img/fotos-oficiais/senador1.jpg');
+});

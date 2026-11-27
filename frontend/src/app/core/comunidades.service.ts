@@ -74,11 +74,21 @@ export class ComunidadesService {
     return (count ?? 0) > 0;
   }
 
-  async entrar(comunidadeId: number): Promise<void> {
+  /** Entra na comunidade. Devolve false quando a pessoa já participava (não é erro). */
+  async entrar(comunidadeId: number): Promise<boolean> {
     const u = this.exigirUsuario();
-    if (!supabase) return this.demo.entrar(comunidadeId, u.id);
+    if (!supabase) {
+      const ja = this.demo.ehMembro(comunidadeId, u.id);
+      this.demo.entrar(comunidadeId, u.id);
+      return !ja;
+    }
     const { error } = await supabase.from('comunidade_membros').insert({ comunidade_id: comunidadeId, usuario_id: u.id });
-    if (error && error.code !== '23505') throw new Error('Não foi possível entrar na comunidade.');
+    if (error?.code === '23505') return false; // já participava
+    if (error) {
+      console.error('[comunidade] entrar:', error.code, error.message);
+      throw new Error('Não foi possível entrar na comunidade.');
+    }
+    return true;
   }
 
   async sair(comunidadeId: number): Promise<void> {
@@ -163,7 +173,11 @@ export class ComunidadesService {
       .eq('removida', false)
       .order('criado_em', { ascending: false })
       .limit(50);
-    if (error) throw new Error('Não foi possível carregar o mural.');
+    if (error) {
+      // Detalhe técnico no console (F12), para a equipe achar a causa no banco
+      console.error('[comunidade] mural:', error.code, error.message, error.details ?? '', error.hint ?? '');
+      throw new Error('Não foi possível carregar o mural.');
+    }
     return (data as Linha[]).map((p) => mapPublicacao(p, eu));
   }
 
