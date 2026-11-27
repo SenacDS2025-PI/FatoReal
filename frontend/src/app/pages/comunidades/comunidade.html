@@ -17,7 +17,8 @@
         <p>{{ c.descricao }}</p>
         <small class="texto-suave"><span class="tag-verde tag-p">{{ c.tema }}</span> {{ c.total_membros | plural: 'membro' : 'membros' }} · comunidade aberta</small>
       </div>
-      <button class="botao" [class.botao-verde]="!membro()" [class.botao-fantasma]="membro()" type="button" (click)="alternarMembro()">
+      <button class="botao" [class.botao-verde]="!membro()" [class.botao-fantasma]="membro()" type="button" (click)="alternarMembro()" [disabled]="entrando()"
+        [attr.aria-label]="membro() ? 'Você participa desta comunidade. Clique para sair.' : 'Participar da comunidade'" [title]="membro() ? 'Clique para sair da comunidade' : ''">
         <app-icone [nome]="membro() ? 'check' : 'add'" /> {{ membro() ? 'Participando' : 'Participar' }}
       </button>
     </div>
@@ -38,14 +39,21 @@
             <div class="card aviso-participar">
               <app-icone nome="group_add" />
               <p>Participe da comunidade para publicar e comentar no mural.</p>
-              <button class="botao botao-verde" type="button" (click)="alternarMembro()">Participar</button>
+              <button class="botao botao-verde" type="button" (click)="alternarMembro()" [disabled]="entrando()">Participar</button>
             </div>
           }
+          @if (membro() && auth.usuario()) {
+            <p class="aviso-membro"><app-icone nome="check_circle" /> Você participa desta comunidade.</p>
+          }
           <div class="feed">
+            @if (erroMural()) {
+              <div class="card vazio" role="alert"><app-icone nome="error" /><p>Não foi possível carregar o mural agora.</p>
+                <button class="botao botao-p" type="button" (click)="recarregar()"><app-icone nome="refresh" /> Tentar de novo</button></div>
+            }
             @for (p of mural(); track p.id) {
               <app-publicacao [pub]="p" (mudou)="recarregar()" />
             } @empty {
-              <div class="card vazio"><app-icone nome="forum" /><p>O mural está vazio. Que tal a primeira publicação?</p></div>
+              @if (!erroMural()) { <div class="card vazio"><app-icone nome="forum" /><p>O mural está vazio. Que tal a primeira publicação?</p></div> }
             }
           </div>
         }

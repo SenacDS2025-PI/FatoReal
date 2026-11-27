@@ -569,3 +569,14 @@ fieldset { min-width: 0; }
 .post-checagem a { color: #ffe14d; }
 /* Contato: o botão do e-mail (endereço comprido) quebra a linha no celular pequeno em vez de alargar a página */
 .inst .botao { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+
+/* Comunidade: aviso de que a pessoa já participa (27 nov. 2026) */
+.aviso-membro { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; padding: 10px 14px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+  background: color-mix(in srgb, var(--primaria) 10%, transparent); color: var(--texto); .icone { color: var(--primaria); } }
+
+/* Botão "Voltar" em todas as páginas (27 nov. 2026). Some quando a página já tem o próprio "Voltar para..." */
+.voltar-global { display: inline-flex; align-items: center; gap: 4px; margin: 0 0 10px; padding: 6px 12px 6px 8px; min-height: 36px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--link); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  &:hover, &:focus-visible { background: var(--superficie-2); } .icone { font-size: 1.15rem; } }
+main:has(.link-voltar) .voltar-global { display: none; }
+@media (max-width: 900px) { .voltar-global { min-height: 44px; } }
