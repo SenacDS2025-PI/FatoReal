@@ -352,6 +352,26 @@ export async function totalDoCargo(cargo: string): Promise<number> {
   return count ?? 0;
 }
 
+/** Um bem declarado ao TSE na candidatura (descrição já vem com CPF de terceiros escondido). */
+export interface BemDeclarado { ordem: number; tipo: string | null; descricao: string | null; valor: number | null; ano: number }
+
+/** Bens declarados na candidatura, na ordem do TSE. Sem Supabase: lista vazia. */
+export async function bensDe(id: number): Promise<BemDeclarado[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('politico_bens').select('ordem, tipo, descricao, valor, ano').eq('politico_id', id).order('ano', { ascending: false }).order('ordem');
+  if (error) throw new Error('Não foi possível carregar os bens declarados.');
+  return (data ?? []) as BemDeclarado[];
+}
+
+/** "Eleito em 2022", "Eleita em 2024" (o banco já manda pronto; registros antigos tinham "Eleito(a) em 2024 (eleito)"). */
+export function situacaoCurta(p: Pick<Politico, 'situacao' | 'genero'>): string {
+  const s = (p.situacao ?? '').replace(/\s*\(.*\)\s*$/, '').trim();
+  if (s && !s.includes('(a)')) return s;
+  const ano = p.situacao?.match(/\d{4}/)?.[0];
+  const palavra = p.genero === 'F' ? 'Eleita' : p.genero === 'M' ? 'Eleito' : 'Eleito(a)';
+  return ano ? `${palavra} em ${ano}` : palavra;
+}
+
 /** Perfil de um eleito do TSE (presidente, governador, prefeito, vereador...). Sem Supabase: null. */
 export async function obterTse(id: number): Promise<Politico | null> {
   if (!supabase) return null;
