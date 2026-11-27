@@ -9,9 +9,9 @@ import { randomBytes } from 'node:crypto';
 
 const ligado = () => process.env.LOG_VERIFICAR !== '0';
 
-// "Fulano tem CPF 12345678900 e..." → "Fulano tem CPF ••••••••••• e..." (até 60 letras)
+// "CPF 123.456.789-00, tel (61) 9999-8888" → números com pontos, traços, barras e espaços escondidos (até 60 letras)
 export function previa(texto, max = 60) {
-  const t = String(texto ?? '').replace(/\s+/g, ' ').replace(/\d{4,}/g, (m) => '•'.repeat(m.length));
+  const t = String(texto ?? '').replace(/\s+/g, ' ').replace(/\d[\d.\-\/ ]{6,}\d/g, (m) => '•'.repeat(m.length));
   return t.length > max ? `${t.slice(0, max)}…` : t;
 }
 

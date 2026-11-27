@@ -28,8 +28,15 @@ const MAX_QUERY = 1000;
 
 const ERRO_CAMINHO = { erro: 'Caminho não permitido.' };
 const ERRO_CAMARA = { erro: 'A Câmara não respondeu. Tente de novo em instantes.' };
+const ERRO_LIMITE = { erro: 'A Câmara pediu uma pausa (muitos pedidos ao mesmo tempo). Tente de novo em 10 segundos.' };
+// Com 200: o navegador guarda por 10 min e a Vercel (CDN) por 1 h, para um perfil de deputado
+// (dezenas de pedidos) não estourar o limite da Câmara.
+export const CACHE_200 = 'public, max-age=600, s-maxage=3600';
+export const ESPERA_429_S = 10;
 
 class FalhaCamara extends Error {}
+// A Câmara respondeu 429 (muitos pedidos): devolvemos 429 também, não 502.
+class LimiteCamara extends Error {}
 
 // Resposta da Câmara que não é 200: devolvida ao front, mas NÃO guardada no cache.
 class NaoGuardar extends Error {
@@ -50,6 +57,7 @@ async function buscar(url) {
   } catch (err) {
     throw new FalhaCamara(err.message);
   }
+  if (res.status === 429) throw new LimiteCamara('a Câmara respondeu 429');
   const texto = await res.text();
   try {
     return { status: res.status, corpo: JSON.parse(texto) };
@@ -85,9 +93,13 @@ router.get('/*', limitarPorIpCamara, async (req, res, next) => {
     }
 
     const { status, corpo } = await obter(`${CAMARA_API}/${caminho}${query}`);
-    res.set('Cache-Control', status === 200 ? 'public, max-age=600' : 'no-store');
+    res.set('Cache-Control', status === 200 ? CACHE_200 : 'no-store');
     return res.status(status).json(corpo);
   } catch (err) {
+    if (err instanceof LimiteCamara) {
+      res.set({ 'Cache-Control': 'no-store', 'Retry-After': String(ESPERA_429_S) });
+      return res.status(429).json(ERRO_LIMITE);
+    }
     if (err instanceof FalhaCamara) {
       console.error(`Proxy da Câmara: ${err.message}`);
       res.set('Cache-Control', 'no-store');
