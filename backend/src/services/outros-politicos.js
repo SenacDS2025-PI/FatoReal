@@ -206,7 +206,8 @@ export async function evidenciasDeOutrosPoliticos(pergunta) {
   };
 
   // 1. Pelo nome completo (senadores, governadores, vices e presidente).
-  add(citados(pergunta, [...senadores, ...pequenos]));
+  const porNome = citados(pergunta, [...senadores, ...pequenos]);
+  add(porNome);
 
   // 2. Por cargo + estado.
   const uf = ufDoTexto(pergunta);
@@ -224,5 +225,11 @@ export async function evidenciasDeOutrosPoliticos(pergunta) {
   for (const e of deMunicipio) if (!evidencias.some((x) => x.texto === e.texto)) evidencias.push(e);
 
   // `candidatos`: para o "Você quis dizer...?" quando a pergunta só traz o sobrenome.
-  return { evidencias, fontes: fontesDe(evidencias), candidatos: [...senadores, ...pequenos] };
+  // `senadoresCitados`: para o FatoBot buscar a atuação (projetos e votações) de cada um.
+  return {
+    evidencias,
+    fontes: fontesDe(evidencias),
+    candidatos: [...senadores, ...pequenos],
+    senadoresCitados: porNome.filter((p) => p.cargo === CARGO_SENADOR),
+  };
 }

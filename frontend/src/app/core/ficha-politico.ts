@@ -517,8 +517,27 @@ export async function totalDiscursos(id: number): Promise<number> {
   return totalPeloLink(r);
 }
 
-/** Quantas proposições de autoria do(a) deputado(a) viraram lei (situação "Transformado em Norma Jurídica"). */
+interface ArquivoLeis {
+  geradoEm: string;
+  deputados: Record<string, { projetos: number; leis: { id: number; sigla: string; numero: number; ano: number; ementa: string }[] }>;
+}
+let arquivoLeis: Promise<ArquivoLeis> | null = null;
+
+/**
+ * Quantos projetos (PL, PLP, PEC, PDL) de autoria ou coautoria do(a) deputado(a), apresentados
+ * desde fev/2023, viraram lei. A API da Câmara IGNORA o filtro codSituacao (antes isso contava
+ * TODAS as proposições como lei), então a conta vem de public/dados/leis-deputados.json,
+ * gerado pelos arquivos completos da Câmara (backend: npm run gerar-leis).
+ */
 export async function leisDoAutor(id: number): Promise<number> {
-  const r = await jsonCamara<Pagina<unknown>>(`/proposicoes?idDeputadoAutor=${id}&codSituacao=1140&dataApresentacaoInicio=1990-01-01&itens=1`);
-  return totalPeloLink(r);
+  arquivoLeis ??= fetch('dados/leis-deputados.json').then((r) => {
+    if (!r.ok) throw new Error('Arquivo de leis indisponível.');
+    return r.json() as Promise<ArquivoLeis>;
+  });
+  try {
+    return (await arquivoLeis).deputados[String(id)]?.leis.length ?? 0;
+  } catch (e) {
+    arquivoLeis = null;
+    throw e;
+  }
 }

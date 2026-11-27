@@ -12,7 +12,8 @@
     "importar": "node --env-file-if-exists=.env scripts/importar-deputados.js",
     "importar-tse": "node --env-file-if-exists=.env scripts/importar-tse.js",
     "atualizar-deputados": "node scripts/atualizar-deputados.js",
-    "conferir": "node scripts/conferir.js"
+    "conferir": "node scripts/conferir.js",
+    "gerar-leis": "node scripts/gerar-leis-deputados.js"
   },
   "engines": {
     "node": ">=20"

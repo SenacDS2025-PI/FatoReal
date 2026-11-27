@@ -512,7 +512,7 @@ export class PerfilPoliticoPage implements OnInit {
       if (contra) lista.push({ tipo: 'atencao', icone: 'call_split', texto: `Votou contra o próprio partido ${plural(contra, 'vez', 'vezes')}`, detalhe: 'Nas votações recentes do plenário. Pode mostrar independência ou divergência.' });
       const tot = this.detalhes()?.totalProposicoes;
       const leis = this.leis();
-      if (leis !== null && leis > 0) lista.push({ tipo: 'ok', icone: 'verified', texto: `${leis === 1 ? '1 projeto de autoria virou lei' : plural(leis, 'projeto', 'projetos') + ' de autoria viraram lei'}`, detalhe: 'Somando todos os mandatos na Câmara.' });
+      if (leis !== null && leis > 0) lista.push({ tipo: 'ok', icone: 'verified', texto: `${leis === 1 ? '1 projeto de autoria virou lei' : plural(leis, 'projeto', 'projetos') + ' de autoria viraram lei'}`, detalhe: 'Projetos de autoria ou coautoria apresentados desde fevereiro de 2023, segundo os dados abertos da Câmara.' });
       else if (leis === 0 && tot != null) lista.push({ tipo: 'atencao', icone: 'block', texto: 'Nenhum projeto de autoria virou lei', detalhe: `Apresentou ${tot} proposições nesta legislatura, mas nenhuma das suas virou lei até agora.` });
       const g = this.comparacaoGastos();
       if (g) {
