@@ -38,7 +38,7 @@ test('caminho permitido: repassa o corpo e o status, com Accept: application/jso
   const res = await pedir('deputados/221328');
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), { dados: { id: 221328, nome: 'Adilson Barroso' } });
-  assert.equal(res.headers.get('cache-control'), 'public, max-age=600');
+  assert.equal(res.headers.get('cache-control'), 'public, max-age=600, s-maxage=3600', 'a Vercel guarda por 1 h');
   assert.equal(pedidos[0].url, `${CAMARA}/deputados/221328`);
   assert.equal(pedidos[0].accept, 'application/json');
 });
@@ -126,4 +126,15 @@ test('limite por IP próprio do proxy → 429', async () => {
   const res = await pedir('deputados/12', h);
   assert.equal(res.status, 429);
   assert.ok(Number(res.headers.get('retry-after')) > 0);
+});
+
+test('Câmara responde 429 → repasse devolve 429 com Retry-After: 10 (não 502), sem cache', async () => {
+  responder = () => new Response('<html>Too Many Requests</html>', { status: 429 });
+  const res = await pedir('deputados/221328/orgaos');
+  assert.equal(res.status, 429);
+  assert.equal(res.headers.get('retry-after'), '10');
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  assert.match((await res.json()).erro, /pausa/);
+  await pedir('deputados/221328/orgaos');
+  assert.equal(pedidos.length, 2, 'o 429 não ficou no cache');
 });

@@ -13,3 +13,6 @@
 **Hoje o front não usa esta tabela:** a busca e o perfil de políticos vêm sempre ao vivo da API da Câmara (com fonte e data), com ou sem Supabase. A tabela fica para uso futuro (ex.: guardar um retrato dos dados).
 
 Se um dia o front voltar a ler daqui, os 10 a 20 deputados do piloto devem ser importados da API de Dados Abertos da Câmara (`https://dadosabertos.camara.leg.br/api/v2/deputados/{id}`), preenchendo sempre `fonte_url` e `data_coleta`. O `id` é o próprio id do deputado na Câmara.
+
+## Campos extras do perfil (27/11/2026)
+Rode `perfil-campos-extras.sql` no SQL Editor (dev e prod) para liberar Profissão, Temas de interesse, Redes sociais e capa enviada em "Editar perfil". Sem ele, a tela esconde esses campos.

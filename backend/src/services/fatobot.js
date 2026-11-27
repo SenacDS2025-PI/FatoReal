@@ -14,6 +14,7 @@ import { buscarNaBase, evidenciasDaBase, fontesDaBase } from './base.js';
 import { normalizar } from '../utils/texto.js';
 import { citadosNaPergunta, sugestoesDeNome } from '../utils/nomes.js';
 import { evidenciasDeOutrosPoliticos } from './outros-politicos.js';
+import { atuacaoDeputado, atuacaoSenador, CONFIG_ATUACAO } from './atuacao.js';
 import { sugerirFontes } from '../data/fontes-oficiais.js';
 
 export const AVISO =
@@ -86,6 +87,20 @@ export async function evidenciasDosDeputados(deputados) {
   };
 }
 
+// Atuação no mandato (projetos, leis, votações, gastos, registros verificados) — ver atuacao.js.
+// Só para os 2 primeiros políticos citados, para não estourar o tempo da resposta.
+const MAX_ATUACAO = 2;
+async function evidenciasDeAtuacao(politicos, buscar, pagina, casa) {
+  if (!CONFIG_ATUACAO.ligada) return { evidencias: [], fontes: [] };
+  const listas = await Promise.all(politicos.map((p) => buscar(p).catch((e) => (console.warn(`FatoBot (atuação): ${e.message}`), []))));
+  return {
+    evidencias: listas.flat(),
+    fontes: politicos
+      .filter((_, i) => listas[i].length)
+      .map((p) => ({ titulo: `${casa}: atuação de ${p.nome} no mandato`, url: pagina(p), data: new Date().toISOString() })),
+  };
+}
+
 // J2 — prazo total de uma pergunta. Câmara/Supabase usam até ~14s no pior caso
 // (ver LIMITES em camara.js); o Gemini usa só o que sobrar até aqui.
 export const LIMITES_FATOBOT = { totalMs: 24_000 };
@@ -121,9 +136,13 @@ export async function buscarEvidencias(texto) {
     deputadosDaLista = lista.dados;
     const deputados = deputadosCitados(texto, lista.dados);
     if (deputados.length) {
-      const dep = await evidenciasDosDeputados(deputados);
-      evidencias.push(...dep.evidencias);
-      fontes.push(...dep.fontes);
+      // Perfil + atuação (projetos, leis, votações, gastos) ao mesmo tempo.
+      const [dep, atuacao] = await Promise.all([
+        evidenciasDosDeputados(deputados),
+        evidenciasDeAtuacao(deputados.slice(0, MAX_ATUACAO), atuacaoDeputado, (d) => `https://www.camara.leg.br/deputados/${d.id}`, 'Dados Abertos da Câmara'),
+      ]);
+      evidencias.push(...dep.evidencias, ...atuacao.evidencias);
+      fontes.push(...dep.fontes, ...atuacao.fontes);
     }
     if (PERGUNTA_TOTAL.test(normalizar(texto))) {
       const { fonte } = lista;
@@ -142,6 +161,16 @@ export async function buscarEvidencias(texto) {
   const op = await outros;
   evidencias.push(...op.evidencias);
   fontes.push(...op.fontes);
+  if (op.senadoresCitados?.length) {
+    const atuacao = await evidenciasDeAtuacao(
+      op.senadoresCitados.slice(0, MAX_ATUACAO),
+      atuacaoSenador,
+      (s) => `https://www25.senado.leg.br/web/senadores/senador/-/perfil/${s.id}`,
+      'Senado Federal'
+    );
+    evidencias.push(...atuacao.evidencias);
+    fontes.push(...atuacao.fontes);
+  }
 
   if (erroCamara) {
     if (itensBase.length === 0 && op.evidencias.length === 0) throw erroCamara;

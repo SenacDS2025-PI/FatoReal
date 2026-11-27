@@ -90,8 +90,16 @@
         @if (p.interesses?.length) {
           <div class="pp-interesses">@for (i of p.interesses!; track i) { <span [style.--cor]="corTema[i]"><app-icone [nome]="iconeTema[i] || 'tag'" /> {{ i }}</span> }</div>
         }
-        @if (p.uf) { <a routerLink="/politicos" [queryParams]="{ uf: p.uf }" class="link-sutil"><app-icone nome="account_balance" /> Deputados de {{ p.uf }}</a> }
       </section>
+
+      <!-- Atalho para os políticos do estado: cartão próprio (antes ficava dentro do "Sobre", junto da bio) -->
+      @if (p.uf) {
+        <section class="card ps-cartao">
+          <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="account_balance" /></span> {{ ehMeu() ? 'Meus representantes' : 'Representantes' }}</h2>
+          <p class="texto-suave">Veja os deputados federais {{ comPreposicao(p.uf) }} na Câmara: gastos, votações e projetos, com fonte oficial.</p>
+          <a routerLink="/politicos" [queryParams]="{ uf: p.uf }" class="botao botao-p"><app-icone nome="account_balance" /> Deputados {{ comPreposicao(p.uf) }}</a>
+        </section>
+      }
 
       <section class="card ps-cartao">
         <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="groups" /></span> Comunidades <small class="texto-suave">({{ comunidades().length }})</small></h2>

@@ -137,6 +137,10 @@
   <div class="painel">
     <app-aviso-demo />
     <main id="conteudo" tabindex="-1">
+      <!-- Voltar em todas as páginas, menos no Início. Some quando a página já tem o próprio "Voltar para..." (.link-voltar) -->
+      @if (mostrarVoltar()) {
+        <button type="button" class="voltar-global" (click)="voltar()"><app-icone nome="arrow_back" /> Voltar</button>
+      }
       <router-outlet />
     </main>
     <footer class="rodape-celular so-celular">

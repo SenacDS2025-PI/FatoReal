@@ -76,16 +76,23 @@ function fonteDe(p) {
   return { nome: `${FONTE_SENADO_NOME}${copia}`, url: p.fonte_url, consultadoEm: p.data_coleta };
 }
 
-const estadoDe = (p) => ESTADOS[p.uf] ?? p.uf;
+// Preposição certa de cada estado: "da Bahia", "do Rio de Janeiro", "de São Paulo".
+export const PREP_ESTADO = {
+  AC: 'do', AL: 'de', AP: 'do', AM: 'do', BA: 'da', CE: 'do', DF: 'do', ES: 'do', GO: 'de', MA: 'do',
+  MT: 'de', MS: 'de', MG: 'de', PA: 'do', PB: 'da', PR: 'do', PE: 'de', PI: 'do', RJ: 'do', RN: 'do',
+  RS: 'do', RO: 'de', RR: 'de', SC: 'de', SP: 'de', SE: 'de', TO: 'do',
+};
+// "BA" → "da Bahia"; sigla desconhecida → "de XX".
+export const doEstado = (uf) => `${PREP_ESTADO[uf] ?? 'de'} ${ESTADOS[uf] ?? uf}`;
 const cidadeDe = (p) => `${p.municipio}-${p.uf}`;
 
 // O que a pessoa conquistou na eleição, sem "(a)": "a prefeitura de Campinas-SP".
 const VAGA = {
   Presidente: () => 'a Presidência da República',
   'Vice-presidente': () => 'a Vice-Presidência da República',
-  'Governador(a)': (p) => `o governo de ${estadoDe(p)}`,
-  'Vice-governador(a)': (p) => `a vice-governadoria de ${estadoDe(p)}`,
-  'Deputado(a) Estadual': (p) => (p.uf === 'DF' ? 'uma vaga na Câmara Legislativa do Distrito Federal' : `uma vaga na Assembleia Legislativa de ${estadoDe(p)}`),
+  'Governador(a)': (p) => `o governo ${doEstado(p.uf)}`,
+  'Vice-governador(a)': (p) => `a vice-governadoria ${doEstado(p.uf)}`,
+  'Deputado(a) Estadual': (p) => (p.uf === 'DF' ? 'uma vaga na Câmara Legislativa do Distrito Federal' : `uma vaga na Assembleia Legislativa ${doEstado(p.uf)}`),
   'Prefeito(a)': (p) => `a prefeitura de ${cidadeDe(p)}`,
   'Vice-prefeito(a)': (p) => `a vice-prefeitura de ${cidadeDe(p)}`,
   'Vereador(a)': (p) => `uma vaga na Câmara Municipal de ${cidadeDe(p)}`,
@@ -199,7 +206,8 @@ export async function evidenciasDeOutrosPoliticos(pergunta) {
   };
 
   // 1. Pelo nome completo (senadores, governadores, vices e presidente).
-  add(citados(pergunta, [...senadores, ...pequenos]));
+  const porNome = citados(pergunta, [...senadores, ...pequenos]);
+  add(porNome);
 
   // 2. Por cargo + estado.
   const uf = ufDoTexto(pergunta);
@@ -217,5 +225,11 @@ export async function evidenciasDeOutrosPoliticos(pergunta) {
   for (const e of deMunicipio) if (!evidencias.some((x) => x.texto === e.texto)) evidencias.push(e);
 
   // `candidatos`: para o "Você quis dizer...?" quando a pergunta só traz o sobrenome.
-  return { evidencias, fontes: fontesDe(evidencias), candidatos: [...senadores, ...pequenos] };
+  // `senadoresCitados`: para o FatoBot buscar a atuação (projetos e votações) de cada um.
+  return {
+    evidencias,
+    fontes: fontesDe(evidencias),
+    candidatos: [...senadores, ...pequenos],
+    senadoresCitados: porNome.filter((p) => p.cargo === CARGO_SENADOR),
+  };
 }

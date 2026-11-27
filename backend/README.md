@@ -167,21 +167,27 @@ Pode rodar de novo quando quiser: atualiza os dados e a data da coleta. O CPF n�
 
 #### Importar os outros cargos (TSE): presidente, governadores, deputados estaduais, prefeitos e vereadores
 
-Fonte: arquivos oficiais "Candidatos" do Portal de Dados Abertos do TSE. Entram só os **eleitos**
-(eleição de 2022 para presidente, governador e deputado estadual; 2024 para prefeito e vereador).
-O FatoBot diz "foi eleito(a) em ...", porque o TSE não mostra quem está no cargo hoje.
+Fonte: Portal de Dados Abertos do TSE. Entram só os **eleitos** (2022: presidente, governador e
+deputado estadual; 2024: prefeito e vereador). O texto diz "Eleito/Eleita em ...", porque o TSE não
+mostra quem está no cargo hoje.
 
-1. Uma vez por banco (dev e prod): rode `supabase/politicos-todos-os-cargos.sql` no SQL Editor.
-2. Baixe no navegador e extraia (botão direito → *Extrair tudo*):
-   - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2022.zip
-   - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2024.zip
-3. Rode, com o caminho das pastas extraídas:
+1. Uma vez por banco (dev e prod), no SQL Editor: `supabase/politicos-todos-os-cargos.sql` e
+   `supabase/politicos-tse-detalhes.sql`.
+2. Baixe e extraia (botão direito → *Extrair tudo*), no Brasil:
+   - **candidatos (obrigatório):** `https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2022.zip` e `..._2024.zip`
+   - **bens (opcional):** `https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2022.zip` e `..._2024.zip`
+   - **votos (opcional, arquivos grandes):** `https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip` e `..._2024.zip`
+3. Rode com **todas** as pastas de uma vez (o script reconhece cada arquivo pelo nome):
 
 ```bash
-npm run importar-tse -- C:\Users\voce\Downloads\consulta_cand_2022 C:\Users\voce\Downloads\consulta_cand_2024
+npm run importar-tse -- C:\Downloads\consulta_cand_2022 C:\Downloads\consulta_cand_2024 C:\Downloads\bem_candidato_2022 C:\Downloads\bem_candidato_2024
 ```
 
-São ~65 mil eleitos (só vereadores são ~58 mil). Não salva CPF, título, e-mail nem data de nascimento.
+Campos gravados (contrato com o front): `numero_urna`, `data_nascimento`, `municipio_nascimento`
+("Garanhuns/PE"), `ocupacao`, `reeleicao`, `coligacao`, `genero` ('M'/'F', só para "eleito/eleita"),
+`bens_total`, `votos`, `turno`; e a tabela `politico_bens` (`politico_id`, `ordem`, `tipo`,
+`descricao`, `valor`, `ano`). LGPD: não salva CPF, título, e-mail nem cor/raça; CPF de terceiros na
+descrição dos bens vira `[CPF oculto]`. A foto só é salva se for a foto de verdade (não o boneco padrão).
 
 ### `GET /api/fontes` (catálogo de fontes oficiais)
 

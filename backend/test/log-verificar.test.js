@@ -7,7 +7,9 @@ import { iniciar, mockCamara } from './ajuda.js';
 test('prévia esconde números longos (CPF, telefone) e corta textos grandes', () => {
   assert.equal(previa('Fulano tem CPF 12345678900'), 'Fulano tem CPF •••••••••••');
   assert.equal(previa('a'.repeat(100)).length, 61);
-  assert.equal(previa('Em 2026 houve eleição?'), 'Em •••• houve eleição?');
+  assert.equal(previa('Em 2026 houve eleição?'), 'Em 2026 houve eleição?', 'ano sozinho não é dado pessoal');
+  assert.ok(!previa('CPF 123.456.789-00').includes('789'), 'CPF com pontos');
+  assert.ok(!previa('ligue 61 99999-8888').includes('8888'), 'telefone com traço');
 });
 
 test('do link só guarda o site', () => {

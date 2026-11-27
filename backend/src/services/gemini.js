@@ -159,6 +159,8 @@ function montarMensagem(texto, evidencias, rotulo = 'PERGUNTA DO USUÁRIO', tag 
 
 // Divide em frases (por . ! ? ou quebra de linha). Uma referência solta depois do ponto
 // ("... PSB. [1]") é juntada à frase anterior.
+const ABREVIACAO_NO_FIM = /(?:^|[\s(])(?:arts?|incs?|al|par|caps?|n|nº|núm|p|pág|dep|deps|sen|sens|dr|dra|sr|sra|prof|profa|min|gov|pres|exmo|exma|etc)\.$/i;
+
 export function dividirFrases(texto) {
   const pedacos = String(texto)
     .split(/\n+/)
@@ -167,11 +169,25 @@ export function dividirFrases(texto) {
     .filter(Boolean);
 
   const frases = [];
+  let juntarNaProxima = false;
   for (const p of pedacos) {
-    if (/^(\[\d+\]\s*)+[.!?]?$/.test(p) && frases.length) frases[frases.length - 1] += ` ${p}`;
+    if ((juntarNaProxima || /^(\[\d+\]\s*)+[.!?]?$/.test(p)) && frases.length) frases[frases.length - 1] += ` ${p}`;
     else frases.push(p);
+    // "art. 154-A", "Dep. Fulano", "nº. 10": o ponto da abreviação não termina a frase.
+    juntarNaProxima = ABREVIACAO_NO_FIM.test(p);
   }
   return frases;
+}
+
+// A IA às vezes cita várias evidências juntas: "[11, 12]" ou "[16,17]". Vira "[11][12]",
+// o formato que o validador e o front entendem (cada número continua tendo que existir).
+export function separarCitacoes(texto) {
+  return String(texto).replace(/\[(\d+(?:\s*[,;]\s*\d+)+)\]/g, (_, lista) =>
+    lista
+      .split(/[,;]/)
+      .map((n) => `[${n.trim()}]`)
+      .join('')
+  );
 }
 
 export function frasesSemCitacao(texto) {
@@ -208,10 +224,12 @@ export async function sintetizarComIA(pergunta, evidencias, { prazo } = {}) {
       return { falha: 'bloqueado' };
     }
 
-    const texto = (response.text ?? '').trim();
+    const texto = separarCitacoes((response.text ?? '').trim());
     if (texto.includes(SEM_EVIDENCIA)) return { semEvidencia: true };
     if (!texto || !citacoesValidas(texto, evidencias.length)) {
-      console.warn('FatoBot: resposta descartada: frase sem citação ou citação inexistente');
+      // Mostra o que a IA escreveu (só dados públicos das fontes), para entender o descarte nos logs.
+      const sem = frasesSemCitacao(texto).map((f) => f.slice(0, 120));
+      console.warn(`FatoBot: resposta descartada: frase sem citação ou citação inexistente. Frases sem citação: ${JSON.stringify(sem)}. Início: ${JSON.stringify(texto.slice(0, 400))}`);
       return { falha: 'citacao_invalida' };
     }
 
@@ -332,7 +350,7 @@ export async function classificarComIA(afirmacao, evidencias, { prazo } = {}) {
     return null;
   }
 
-  const explicacao = r.explicacao.trim();
+  const explicacao = separarCitacoes(r.explicacao.trim());
   if (r.estado !== 'insuficiente' && !citacoesValidas(explicacao, evidencias.length)) {
     console.warn('Verificar: classificação descartada: frase sem citação ou citação inexistente');
     return { estado: 'insuficiente', explicacao: null };
