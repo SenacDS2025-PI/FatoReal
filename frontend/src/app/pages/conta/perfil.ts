@@ -48,6 +48,14 @@ export class PerfilPage {
   protected readonly favoritos = inject(FavoritosService);
   protected readonly iconeSalvo: Record<TipoFavorito, string> = { politico: 'account_balance', projeto: 'description', noticia: 'newspaper', publicacao: 'dynamic_feed', comunidade: 'groups' };
   protected readonly nomeSalvo: Record<TipoFavorito, string> = { politico: 'Político', projeto: 'Projeto', noticia: 'Notícia', publicacao: 'Publicação', comunidade: 'Comunidade' };
+  /** "do DF", "da BA", "de SP": a preposição certa antes da sigla do estado. */
+  protected comPreposicao(uf: string): string {
+    const da = ['BA', 'PB'];
+    const de = ['AL', 'GO', 'MG', 'PE', 'RO', 'RR', 'SC', 'SE', 'SP'];
+    const sigla = uf.toUpperCase();
+    return `${da.includes(sigla) ? 'da' : de.includes(sigla) ? 'de' : 'do'} ${sigla}`;
+  }
+
   /** Rota interna do item salvo (político e comunidade abrem dentro do site). */
   protected rotaSalvo(f: Favorito): (string | number)[] | null {
     if (f.tipo === 'politico') {

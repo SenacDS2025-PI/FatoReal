@@ -1,4 +1,4 @@
-import { Component, HostListener, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, effect, inject, signal, computed } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from './core/auth.service';
@@ -53,6 +53,17 @@ export class App {
   ];
   /** Rota atual, para manter "Políticos" ativo também em /congresso. */
   protected readonly rotaAtual = signal('');
+  /** Quantas páginas a pessoa já abriu dentro do site (para o "Voltar" saber se tem para onde voltar). */
+  private paginasVistas = 0;
+  protected readonly mostrarVoltar = computed(() => {
+    const r = this.rotaAtual().split(/[?#]/)[0];
+    return r !== '' && r !== '/';
+  });
+  /** Volta para a página anterior do site; se a pessoa chegou direto por um link, vai para o Início. */
+  protected voltar(): void {
+    if (this.paginasVistas > 1) history.back();
+    else this.router.navigateByUrl('/');
+  }
   protected ativoTambem(item: { tambem?: string[] }) {
     return !!item.tambem?.some((r) => this.rotaAtual().startsWith(r));
   }
@@ -73,6 +84,7 @@ export class App {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       this.menuAberto.set(false);
       this.rotaAtual.set(this.router.url);
+      this.paginasVistas++;
       this.notifAberto.set(false);
       this.notificacoes.atualizar();
       this.mensagens.atualizarContagem();

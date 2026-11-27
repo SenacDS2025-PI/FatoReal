@@ -4,19 +4,13 @@
     <meta charset="utf-8" />
     <title>Fato Real</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Fato Real: rede social de informação cívica. Pesquise políticos com fontes oficiais, pergunte ao FatoBot e participe de comunidades." />
     <!-- Cor da barra do celular: segue o tema do aparelho ; o app ajusta quando a pessoa troca na lâmpada -->
     <meta name="theme-color" content="#0e5e3a" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
-    <!-- App instalável (PWA): Android e iPhone -->
-    <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="img/icones/apple-touch-icon.png" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Fato Real" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="img/logo.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
@@ -32,9 +26,10 @@
       });
     </script>
     <script>
-      // Liga o service worker (app instalável e cópia sem internet). Em localhost fica desligado para não atrapalhar o desenvolvimento.
-      if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+      // O app instalável (PWA) saiu do projeto (pedido do Luiz em 26 nov. 2026).
+      // Quem abriu uma prévia antiga pode ter ficado com o service worker: aqui ele é desligado.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (l) { l.forEach(function (r) { r.unregister(); }); }).catch(function () {});
       }
     </script>
   </head>
