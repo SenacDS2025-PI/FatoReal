@@ -211,7 +211,9 @@ export async function sintetizarComIA(pergunta, evidencias, { prazo } = {}) {
     const texto = (response.text ?? '').trim();
     if (texto.includes(SEM_EVIDENCIA)) return { semEvidencia: true };
     if (!texto || !citacoesValidas(texto, evidencias.length)) {
-      console.warn('FatoBot: resposta descartada: frase sem citação ou citação inexistente');
+      // Mostra o que a IA escreveu (só dados públicos das fontes), para entender o descarte nos logs.
+      const sem = frasesSemCitacao(texto).map((f) => f.slice(0, 120));
+      console.warn(`FatoBot: resposta descartada: frase sem citação ou citação inexistente. Frases sem citação: ${JSON.stringify(sem)}. Início: ${JSON.stringify(texto.slice(0, 400))}`);
       return { falha: 'citacao_invalida' };
     }
 
